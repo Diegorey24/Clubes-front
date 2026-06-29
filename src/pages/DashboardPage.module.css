@@ -1,0 +1,332 @@
+.page {
+    padding: 1.5rem 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    height: calc(100vh - 80px);
+    /* Adjust based on header height, approx 80px */
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-700) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    /* Standard property */
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.03em;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: var(--gray-500);
+    margin-top: 0.25rem;
+    font-weight: 500;
+}
+
+/* Premium Button Style - Slightly smaller */
+.addButton {
+    background: linear-gradient(135deg, #4f46e5, #4338ca);
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s;
+}
+
+.addButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+    filter: brightness(1.1);
+}
+
+/* Main Content Grid - Fills remaining space */
+.mainLayout {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 1.5rem;
+    flex: 1;
+    min-height: 0;
+    /* Important for scroll containment if needed inside */
+}
+
+/* Summary Cards */
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.summaryCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.summaryCard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.summaryCard::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: var(--primary-500);
+}
+
+.summaryCard:nth-child(2)::before {
+    background: var(--secondary-500);
+}
+
+.summaryContent {
+    display: flex;
+    flex-direction: column;
+}
+
+.cardTitle {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.25rem;
+}
+
+.cardValue {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--gray-900);
+    line-height: 1;
+}
+
+.cardIcon {
+    background: var(--primary-50);
+    color: var(--primary-600);
+    padding: 1rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cardIcon.historical {
+    background: var(--secondary-50);
+    color: var(--secondary-600);
+}
+
+/* Charts Grid - Fills remaining height */
+.chartsGrid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.5rem;
+    height: 100%;
+    min-height: 0;
+}
+
+.chartCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--gray-100);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.chartCard:nth-child(1),
+.chartCard:nth-child(2) {
+    grid-column: span 5;
+}
+
+.chartCard:nth-child(3) {
+    grid-column: span 2;
+}
+
+.chartTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--gray-200);
+    flex-shrink: 0;
+}
+
+/* Bar Styles */
+.barList {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.barList::-webkit-scrollbar {
+    width: 4px;
+}
+
+.barList::-webkit-scrollbar-thumb {
+    background: var(--gray-200);
+    border-radius: 2px;
+}
+
+.barItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.barHeader {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.barContainer {
+    height: 8px;
+    background: var(--gray-100);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.barFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-500), var(--primary-400));
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Gender Styles - Compact List */
+.genderContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* Center items vertically */
+    gap: 0.75rem;
+    height: 100%;
+    padding: 0.5rem 0;
+}
+
+.genderItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.genderItem:hover {
+    transform: translateX(4px);
+    border-color: var(--primary-300);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.genderName {
+    font-weight: 700;
+    color: var(--gray-600);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+    /* Remove margin for horizontal alignment */
+}
+
+.genderCount {
+    font-weight: 800;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--gray-900);
+    /* Reverting gradient for simpler, cleaner look at small size, or keeping it subtle */
+    background: none;
+    -webkit-text-fill-color: initial;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    font-size: 1.2rem;
+    color: var(--gray-400);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1280px) {
+
+    .chartCard:nth-child(1),
+    .chartCard:nth-child(2) {
+        grid-column: span 6;
+    }
+
+    .chartCard:nth-child(3) {
+        grid-column: span 12;
+        flex-direction: row;
+        gap: 1rem;
+        min-height: 120px;
+    }
+
+    .chartCard:nth-child(3) .genderContainer {
+        flex-direction: row;
+        width: 100%;
+    }
+}
+
+@media (max-height: 800px) {
+    .page {
+        padding: 1rem 1.5rem;
+    }
+
+    .header {
+        margin-bottom: 1rem;
+    }
+
+    .cardValue {
+        font-size: 2rem;
+    }
+
+    .summaryGrid {
+        margin-bottom: 1rem;
+    }
+}

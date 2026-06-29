@@ -1,0 +1,101 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import HeaderNav from './components/HeaderNav/HeaderNav';
+import Toast from './components/Toast/Toast';
+import Home from './pages/Home';
+import RubrosPage from './pages/RubrosPage';
+import RadiosPage from './pages/RadiosPage';
+import FormaPagoPage from './pages/FormaPagoPage';
+import MediosPagoPage from './pages/MediosPagoPage';
+import ParametrosPage from './pages/ParametrosPage';
+import AddSocioPage from './pages/AddSocioPage';
+import SociosPage from './pages/SociosPage';
+import SociosHistoricosPage from './pages/SociosHistoricosPage';
+import DashboardPage from './pages/DashboardPage';
+import CategoriasSociosPage from './pages/CategoriasSociosPage';
+import SocioDetailsPage from './pages/SocioDetailsPage';
+import SocioEditPage from './pages/SocioEditPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import GenerarCuotasPage from './pages/GenerarCuotasPage';
+import CajaPage from './pages/CajaPage';
+import CajaHistoricoPage from './pages/CajaHistoricoPage';
+import './App.css';
+
+const getUsuarioGuardado = () => {
+  try {
+    const data = localStorage.getItem('usuario');
+    return data ? JSON.parse(data) : null;
+  } catch {
+    return null;
+  }
+};
+
+function PrivateRoute({ usuario, children }) {
+  if (!usuario) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function App() {
+  const [usuario, setUsuario] = useState(getUsuarioGuardado);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+  const [toastVisible, setToastVisible] = useState(false);
+
+  const showToast = (message, type = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
+  const hideToast = () => {
+    setToastVisible(false);
+  };
+
+  const handleLogin = (u) => {
+    setUsuario(u);
+    localStorage.setItem('usuario', JSON.stringify(u));
+  };
+
+  const handleLogout = () => {
+    setUsuario(null);
+    localStorage.removeItem('usuario');
+  };
+
+  return (
+    <Router basename="/clubes">
+      <div className="app">
+        {usuario && <HeaderNav usuario={usuario} onLogout={handleLogout} />}
+        <Routes>
+          <Route path="/login" element={usuario ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />} />
+          <Route path="/register" element={usuario ? <Navigate to="/" replace /> : <RegisterPage />} />
+
+          <Route path="/" element={<PrivateRoute usuario={usuario}><DashboardPage /></PrivateRoute>} />
+          <Route path="/rubros" element={<PrivateRoute usuario={usuario}><RubrosPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/radios" element={<PrivateRoute usuario={usuario}><RadiosPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/formapago" element={<PrivateRoute usuario={usuario}><FormaPagoPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/mediospago" element={<PrivateRoute usuario={usuario}><MediosPagoPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/parametros" element={<PrivateRoute usuario={usuario}><ParametrosPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/agregar-socio" element={<PrivateRoute usuario={usuario}><AddSocioPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/socios" element={<PrivateRoute usuario={usuario}><SociosPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/socios-historicos" element={<PrivateRoute usuario={usuario}><SociosHistoricosPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/socios-historicos/:id" element={<PrivateRoute usuario={usuario}><SocioDetailsPage isHistorical={true} /></PrivateRoute>} />
+          <Route path="/categorias-socios" element={<PrivateRoute usuario={usuario}><CategoriasSociosPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/generar-cuotas" element={<PrivateRoute usuario={usuario}><GenerarCuotasPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/caja" element={<PrivateRoute usuario={usuario}><CajaPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
+          <Route path="/caja/historico" element={<PrivateRoute usuario={usuario}><CajaHistoricoPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
+          <Route path="/socios/:id" element={<PrivateRoute usuario={usuario}><SocioDetailsPage /></PrivateRoute>} />
+          <Route path="/socios/edit/:id" element={<PrivateRoute usuario={usuario}><SocioEditPage showToast={showToast} /></PrivateRoute>} />
+        </Routes>
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          isVisible={toastVisible}
+          onClose={hideToast}
+        />
+      </div>
+    </Router>
+  );
+}
+
+export default App;

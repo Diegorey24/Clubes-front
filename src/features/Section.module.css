@@ -1,0 +1,26 @@
+.cardGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.emptyState,
+.errorState {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: var(--spacing-2xl);
+}
+
+.emptyState {
+    color: var(--gray-500);
+}
+
+.errorState {
+    color: var(--error-500);
+}
+
+@media (max-width: 768px) {
+    .cardGrid {
+        grid-template-columns: 1fr;
+    }
+}

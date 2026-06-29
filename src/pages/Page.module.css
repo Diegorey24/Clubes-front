@@ -1,0 +1,12 @@
+.page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--spacing-2xl) var(--spacing-lg);
+    animation: fadeIn 0.5s ease-out;
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+}

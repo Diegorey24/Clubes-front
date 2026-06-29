@@ -1,0 +1,155 @@
+.tableContainer {
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.table thead {
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
+    color: white;
+}
+
+.table thead th {
+    padding: var(--spacing-md) var(--spacing-sm);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid var(--gray-200);
+    transition: all var(--transition-fast);
+}
+
+.table tbody tr:hover {
+    background: var(--gray-50);
+}
+
+.table tbody td {
+    padding: var(--spacing-md) var(--spacing-sm);
+    color: var(--gray-700);
+}
+
+.idCell {
+    font-weight: 600;
+}
+
+.idBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    padding: 0.25rem 0.5rem;
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
+    color: white;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.nameCell {
+    font-weight: 600;
+    color: var(--gray-800);
+    max-width: 300px;
+}
+
+.numberCell {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.actionsCell {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btnEdit,
+.btnDelete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin: 0 0.25rem;
+}
+
+.btnEdit {
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
+    color: white;
+}
+
+.btnEdit:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btnDelete {
+    background: linear-gradient(135deg, var(--error-500), hsl(0, 84%, 50%));
+    color: white;
+}
+
+.btnDelete:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    color: var(--gray-400);
+}
+
+.emptyState svg {
+    margin-bottom: var(--spacing-md);
+}
+
+.emptyState p {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+@media (max-width: 1200px) {
+    .tableContainer {
+        overflow-x: auto;
+    }
+
+    .table {
+        min-width: 600px;
+    }
+}
+
+@media (max-width: 768px) {
+    .table {
+        font-size: 0.8125rem;
+    }
+
+    .table thead th,
+    .table tbody td {
+        padding: var(--spacing-sm) var(--spacing-xs);
+    }
+
+    .nameCell {
+        max-width: 200px;
+    }
+}

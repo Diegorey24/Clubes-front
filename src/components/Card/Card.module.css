@@ -1,0 +1,78 @@
+.card {
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    border: 2px solid transparent;
+    animation: scaleIn 0.3s ease-out;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-600);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+}
+
+.cardTitle {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    word-break: break-word;
+}
+
+.cardId {
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.cardActions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.btnEdit,
+.btnDanger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-size: 0.875rem;
+}
+
+.btnEdit {
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
+    color: white;
+}
+
+.btnEdit:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btnDanger {
+    background: linear-gradient(135deg, var(--error-500), hsl(0, 84%, 50%));
+    color: white;
+}
+
+.btnDanger:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}

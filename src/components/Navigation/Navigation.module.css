@@ -1,0 +1,62 @@
+.navTabs {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+    background: white;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    animation: slideDown 0.6s ease-out;
+}
+
+.tabButton {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: none;
+    background: transparent;
+    color: var(--gray-600);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    position: relative;
+}
+
+.tabButton::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--primary-600), var(--purple-600));
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.tabButton:hover {
+    color: var(--primary-600);
+    transform: translateY(-2px);
+}
+
+.tabButton.active {
+    color: white;
+    font-weight: 600;
+}
+
+.tabButton.active::before {
+    opacity: 1;
+}
+
+.tabButton svg,
+.tabButton span {
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 768px) {
+    .navTabs {
+        flex-direction: column;
+    }
+}
