@@ -20,6 +20,7 @@ import RegisterPage from './pages/RegisterPage';
 import GenerarCuotasPage from './pages/GenerarCuotasPage';
 import CajaPage from './pages/CajaPage';
 import CajaHistoricoPage from './pages/CajaHistoricoPage';
+import GeneracionArchivosPage from './pages/GeneracionArchivosPage';
 import './App.css';
 
 const getUsuarioGuardado = () => {
@@ -86,6 +87,7 @@ function App() {
           <Route path="/caja/historico" element={<PrivateRoute usuario={usuario}><CajaHistoricoPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
           <Route path="/socios/:id" element={<PrivateRoute usuario={usuario}><SocioDetailsPage /></PrivateRoute>} />
           <Route path="/socios/edit/:id" element={<PrivateRoute usuario={usuario}><SocioEditPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/generacion-archivos" element={<PrivateRoute usuario={usuario}><GeneracionArchivosPage showToast={showToast} /></PrivateRoute>} />
         </Routes>
         <Toast
           message={toastMessage}

@@ -293,4 +293,16 @@ export const getCajaHistorico = async ({ caja, fecha, nroCierre } = {}) => {
   return response.data;
 };
 
+export const generarArchivo = async (financiera, emision) => {
+  try {
+    const response = await api.post('/generacion-archivos/generar', {
+      financiera,
+      emision,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al generar archivo:', error);
+    throw error;
+  }
+};
 export default api;
