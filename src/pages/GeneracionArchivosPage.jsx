@@ -123,11 +123,12 @@ const GeneracionArchivosPage = ({ showToast }) => {
                     >
                         {generando ? 'Generando...' : 'Generar Archivo'}
                     </button>
-
                     {resultado && (
                         <div className={styles.resultado}>
                             <p>Archivo generado para <strong>{resultado.financiera.toUpperCase()}</strong>.</p>
-                            <p>Código de comercio: <strong>{resultado.codigoComercio}</strong></p>
+                            {resultado.codigoComercio && (
+                                <p>Código de comercio: <strong>{resultado.codigoComercio}</strong></p>
+                            )}
                             <p>Registros: <strong>{resultado.registros}</strong></p>
                             <p>Importe total: <strong>{resultado.importe}</strong></p>
                             <button className={styles.btnDescargar} onClick={handleDescargar}>
