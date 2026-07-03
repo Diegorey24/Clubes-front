@@ -16,6 +16,7 @@ const GeneracionArchivosPage = ({ showToast }) => {
     const [emision, setEmision] = useState('');
     const [resultado, setResultado] = useState(null);
     const [generando, setGenerando] = useState(false);
+    const [marcando, setMarcando] = useState(false);
 
     const handleSeleccionar = (id) => {
         setFinancieraSeleccionada(id);
@@ -84,6 +85,25 @@ const GeneracionArchivosPage = ({ showToast }) => {
         }
     };
 
+    const handleMarcarPago = async () => {
+        const confirmar = window.confirm(
+            `¿Estás segura? Esto va a marcar todas las deudas de ${financieraSeleccionada.toUpperCase()} como pagas. Esta acción no se puede deshacer.`
+        );
+        if (!confirmar) return;
+
+        setMarcando(true);
+        try {
+            const response = await api.post(`/generacion-archivos/marcar-pago/${financieraSeleccionada}`);
+            const cant = response.data.cuentasMarcadas;
+            showToast(`Se ${cant === 1 ? 'marcó 1 cuenta' : `marcaron ${cant} cuentas`} como paga${cant === 1 ? '' : 's'}`, 'success');
+        } catch (err) {
+            console.error('Error al marcar pago:', err);
+            showToast('Error al marcar como pagado', 'error');
+        } finally {
+            setMarcando(false);
+        }
+    };
+
     return (
         <div className={styles.page}>
             <div className={styles.container}>
@@ -133,6 +153,13 @@ const GeneracionArchivosPage = ({ showToast }) => {
                             <p>Importe total: <strong>{resultado.importe}</strong></p>
                             <button className={styles.btnDescargar} onClick={handleDescargar}>
                                 Descargar .txt
+                            </button>
+                            <button
+                                className={styles.btnDescargar}
+                                onClick={handleMarcarPago}
+                                disabled={marcando}
+                            >
+                                {marcando ? 'Marcando...' : 'Marcar como pagado'}
                             </button>
                         </div>
                     )}
