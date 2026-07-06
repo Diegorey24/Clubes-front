@@ -305,4 +305,14 @@ export const generarArchivo = async (financiera, emision) => {
     throw error;
   }
 };
+
+export const getParametrosDebitos = async () => {
+  const response = await api.get('/parametros-debitos');
+  return response.data;
+};
+
+export const updateParametroDebito = async (nombre, data) => {
+  const response = await api.put(`/parametros-debitos/${encodeURIComponent(nombre)}`, data);
+  return response.data;
+};
 export default api;
