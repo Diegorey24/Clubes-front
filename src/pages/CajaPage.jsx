@@ -160,7 +160,6 @@ const CajaPage = ({ usuario, showToast }) => {
                 isOpen={showCobroModal}
                 onClose={() => setShowCobroModal(false)}
                 onSuccess={() => {
-                    setShowCobroModal(false);
                     loadMovimientos();
                 }}
                 caja={caja}

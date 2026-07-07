@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { buscarCuotasPendientes, cobrarCuotasSocio, getMediosPago } from '../../services/api';
 import styles from './CobroSocioModal.module.css';
+import jsPDF from 'jspdf';
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(amount || 0);
@@ -27,6 +28,7 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
     const [mediosPago, setMediosPago] = useState([]);
     const [paso, setPaso] = useState('cuotas'); // 'cuotas' | 'pago'
     const [formasPago, setFormasPago] = useState([nuevaFormaPago()]);
+    const [reciboData, setReciboData] = useState(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -137,7 +139,7 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
         }
         setSubmitting(true);
         try {
-            await cobrarCuotasSocio({
+            const result = await cobrarCuotasSocio({
                 caja,
                 usuario,
                 ci: socio.SocDocIde,
@@ -149,12 +151,87 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                 })),
             });
             showToast(`Cobro registrado: ${formatCurrency(total)}`, 'success');
+            setReciboData({
+                nroDoc: result.nroDoc,
+                nombreSocio: socio.SocNom?.trim(),
+                ci: socio.SocDocIde,
+                cuotas: cuotas.filter(c => selectedIds.has(c.Id)),
+                formasPago,
+                mediosPago,
+                total,
+                fecha: new Date().toLocaleDateString('es-UY'),
+                usuario,
+                caja,
+            });
             onSuccess();
+
         } catch (err) {
             showToast(err.response?.data?.error || 'Error al registrar el cobro', 'error');
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const generarPDF = () => {
+        const doc = new jsPDF();
+        const { nroDoc, nombreSocio, ci, cuotas, formasPago, mediosPago, total, fecha, usuario, caja } = reciboData;
+
+        // Encabezado
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Club Aguada', 105, 20, { align: 'center' });
+
+        doc.setFontSize(13);
+        doc.text('Recibo de Cobro', 105, 30, { align: 'center' });
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Recibo N°: ${nroDoc}`, 20, 45);
+        doc.text(`Fecha: ${fecha}`, 20, 52);
+        doc.text(`Caja: ${caja}  |  Usuario: ${usuario}`, 20, 59);
+
+        // Datos del socio
+        doc.setFont('helvetica', 'bold');
+        doc.text('Socio:', 20, 72);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${nombreSocio}  —  CI: ${ci}`, 20, 79);
+
+        // Detalle de cuotas
+        doc.setFont('helvetica', 'bold');
+        doc.text('Detalle:', 20, 92);
+        doc.setFont('helvetica', 'normal');
+
+        let y = 99;
+        for (const c of cuotas) {
+            const periodo = formatAniomes(c.Aniomes);
+            const rubro = c.RubroNombre?.trim() || `Rubro ${c.Rubro}`;
+            const importe = formatCurrency(c.Importe);
+            doc.text(`${periodo}  ${rubro}`, 20, y);
+            doc.text(importe, 190, y, { align: 'right' });
+            y += 7;
+        }
+
+        // Total
+        doc.line(20, y + 2, 190, y + 2);
+        y += 8;
+        doc.setFont('helvetica', 'bold');
+        doc.text('Total:', 20, y);
+        doc.text(formatCurrency(total), 190, y, { align: 'right' });
+
+        // Formas de pago
+        y += 12;
+        doc.setFont('helvetica', 'bold');
+        doc.text('Forma de pago:', 20, y);
+        doc.setFont('helvetica', 'normal');
+        y += 7;
+        for (const fp of formasPago) {
+            const mp = mediosPago.find(m => String(m.IdMedioPago) === String(fp.medioPago));
+            const desc = mp?.Descripcion?.trim() || `Medio ${fp.medioPago}`;
+            doc.text(`${desc}: ${formatCurrency(fp.importe)}`, 20, y);
+            y += 7;
+        }
+
+        doc.save(`recibo_${nroDoc}.pdf`);
     };
 
     return (
@@ -239,6 +316,7 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                                 {socio.SocNom?.trim()} — CI {socio.SocDocIde} — Total a cobrar: {formatCurrency(total)}
                             </div>
 
+
                             <div className={styles.cuotasList}>
                                 {formasPago.map((fp, index) => (
                                     <div className={styles.formaPagoRow} key={index}>
@@ -316,6 +394,11 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                                 >
                                     {submitting ? 'Procesando...' : 'Cobrar'}
                                 </button>
+                                {reciboData && (
+                                    <button type="button" className="btn-secondary" onClick={generarPDF}>
+                                        Descargar recibo
+                                    </button>
+                                )}
                             </>
                         )}
                     </div>
