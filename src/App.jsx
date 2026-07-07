@@ -22,6 +22,8 @@ import CajaPage from './pages/CajaPage';
 import CajaHistoricoPage from './pages/CajaHistoricoPage';
 import GeneracionArchivosPage from './pages/GeneracionArchivosPage';
 import ParametrosDebitosPage from './pages/ParametrosDebitosPage';
+import PortalSocioLoginPage from './pages/PortalSocioLoginPage';
+import PortalSocioPage from './pages/PortalSocioPage';
 import './App.css';
 
 const getUsuarioGuardado = () => {
@@ -64,6 +66,23 @@ function App() {
     localStorage.removeItem('usuario');
   };
 
+  const [socio, setSocio] = useState(() => {
+    try {
+      const data = localStorage.getItem('socio');
+      return data ? JSON.parse(data) : null;
+    } catch { return null; }
+  });
+
+  const handleLoginSocio = (s) => {
+    setSocio(s);
+    localStorage.setItem('socio', JSON.stringify(s));
+  };
+
+  const handleLogoutSocio = () => {
+    setSocio(null);
+    localStorage.removeItem('socio');
+  };
+
   return (
     <Router basename="/clubes">
       <div className="app">
@@ -90,6 +109,8 @@ function App() {
           <Route path="/socios/edit/:id" element={<PrivateRoute usuario={usuario}><SocioEditPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/generacion-archivos" element={<PrivateRoute usuario={usuario}><GeneracionArchivosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/parametros-debitos" element={<PrivateRoute usuario={usuario}><ParametrosDebitosPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/portal-socio/login" element={socio ? <Navigate to="/portal-socio" replace /> : <PortalSocioLoginPage onLogin={handleLoginSocio} />} />
+          <Route path="/portal-socio" element={socio ? <PortalSocioPage socio={socio} onLogout={handleLogoutSocio} showToast={showToast} /> : <Navigate to="/portal-socio/login" replace />} />
         </Routes>
         <Toast
           message={toastMessage}

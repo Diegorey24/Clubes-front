@@ -315,4 +315,25 @@ export const updateParametroDebito = async (nombre, data) => {
   const response = await api.put(`/parametros-debitos/${encodeURIComponent(nombre)}`, data);
   return response.data;
 };
+
+export const loginSocio = async (ci, contrasena) => {
+  const response = await api.post('/portal-socio/login', { ci, contrasena });
+  return response.data;
+};
+
+export const getFichaSocio = async (ci) => {
+  const response = await api.get(`/portal-socio/ficha/${ci}`);
+  return response.data;
+};
+
+export const getCuentaCorrienteSocio = async (ci) => {
+  const response = await api.get(`/portal-socio/cuenta-corriente/${ci}`);
+  return response.data;
+};
+
+export const actualizarDatosSocio = async (ci, datos) => {
+  const response = await api.put(`/portal-socio/ficha/${ci}`, datos);
+  return response.data;
+};
+
 export default api;
