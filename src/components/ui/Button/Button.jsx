@@ -6,6 +6,7 @@ import styles from './Button.module.css';
  *
  * Variantes: primary | secondary | success | danger | ghost | outline | ghost-danger
  *            | soft | soft-success | soft-danger (fondo pastel, look más etéreo)
+ *            | glass (translúcido, para usar sobre headers con fondo de color)
  * Tamaños: sm | md | lg
  *
  * Ejemplos:

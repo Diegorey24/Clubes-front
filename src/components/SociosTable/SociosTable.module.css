@@ -53,16 +53,6 @@
     color: var(--gray-500);
 }
 
-.pill {
-    display: inline-block;
-    padding: 0.2rem 0.65rem;
-    border-radius: 999px;
-    background: var(--primary-50, hsl(210, 76%, 96%));
-    color: var(--primary-700);
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
 .actionsHeader {
     width: 1%;
     white-space: nowrap;
@@ -87,6 +77,36 @@
 .emptyState p {
     color: var(--gray-500);
     font-size: 0.9375rem;
+}
+
+.confirmSummary {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--radius-lg);
+    padding: 0.85rem 1rem;
+    text-align: left;
+}
+
+.confirmName {
+    font-weight: 700;
+    color: var(--gray-900);
+    font-size: 0.9375rem;
+    text-transform: uppercase;
+}
+
+.confirmMeta {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+    color: var(--gray-500);
+    font-size: 0.8125rem;
+}
+
+.confirmError {
+    margin: var(--spacing-md) 0 0;
+    color: var(--error-600);
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
 /* Responsive */

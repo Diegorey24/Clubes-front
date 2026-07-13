@@ -190,6 +190,21 @@
     transform: translateY(-1px);
 }
 
+/* Variante "glass": para usar sobre headers/fondos de color (el mismo
+   criterio que Badge variant="glass"). */
+.glass {
+    background: rgba(255, 255, 255, 0.16);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.glass:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.26);
+    transform: translateY(-1px);
+}
+
 /* ===== Loading ===== */
 .spinner {
     width: 1em;

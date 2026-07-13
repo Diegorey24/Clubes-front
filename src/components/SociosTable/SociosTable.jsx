@@ -1,23 +1,43 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteSocio } from '../../services/api';
-import { TableActions } from '../ui';
+import { TableActions, Badge, ConfirmDialog } from '../ui';
 import styles from './SociosTable.module.css';
 
 const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/socios' }) => {
     const navigate = useNavigate();
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
+
     const handleRowClick = (id) => {
         navigate(`${detailPath}/${id}`);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('¿Está seguro que desea dar de baja a este socio? Esta acción moverá al socio al histórico.')) {
-            try {
-                await deleteSocio(id);
-                if (onSocioDeleted) onSocioDeleted();
-            } catch (error) {
-                console.error('Error deleting socio:', error);
-                alert('Error al dar de baja al socio');
-            }
+    const requestDelete = (socio) => {
+        setDeleteError('');
+        setDeleteTarget(socio);
+    };
+
+    const closeConfirm = () => {
+        if (deleting) return;
+        setDeleteTarget(null);
+        setDeleteError('');
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        setDeleteError('');
+        try {
+            await deleteSocio(deleteTarget.SocNro);
+            setDeleteTarget(null);
+            if (onSocioDeleted) onSocioDeleted();
+        } catch (error) {
+            console.error('Error deleting socio:', error);
+            setDeleteError('No se pudo dar de baja al socio. Intentá nuevamente.');
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -59,7 +79,7 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
                             <td className={styles.nameCell}>{socio.PrimerNombre} {socio.PrimerApellido}</td>
                             <td>
                                 {socio.CategoriaNombre
-                                    ? <span className={styles.pill}>{socio.CategoriaNombre}</span>
+                                    ? <Badge variant="primary">{socio.CategoriaNombre}</Badge>
                                     : <span className={styles.muted}>-</span>}
                             </td>
                             <td className={styles.muted}>{socio.RadioNombre || '-'}</td>
@@ -68,7 +88,7 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
                                     <TableActions
                                         onView={() => navigate(`${detailPath}/${socio.SocNro}`)}
                                         onEdit={() => navigate(`/socios/edit/${socio.SocNro}`)}
-                                        onDelete={() => handleDelete(socio.SocNro)}
+                                        onDelete={() => requestDelete(socio)}
                                     />
                                 </td>
                             )}
@@ -76,6 +96,32 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
                     ))}
                 </tbody>
             </table>
+
+            <ConfirmDialog
+                isOpen={!!deleteTarget}
+                title="¿Dar de baja al socio?"
+                description="Esta acción moverá al socio al histórico. Vas a poder consultarlo ahí más adelante."
+                confirmLabel="Sí, dar de baja"
+                cancelLabel="Cancelar"
+                variant="danger"
+                loading={deleting}
+                onConfirm={confirmDelete}
+                onCancel={closeConfirm}
+            >
+                {deleteTarget && (
+                    <div className={styles.confirmSummary}>
+                        <div className={styles.confirmName}>
+                            {deleteTarget.PrimerNombre} {deleteTarget.PrimerApellido}
+                        </div>
+                        <div className={styles.confirmMeta}>
+                            <span>N.° {deleteTarget.SocNro}</span>
+                            <span>·</span>
+                            <span>CI {deleteTarget.SocDocIde}</span>
+                        </div>
+                    </div>
+                )}
+                {deleteError && <p className={styles.confirmError}>{deleteError}</p>}
+            </ConfirmDialog>
         </div>
     );
 };
