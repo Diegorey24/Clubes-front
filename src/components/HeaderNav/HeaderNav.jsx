@@ -34,12 +34,12 @@ const HeaderNav = ({ usuario, onLogout }) => {
                 <Link to="/" className={styles.brand}>
                     <div className={styles.brandIcon}>
                         <img
-                            src={`${import.meta.env.BASE_URL}Macrosoft.png`}
+                            src={`${import.meta.env.BASE_URL}Macrosoft.svg`}
                             alt=""
                             className={styles.brandIconImg}
                         />
                     </div>
-                    <span className={styles.brandText}>Gestión de Socios</span>
+                    {/* <span className={styles.brandText}>Gestión de Socios</span> */}
                 </Link>
 
                 <nav className={styles.nav}>
