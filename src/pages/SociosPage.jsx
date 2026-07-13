@@ -103,7 +103,7 @@ const SociosPage = ({ showToast }) => {
     return (
         <div className={styles.page}>
             <PageHeader
-                title="Listado de Socios"
+                title="Socios"
                 actions={
                     <>
                         <Button to="/socios-historicos" variant="soft" icon={HistoryIcon}>

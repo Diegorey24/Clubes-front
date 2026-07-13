@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import HeaderNav from './components/HeaderNav/HeaderNav';
+import Footer from './components/Footer/Footer';
 import Toast from './components/Toast/Toast';
 import Home from './pages/Home';
 import RubrosPage from './pages/RubrosPage';
@@ -87,7 +88,7 @@ function App() {
     <Router basename="/clubes">
       <div className="app">
         {usuario && <HeaderNav usuario={usuario} onLogout={handleLogout} />}
-        <Routes>
+        <main className="main-content"><Routes>
           <Route path="/login" element={usuario ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />} />
           <Route path="/register" element={usuario ? <Navigate to="/" replace /> : <RegisterPage />} />
 
@@ -111,7 +112,8 @@ function App() {
           <Route path="/parametros-debitos" element={<PrivateRoute usuario={usuario}><ParametrosDebitosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/portal-socio/login" element={socio ? <Navigate to="/portal-socio" replace /> : <PortalSocioLoginPage onLogin={handleLoginSocio} />} />
           <Route path="/portal-socio" element={socio ? <PortalSocioPage socio={socio} onLogout={handleLogoutSocio} showToast={showToast} /> : <Navigate to="/portal-socio/login" replace />} />
-        </Routes>
+        </Routes></main>
+        {(usuario || socio) && <Footer />}
         <Toast
           message={toastMessage}
           type={toastType}

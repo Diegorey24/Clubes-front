@@ -162,27 +162,66 @@
     background: var(--gray-50);
 }
 
+.dropdownTriggerActive {
+    color: var(--primary-600);
+    background: var(--gray-50);
+}
+
+.chevron {
+    transition: transform var(--transition-fast);
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
+/* El dropdown ahora se controla por estado de React (click para abrir,
+   click afuera o Escape para cerrar) en vez de :hover puro: así funciona
+   también en mobile/touch, donde no existe un hover sostenido. */
 .dropdownContent {
-    visibility: hidden;
-    opacity: 0;
     position: absolute;
     top: 100%;
     right: 0;
+    margin-top: var(--spacing-xs);
     background-color: white;
-    min-width: 220px;
+    min-width: 260px;
     box-shadow: var(--shadow-xl);
     border-radius: var(--radius-lg);
     padding: var(--spacing-xs);
     z-index: 1000;
-    transform: translateY(10px);
-    transition: all var(--transition-normal);
     border: 1px solid var(--gray-100);
+    animation: dropdownIn 0.15s ease-out;
 }
 
-.dropdown:hover .dropdownContent {
-    visibility: visible;
-    opacity: 1;
-    transform: translateY(0);
+@keyframes dropdownIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdownGroup {
+    padding: var(--spacing-xs) 0;
+}
+
+.dropdownGroup + .dropdownGroup {
+    margin-top: var(--spacing-xs);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--gray-100);
+}
+
+.dropdownGroupLabel {
+    display: block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    color: var(--gray-400);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 .dropdownItem {
@@ -218,7 +257,9 @@
     }
 
     .dropdownContent {
-        right: -50px;
+        right: -16px;
+        min-width: 220px;
+        max-width: calc(100vw - 2rem);
     }
 }
 

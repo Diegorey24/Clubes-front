@@ -212,6 +212,22 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                 <Title variant="section">Información personal</Title>
                                 <div className={styles.grid}>
                                     <div className={styles.field}>
+                                        <span className={styles.label}>Primer Nombre</span>
+                                        <span className={styles.value}>{socio.PrimerNombre || '-'}</span>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <span className={styles.label}>Segundo Nombre</span>
+                                        <span className={styles.value}>{socio.SegundoNombre || '-'}</span>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <span className={styles.label}>Primer Apellido</span>
+                                        <span className={styles.value}>{socio.PrimerApellido || '-'}</span>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <span className={styles.label}>Segundo Apellido</span>
+                                        <span className={styles.value}>{socio.SegundoApellido || '-'}</span>
+                                    </div>
+                                    <div className={styles.field}>
                                         <span className={styles.label}>Cédula de Identidad</span>
                                         <span className={styles.value}>{socio.SocDocIde}</span>
                                     </div>
@@ -227,7 +243,7 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                     </div>
                                     <div className={styles.field}>
                                         <span className={styles.label}>Nacionalidad</span>
-                                        <span className={styles.value}>{socio.NacCod || '-'}</span>
+                                        <span className={styles.value}>{socio.NacDsc || socio.NacCod || '-'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -265,7 +281,7 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                     </div>
                                     <div className={styles.field}>
                                         <span className={styles.label}>Categoría</span>
-                                        <span className={styles.value}>{socio.CatCod || '-'}</span>
+                                        <span className={styles.value}>{socio.CatNom || socio.CatCod || '-'}</span>
                                     </div>
                                     <div className={styles.field}>
                                         <span className={styles.label}>Forma de Pago</span>
@@ -273,7 +289,7 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                     </div>
                                     <div className={styles.field}>
                                         <span className={styles.label}>Radio</span>
-                                        <span className={styles.value}>{socio.RadCod || '-'}</span>
+                                        <span className={styles.value}>{socio.RADNOM || socio.RadCod || '-'}</span>
                                     </div>
                                 </div>
                             </div>

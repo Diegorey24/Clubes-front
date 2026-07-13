@@ -1,115 +1,207 @@
 .page {
     padding: var(--spacing-xl);
-    max-width: 1000px;
+    background-color: var(--gray-50);
+    min-height: 100vh;
+}
+
+.pageInner {
+    max-width: 1100px;
     margin: 0 auto;
 }
 
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: var(--spacing-md);
+    padding: 0.35rem 0;
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.backLink svg {
+    transition: transform var(--transition-fast);
+}
+
+.backLink:hover {
+    color: var(--primary-600);
+}
+
+.backLink:hover svg {
+    transform: translateX(-3px);
+}
+
+.container {
+    background-color: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
 .header {
-    margin-bottom: var(--spacing-xl);
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
+    color: white;
+    padding: var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
 }
 
 .title {
-    font-size: 2rem;
+    font-size: 1.875rem;
     font-weight: 700;
-    color: var(--gray-900);
+    margin: 0 0 0.35rem;
+    color: white;
 }
 
-.form {
-    background: white;
+.subtitle {
+    margin: 0;
+    opacity: 0.85;
+    font-size: 1rem;
+}
+
+.content {
     padding: var(--spacing-xl);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
 }
 
-.sectionTitle {
-    font-size: 1.25rem;
-    color: var(--primary-700);
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-xs);
-    border-bottom: 2px solid var(--primary-100);
+.section {
+    margin-bottom: var(--spacing-2xl);
+}
+
+.section:last-child {
+    margin-bottom: 0;
+}
+
+/* Separador sutil entre secciones consecutivas, mismo patrón que en
+   SocioDetailsPage. */
+.section + .section {
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid var(--gray-100);
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-xl);
+}
+
+.grid + .grid {
+    margin-top: var(--spacing-lg);
+}
+
+/* Campos que necesitan más espacio (ej. Domicilio) para no truncar
+   direcciones largas: ocupan todo el ancho de la fila. */
+.formGroupWide {
+    grid-column: 1 / -1;
+}
+
+/* Fila fija de 3 columnas para agrupar Email / Teléfono / Celular. */
+.gridThree {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .formGroup {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 0.4rem;
 }
 
 .formGroup label {
-    font-weight: 500;
-    color: var(--gray-700);
-    font-size: 0.875rem;
+    color: var(--gray-500);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .formGroup input,
 .formGroup select {
-    padding: 0.625rem;
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
     font-size: 0.9375rem;
+    color: var(--gray-900);
+    font-family: inherit;
+    background: white;
     transition: all var(--transition-fast);
 }
 
 .formGroup input:focus,
 .formGroup select:focus {
-    border-color: var(--primary-500);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
 }
 
 .actions {
     display: flex;
     justify-content: flex-end;
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-xl);
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-2xl);
     padding-top: var(--spacing-lg);
     border-top: 1px solid var(--gray-100);
 }
 
-.saveButton {
-    background: var(--primary-600);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: var(--radius-lg);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-fast);
+.loadingOverlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    gap: var(--spacing-md);
+    color: var(--gray-500);
 }
 
-.saveButton:hover:not(:disabled) {
-    background: var(--primary-700);
-    transform: translateY(-1px);
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--gray-200);
+    border-top-color: var(--primary-600);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
-.cancelButton {
-    background: white;
-    color: var(--gray-700);
-    padding: 0.75rem 1.5rem;
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-lg);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-fast);
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-.cancelButton:hover {
-    background: var(--gray-50);
-}
-
-@media (max-width: 768px) {
+@media (max-width: 640px) {
     .page {
         padding: var(--spacing-md);
     }
 
-    .grid {
+    .header {
+        padding: var(--spacing-lg);
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .content {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .grid,
+    .gridThree {
         grid-template-columns: 1fr;
+    }
+
+    .actions {
+        flex-direction: column-reverse;
+    }
+
+    .actions > * {
+        width: 100%;
+        justify-content: center;
     }
 }

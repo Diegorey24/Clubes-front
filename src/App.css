@@ -170,6 +170,7 @@ body {
 
 /* ===== MAIN CONTENT ===== */
 .main-content {
+  flex: 1;
   animation: fadeIn 0.7s ease-out;
 }
 
