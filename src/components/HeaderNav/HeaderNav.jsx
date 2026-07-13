@@ -33,11 +33,13 @@ const HeaderNav = ({ usuario, onLogout }) => {
             <div className={styles.container}>
                 <Link to="/" className={styles.brand}>
                     <div className={styles.brandIcon}>
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <path d="M16 2L4 8V14C4 22 16 30 16 30C16 30 28 22 28 14V8L16 2Z" fill="currentColor" />
-                        </svg>
+                        <img
+                            src={`${import.meta.env.BASE_URL}Macrosoft.png`}
+                            alt=""
+                            className={styles.brandIconImg}
+                        />
                     </div>
-                    <span className={styles.brandText}>Gestión de Clubes</span>
+                    <span className={styles.brandText}>Gestión de Socios</span>
                 </Link>
 
                 <nav className={styles.nav}>
@@ -159,6 +161,11 @@ const HeaderNav = ({ usuario, onLogout }) => {
 
                     {usuario && (
                         <div className={styles.userMenu}>
+                            <img
+                                src={`${import.meta.env.BASE_URL}cliente.svg`}
+                                alt="Logo del club"
+                                className={styles.clientLogo}
+                            />
                             <span className={styles.userName}>{usuario.nombre}</span>
                             <button className={styles.logoutButton} onClick={onLogout} title="Cerrar sesión">
                                 <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">

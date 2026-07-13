@@ -85,7 +85,7 @@ function App() {
   };
 
   return (
-    <Router basename="/clubes">
+    <Router basename="/gestion-de-socios">
       <div className="app">
         {usuario && <HeaderNav usuario={usuario} onLogout={handleLogout} />}
         <main className="main-content"><Routes>

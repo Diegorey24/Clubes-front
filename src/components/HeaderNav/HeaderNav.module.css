@@ -34,21 +34,19 @@
 }
 
 .brandIcon {
-    width: 40px;
-    height: 40px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
-    color: white;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
     transition: all var(--transition-normal);
 }
 
+.brandIconImg {
+    height: 38px;
+    width: auto;
+    display: block;
+}
+
 .brand:hover .brandIcon {
-    box-shadow: var(--shadow-lg);
-    transform: rotate(5deg);
+    transform: scale(1.03);
 }
 
 .brandText {
@@ -132,6 +130,10 @@
 
     .navLink {
         padding: var(--spacing-sm);
+    }
+
+    .clientLogo {
+        display: none;
     }
 }
 
@@ -270,6 +272,17 @@
     margin-left: var(--spacing-md);
     padding-left: var(--spacing-md);
     border-left: 1px solid var(--gray-200);
+}
+
+/* Identidad del club/cliente que usa la app: presente pero secundaria,
+   junto al usuario logueado, sin competir con la marca del producto
+   (Macrosoft) que va a la izquierda. */
+.clientLogo {
+    height: 24px;
+    width: auto;
+    max-width: 100px;
+    object-fit: contain;
+    opacity: 0.9;
 }
 
 .userName {

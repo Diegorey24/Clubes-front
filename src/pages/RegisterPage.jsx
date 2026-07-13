@@ -44,7 +44,7 @@ function RegisterPage() {
               <path d="M16 2L4 8V14C4 22 16 30 16 30C16 30 28 22 28 14V8L16 2Z" fill="currentColor" />
             </svg>
           </div>
-          <span className={styles.brandText}>Gestión de Clubes</span>
+          <span className={styles.brandText}>Gestión de Socios</span>
         </div>
 
         <h1 className={styles.title}>Crear cuenta</h1>
