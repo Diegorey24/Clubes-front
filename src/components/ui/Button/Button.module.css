@@ -190,6 +190,17 @@
     transform: translateY(-1px);
 }
 
+.soft-warning {
+    background: hsl(30, 95%, 94%);
+    color: hsl(25, 85%, 40%);
+    border: 1px solid transparent;
+}
+
+.soft-warning:hover:not(:disabled) {
+    background: hsl(30, 95%, 88%);
+    transform: translateY(-1px);
+}
+
 /* Variante "glass": para usar sobre headers/fondos de color (el mismo
    criterio que Badge variant="glass"). */
 .glass {
@@ -222,7 +233,8 @@
 .ghost-danger .spinner,
 .soft .spinner,
 .soft-success .spinner,
-.soft-danger .spinner {
+.soft-danger .spinner,
+.soft-warning .spinner {
     border: 2px solid var(--gray-300);
     border-top-color: var(--gray-600);
 }

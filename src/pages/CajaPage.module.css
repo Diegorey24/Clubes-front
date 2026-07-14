@@ -4,153 +4,238 @@
     margin: 0 auto;
 }
 
-.header {
+/* ===== Tarjetas de saldo / medios de pago ===== */
+.statsRow {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-xl);
     flex-wrap: wrap;
     gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
 }
 
-.title {
-    font-size: 2rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin: 0;
-}
-
-.saldoBox {
-    padding: 0.75rem 1.5rem;
+.saldoCard {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.9rem 1.5rem 0.9rem 1rem;
+    background: white;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-sm);
     border-radius: var(--radius-lg);
-    font-weight: 700;
-    font-size: 1.25rem;
-    background: var(--primary-50);
+}
+
+.saldoIconWrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: hsl(210, 76%, 95%);
     color: var(--primary-700);
 }
 
-.saldoBox.negativo {
-    background: var(--error-50);
-    color: var(--error-700);
+.saldoCard.negativo .saldoIconWrap {
+    background: hsl(0, 84%, 95%);
+    color: var(--error-600);
 }
 
-.medioPagoBox {
+.saldoText {
     display: flex;
-    gap: var(--spacing-md);
-    flex-wrap: wrap;
-    margin-bottom: var(--spacing-lg);
+    flex-direction: column;
+    gap: 0.15rem;
 }
 
-.medioPagoItem {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-lg);
-    background: var(--gray-50);
-    border: 1px solid var(--gray-200);
-    font-size: 0.9rem;
-}
-
-.medioPagoItem .nombre {
-    color: var(--gray-600);
-    margin-right: 0.5rem;
-}
-
-.medioPagoItem .monto {
-    font-weight: 700;
-    font-family: monospace;
-    color: var(--gray-800);
-}
-
-.actions {
-    display: flex;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-    flex-wrap: wrap;
-}
-
-.btnDanger {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-md) var(--spacing-lg);
-    border: none;
-    border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, var(--error-600), var(--error-500));
-    color: white;
-    font-size: 0.9375rem;
+.statLabel {
+    color: var(--gray-500);
     font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-    margin-left: auto;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.btnDanger:hover {
-    transform: translateY(-2px);
+.saldoValue {
+    color: var(--primary-700);
+    font-weight: 700;
+    font-size: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
 }
 
-.tableContainer {
-    overflow-x: auto;
-    border: 1px solid var(--gray-200);
+.saldoCard.negativo .saldoValue {
+    color: var(--error-600);
+}
+
+.medioPagoCard {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-100);
     border-radius: var(--radius-lg);
+    min-width: 140px;
+}
+
+.medioPagoValue {
+    font-weight: 700;
+    font-size: 1.0625rem;
+    color: var(--gray-800);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+/* ===== Fila de acciones: el grupo de operaciones de caja a la izquierda
+   (estética "soft" consistente entre sí) y Cobrar Cuota a Socio destacado
+   a la derecha, todos del mismo tamaño ===== */
+.actionsRow {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    max-width: 1080px;
+    margin: 0 auto var(--spacing-xl);
+}
+
+.actionsGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.actionBtn {
+    width: 190px;
+}
+
+/* ===== Barra sobre la tabla: acceso al histórico (no es una acción de
+   caja, es la navegación hacia el histórico de esta tabla) ===== */
+.tableToolbar {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: var(--spacing-sm);
+}
+
+/* ===== Tabla de movimientos ===== */
+.tableContainer {
     background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    border: 1px solid var(--gray-100);
 }
 
 .table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 
 .table th {
-    background-color: var(--gray-50);
-    color: var(--gray-600);
+    background: transparent;
+    color: var(--gray-500);
     font-weight: 600;
-    text-align: left;
-    padding: 1rem;
-    border-bottom: 1px solid var(--gray-200);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid var(--gray-100);
 }
 
 .table td {
-    padding: 1rem;
-    border-bottom: 1px solid var(--gray-100);
-    color: var(--gray-800);
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid var(--gray-50);
+    color: var(--gray-700);
+    text-align: center;
+    vertical-align: middle;
 }
 
 .table tr:last-child td {
     border-bottom: none;
 }
 
+.table tr:hover td {
+    background-color: var(--gray-50);
+}
+
+.nameCell {
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.muted {
+    color: var(--gray-400);
+    font-variant-numeric: tabular-nums;
+}
+
 .debe {
-    color: var(--success-600, #16a34a);
-    font-family: monospace;
-    text-align: right;
+    color: var(--success-600);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
 }
 
 .haber {
     color: var(--error-600);
-    font-family: monospace;
-    text-align: right;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
 }
 
 .noData {
     color: var(--gray-500);
     text-align: center;
-    padding: 2rem;
+    padding: var(--spacing-xl);
+    background-color: var(--gray-50);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--gray-200);
+    font-size: 0.9375rem;
 }
 
 .error {
     padding: var(--spacing-lg);
-    background: var(--error-50);
-    color: var(--error-700);
+    background: hsl(0, 84%, 96%);
+    color: var(--error-700, var(--error-600));
     border-radius: var(--radius-lg);
     text-align: center;
     font-weight: 500;
 }
 
-.footer {
-    margin-top: var(--spacing-lg);
-    display: flex;
-    justify-content: flex-end;
+@media (max-width: 640px) {
+    .page {
+        padding: var(--spacing-md);
+    }
+
+    .actionsRow {
+        flex-direction: column;
+    }
+
+    .actionsGroup {
+        flex-direction: column;
+    }
+
+    .actionBtn {
+        width: 100%;
+    }
+
+    .statsRow {
+        flex-direction: column;
+    }
+
+    .saldoCard,
+    .medioPagoCard {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .tableContainer {
+        overflow-x: auto;
+    }
+
+    .table th,
+    .table td {
+        white-space: nowrap;
+    }
 }
