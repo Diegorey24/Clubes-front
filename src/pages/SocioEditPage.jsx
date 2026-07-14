@@ -93,11 +93,22 @@ const SocioEditPage = ({ showToast }) => {
         return normalize(a) !== normalize(b);
     };
 
+    // Campos que el backend espera como número (smallint/int) aunque los
+    // <select> del formulario los manejen como string.
+    const NUMERIC_FIELDS = ['CatCod', 'RadCod', 'ForPagCod', 'NacCod'];
+
+    const castFieldValue = (key, value) => {
+        if (!NUMERIC_FIELDS.includes(key)) return value;
+        if (value === '' || value === null || value === undefined) return null;
+        const num = Number(value);
+        return Number.isNaN(num) ? value : num;
+    };
+
     const getChangedFields = () => {
         const changed = {};
         Object.keys(formData).forEach((key) => {
             if (valuesDiffer(formData[key], originalData?.[key])) {
-                changed[key] = formData[key];
+                changed[key] = castFieldValue(key, formData[key]);
             }
         });
         return changed;

@@ -26,6 +26,29 @@ const EditIcon = (
     </svg>
 );
 
+const DebtIcon = (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m9-8a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+const InfoIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+// Por defecto, la cuenta corriente se filtra desde el primer día del mes,
+// un año atrás, hasta hoy. Por ejemplo si hoy es 14/07/2026, se busca desde
+// el 01/07/2025. Esto evita traer demasiados registros en cada llamado,
+// cubriendo igualmente cualquier movimiento emitido a comienzos de mes.
+const getDefaultDateRange = () => {
+    const fmt = (d) => d.toISOString().slice(0, 10);
+    const end = new Date();
+    const start = new Date(end.getFullYear() - 1, end.getMonth(), 1);
+    return { start: fmt(start), end: fmt(end) };
+};
+
 const SocioDetailsPage = ({ isHistorical = false }) => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -33,11 +56,12 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const defaultDateRange = getDefaultDateRange();
     const [cuentaCorriente, setCuentaCorriente] = useState([]);
     const [loadingCC, setLoadingCC] = useState(false);
     const [ccLoaded, setCcLoaded] = useState(false);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [startDate, setStartDate] = useState(defaultDateRange.start);
+    const [endDate, setEndDate] = useState(defaultDateRange.end);
     const [activeTab, setActiveTab] = useState('info');
 
     const [cuentaCorrienteFamiliar, setCuentaCorrienteFamiliar] = useState([]);
@@ -46,6 +70,23 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(amount);
+    };
+
+    // El campo "Mes" llega como fecha (ej. 2026-04-01T00:00:00.000Z) pero
+    // representa el período del cargo, así que lo mostramos como MM/AAAA.
+    const formatMonthYear = (dateStr) => {
+        if (!dateStr) return '-';
+        const d = new Date(dateStr);
+        const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+        return `${month}/${d.getUTCFullYear()}`;
+    };
+
+    // startDate/endDate son strings 'AAAA-MM-DD' (del input type=date); se
+    // formatean a mano para evitar corrimientos de huso horario con Date().
+    const formatDateStr = (dateStr) => {
+        if (!dateStr) return '-';
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y}`;
     };
 
     useEffect(() => {
@@ -110,9 +151,10 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
     };
 
     const handleClearDates = () => {
-        setStartDate('');
-        setEndDate('');
-        if (socio) loadCuentaCorriente(socio.SocDocIde, '', '');
+        const { start, end } = getDefaultDateRange();
+        setStartDate(start);
+        setEndDate(end);
+        if (socio) loadCuentaCorriente(socio.SocDocIde, start, end);
     };
 
     if (loading) {
@@ -285,7 +327,7 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                     </div>
                                     <div className={styles.field}>
                                         <span className={styles.label}>Forma de Pago</span>
-                                        <span className={styles.value}>{socio.ForPagCod || '-'}</span>
+                                        <span className={styles.value}>{socio.ForPagNom || socio.ForPagCod  || '-'}</span>
                                     </div>
                                     <div className={styles.field}>
                                         <span className={styles.label}>Radio</span>
@@ -378,14 +420,17 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
 
                             {!loadingCC && cuentaCorriente.length > 0 && (
                                 <div className={styles.debtSummary}>
-                                    <span className={styles.debtLabel}>Total Adeudado:</span>
-                                    <span className={styles.debtValue}>
-                                        {formatCurrency(
-                                            cuentaCorriente
-                                                .filter(mov => !mov.FechaPago)
-                                                .reduce((acc, mov) => acc + (parseFloat(mov.Importe) || 0), 0)
-                                        )}
-                                    </span>
+                                    <span className={styles.debtIconWrap}>{DebtIcon}</span>
+                                    <div className={styles.debtText}>
+                                        <span className={styles.debtLabel}>Total Adeudado</span>
+                                        <span className={styles.debtValue}>
+                                            {formatCurrency(
+                                                cuentaCorriente
+                                                    .filter(mov => !mov.FechaPago)
+                                                    .reduce((acc, mov) => acc + (parseFloat(mov.Importe) || 0), 0)
+                                            )}
+                                        </span>
+                                    </div>
                                 </div>
                             )}
 
@@ -396,11 +441,14 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                     <table className={styles.ccTable}>
                                         <thead>
                                             <tr>
-                                                <th>Id</th>
+                                                <th>Nro Emisión</th>
                                                 <th>N.° Recibo</th>
+                                                <th>Rubro</th>
+                                                <th>Mes</th>
+                                                {/* <th>Fecha Cargo</th> */}
+                                                <th>Fecha Vencimiento</th>
                                                 <th>Importe</th>
-                                                <th>Fecha</th>
-                                                <th>Fecha Pago</th>
+                                                <th>Estado</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -408,9 +456,18 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                                 <tr key={index}>
                                                     <td className={styles.muted}>{mov.Id || '-'}</td>
                                                     <td>{mov.NroRecibo || '-'}</td>
+                                                    <td>{mov.RubDsc?.trim() || '-'}</td>
+                                                    <td>{formatMonthYear(mov.Mes)}</td>
+                                                    {/* <td>{mov.FechaCargo ? new Date(mov.FechaCargo).toLocaleDateString() : '-'}</td> */}
+                                                    <td>{mov.FechaVto ? new Date(mov.FechaVto).toLocaleDateString() : '-'}</td>
                                                     <td className={styles.amount}>{formatCurrency(parseFloat(mov.Importe) || 0)}</td>
-                                                    <td>{mov.Mes ? new Date(mov.Mes).toLocaleDateString() : '-'}</td>
-                                                    <td>{mov.FechaPago ? new Date(mov.FechaPago).toLocaleDateString() : '-'}</td>
+                                                    <td>
+                                                        {mov.FechaPago ? (
+                                                            <Badge variant="success">{new Date(mov.FechaPago).toLocaleDateString()}</Badge>
+                                                        ) : (
+                                                            <Badge variant="danger">Pendiente</Badge>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -426,16 +483,36 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                         <div className={styles.section}>
                             <Title variant="section">Estado de cuenta familiar</Title>
 
+                            <p className={styles.dateNote}>
+                                {InfoIcon}
+                                <span>
+                                    Mostrando movimientos del <strong>{formatDateStr(startDate)}</strong> al{' '}
+                                    <strong>{formatDateStr(endDate)}</strong>. Para cambiar el rango de fechas, modificar en la misma
+                                    pestaña{' '}
+                                    <button
+                                        type="button"
+                                        className={styles.dateNoteLink}
+                                        onClick={() => handleTabChange('cuentaCorriente')}
+                                    >
+                                        Cuenta Corriente
+                                    </button>
+                                    .
+                                </span>
+                            </p>
+
                             {!loadingCCFam && cuentaCorrienteFamiliar.length > 0 && (
                                 <div className={styles.debtSummary}>
-                                    <span className={styles.debtLabel}>Total Adeudado del Grupo:</span>
-                                    <span className={styles.debtValue}>
-                                        {formatCurrency(
-                                            cuentaCorrienteFamiliar
-                                                .filter(mov => !mov.FechaPago)
-                                                .reduce((acc, mov) => acc + (parseFloat(mov.Importe) || 0), 0)
-                                        )}
-                                    </span>
+                                    <span className={styles.debtIconWrap}>{DebtIcon}</span>
+                                    <div className={styles.debtText}>
+                                        <span className={styles.debtLabel}>Total Adeudado del Grupo</span>
+                                        <span className={styles.debtValue}>
+                                            {formatCurrency(
+                                                cuentaCorrienteFamiliar
+                                                    .filter(mov => !mov.FechaPago)
+                                                    .reduce((acc, mov) => acc + (parseFloat(mov.Importe) || 0), 0)
+                                            )}
+                                        </span>
+                                    </div>
                                 </div>
                             )}
 
@@ -447,11 +524,14 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                         <thead>
                                             <tr>
                                                 <th>Integrante</th>
-                                                <th>Id</th>
+                                                <th>Nro Emisión</th>
                                                 <th>N.° Recibo</th>
+                                                <th>Rubro</th>
+                                                <th>Mes</th>
+                                                <th>Fecha Cargo</th>
+                                                <th>Fecha Vencimiento</th>
                                                 <th>Importe</th>
-                                                <th>Fecha</th>
-                                                <th>Fecha Pago</th>
+                                                <th>Estado</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -460,9 +540,18 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                                     <td className={styles.nameCell}>{mov.IntegranteNombre?.trim() || mov.IntegranteCi || '-'}</td>
                                                     <td className={styles.muted}>{mov.Id || '-'}</td>
                                                     <td>{mov.NroRecibo || '-'}</td>
+                                                    <td>{mov.RubDsc?.trim() || '-'}</td>
+                                                    <td>{formatMonthYear(mov.Mes)}</td>
+                                                    <td>{mov.FechaCargo ? new Date(mov.FechaCargo).toLocaleDateString() : '-'}</td>
+                                                    <td>{mov.FechaVto ? new Date(mov.FechaVto).toLocaleDateString() : '-'}</td>
                                                     <td className={styles.amount}>{formatCurrency(parseFloat(mov.Importe) || 0)}</td>
-                                                    <td>{mov.Mes ? new Date(mov.Mes).toLocaleDateString() : '-'}</td>
-                                                    <td>{mov.FechaPago ? new Date(mov.FechaPago).toLocaleDateString() : '-'}</td>
+                                                    <td>
+                                                        {mov.FechaPago ? (
+                                                            <Badge variant="success">{new Date(mov.FechaPago).toLocaleDateString()}</Badge>
+                                                        ) : (
+                                                            <Badge variant="danger">Pendiente</Badge>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>

@@ -176,6 +176,44 @@
     box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
 }
 
+/* Aviso de rango de fechas (cuenta corriente familiar) */
+.dateNote {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin: 0 0 var(--spacing-lg);
+    padding: 0.75rem 1.1rem;
+    background: hsl(210, 76%, 97%);
+    border: 1px solid hsl(210, 76%, 91%);
+    border-radius: var(--radius-lg);
+    color: var(--primary-700);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.dateNote svg {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+}
+
+.dateNoteLink {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: var(--primary-700);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    font-size: inherit;
+    font-family: inherit;
+}
+
+.dateNoteLink:hover {
+    color: var(--primary-800);
+}
+
 /* Tablas de movimientos */
 .tableContainer {
     overflow-x: auto;
@@ -190,13 +228,13 @@
 }
 
 .ccTable th {
-    background-color: transparent;
+    background-color: var(--gray-50);
     color: var(--gray-500);
     font-weight: 600;
     font-size: 0.75rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    text-align: left;
+    text-align: center;
     padding: 0.85rem 1.1rem;
     border-bottom: 1px solid var(--gray-100);
 }
@@ -205,7 +243,8 @@
     padding: 0.85rem 1.1rem;
     border-bottom: 1px solid var(--gray-50);
     color: var(--gray-700);
-    text-transform: uppercase;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .ccTable tr:last-child td {
@@ -217,24 +256,20 @@
 }
 
 .ccTable .amount {
-    font-family: 'SF Mono', 'Roboto Mono', monospace;
-    text-align: right;
-    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
     color: var(--gray-900);
+    letter-spacing: 0.01em;
 }
 
 .ccTable .muted {
     color: var(--gray-400);
+    font-variant-numeric: tabular-nums;
 }
 
 .ccTable .nameCell {
     font-weight: 600;
     color: var(--gray-900);
-}
-
-.ccTable th:last-child,
-.ccTable td:last-child {
-    text-align: right;
 }
 
 .noData {
@@ -254,26 +289,48 @@
 
 .debtSummary {
     margin-bottom: var(--spacing-lg);
-    padding: 0.85rem 1.25rem;
-    background-color: hsl(0, 84%, 97%);
-    border: 1px solid hsl(0, 84%, 92%);
+    padding: 0.9rem 1.5rem 0.9rem 1rem;
+    background-color: white;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-sm);
     border-radius: var(--radius-lg);
     display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.9rem;
+}
+
+.debtIconWrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: hsl(0, 84%, 95%);
+    color: var(--error-600);
+}
+
+.debtText {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
 }
 
 .debtLabel {
-    color: var(--error-600);
+    color: var(--gray-500);
     font-weight: 600;
-    font-size: 0.9375rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .debtValue {
     color: var(--error-600);
     font-weight: 700;
-    font-size: 1.375rem;
-    font-family: 'SF Mono', 'Roboto Mono', monospace;
+    font-size: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
 }
 
 .errorState {
