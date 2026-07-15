@@ -1,165 +1,204 @@
 import { useState, useEffect } from 'react';
+import { Button } from '../ui';
 import styles from './FormaPagoModal.module.css';
 
-const FormaPagoModal = ({ isOpen, onClose, onSubmit, initialData }) => {
-    const [formData, setFormData] = useState({
-        IdFormaPago: '',
-        Nombre: '',
-        FlagEmision: 0,
-        FlagTodo: 0,
-        Factor: 0,
-        RubroContable: 0
-    });
+const TagIcon = (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6h.008v.008H6V6z" />
+    </svg>
+);
+
+const CloseIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
+const ChevronIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+);
+
+const emptyForm = {
+    IdFormaPago: '',
+    Nombre: '',
+};
+
+const FormaPagoModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onRequestEdit, initialData }) => {
+    const isView = mode === 'view';
+
+    const [formData, setFormData] = useState(emptyForm);
+    const [saving, setSaving] = useState(false);
+    const [formError, setFormError] = useState('');
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     useEffect(() => {
+        if (!isOpen) return;
+        setFormError('');
+        setShowAdvanced(false);
         if (initialData) {
             setFormData({
-                IdFormaPago: initialData.IdFormaPago || '',
+                IdFormaPago: initialData.IdFormaPago ?? '',
                 Nombre: initialData.Nombre?.trim() || '',
-                FlagEmision: initialData.FlagEmision || 0,
-                FlagTodo: initialData.FlagTodo || 0,
-                Factor: initialData.Factor || 0,
-                RubroContable: initialData.RubroContable || 0
             });
         } else {
-            setFormData({
-                IdFormaPago: '',
-                Nombre: '',
-                FlagEmision: 0,
-                FlagTodo: 0,
-                Factor: 0,
-                RubroContable: 0
-            });
+            setFormData(emptyForm);
         }
     }, [initialData, isOpen]);
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? (checked ? 1 : 0) : value
-        }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!formData.IdFormaPago) {
-            alert('El ID es requerido');
-            return;
-        }
-        if (!formData.Nombre.trim()) {
-            alert('El nombre es requerido');
-            return;
-        }
-        onSubmit(formData);
-    };
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKey = (e) => {
+            if (e.key === 'Escape' && !saving) onClose?.();
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, saving]);
 
     if (!isOpen) return null;
 
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget && !saving) onClose?.();
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.Nombre.trim()) {
+            setFormError('El nombre es requerido');
+            return;
+        }
+        setFormError('');
+        setSaving(true);
+        try {
+            const payload = { ...formData };
+            payload.IdFormaPago = formData.IdFormaPago === '' ? null : Number(formData.IdFormaPago);
+            await onSubmit(payload);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
-        <div className={styles.overlay} onClick={onClose}>
-            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.overlay} onClick={handleBackdropClick}>
+            <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="formapago-modal-title">
                 <div className={styles.header}>
-                    <h3 className={styles.title}>
-                        {initialData ? 'Editar Forma de Pago' : 'Nueva Forma de Pago'}
-                    </h3>
-                    <button className={styles.closeBtn} onClick={onClose}>
-                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
+                    <div className={styles.headerLeft}>
+                        <span className={styles.iconWrap}>{TagIcon}</span>
+                        <h3 id="formapago-modal-title" className={styles.title}>
+                            {isView ? 'Ver Forma de Pago' : initialData ? 'Editar Forma de Pago' : 'Nueva Forma de Pago'}
+                        </h3>
+                    </div>
+                    <button
+                        type="button"
+                        className={styles.closeBtn}
+                        onClick={onClose}
+                        disabled={saving}
+                        aria-label="Cerrar"
+                    >
+                        {CloseIcon}
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.formGrid}>
-                        <div className={styles.formGroup}>
-                            <label htmlFor="IdFormaPago">
-                                ID <span className={styles.required}>*</span>
-                            </label>
-                            <input
-                                type="number"
-                                id="IdFormaPago"
-                                name="IdFormaPago"
-                                value={formData.IdFormaPago}
-                                onChange={handleChange}
-                                required
-                                placeholder="Ingrese el ID"
-                                autoFocus
-                                disabled={!!initialData}
-                            />
-                        </div>
+                        {initialData && (
+                            <div className={styles.formGroup}>
+                                <label htmlFor="IdFormaPago">Código</label>
+                                <input
+                                    type="number"
+                                    id="IdFormaPago"
+                                    className={styles.input}
+                                    value={formData.IdFormaPago}
+                                    disabled
+                                />
+                            </div>
+                        )}
 
-                        <div className={styles.formGroup}>
-                            <label htmlFor="Nombre">
-                                Nombre <span className={styles.required}>*</span>
-                            </label>
+                        <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
+                            <label htmlFor="Nombre">Nombre <span className={styles.required}>*</span></label>
                             <input
                                 type="text"
                                 id="Nombre"
                                 name="Nombre"
+                                className={styles.input}
                                 value={formData.Nombre}
                                 onChange={handleChange}
                                 required
-                                placeholder="Ingrese el nombre"
+                                placeholder="Nombre de la forma de pago"
+                                disabled={isView}
                             />
                         </div>
 
-                        <div className={styles.formGroup}>
-                            <label htmlFor="Factor">Factor</label>
-                            <input
-                                type="number"
-                                id="Factor"
-                                name="Factor"
-                                value={formData.Factor}
-                                onChange={handleChange}
-                                placeholder="0"
-                            />
-                        </div>
+                        {!initialData && (
+                            <div className={styles.formGroupFull}>
+                                <button
+                                    type="button"
+                                    className={styles.advancedToggle}
+                                    onClick={() => setShowAdvanced((v) => !v)}
+                                    aria-expanded={showAdvanced}
+                                >
+                                    <span className={`${styles.chevron} ${showAdvanced ? styles.chevronOpen : ''}`}>
+                                        {ChevronIcon}
+                                    </span>
+                                    {showAdvanced ? 'Ocultar' : 'Mostrar'} opciones avanzadas
+                                </button>
 
-                        <div className={styles.formGroup}>
-                            <label htmlFor="RubroContable">Rubro Contable</label>
-                            <input
-                                type="number"
-                                id="RubroContable"
-                                name="RubroContable"
-                                value={formData.RubroContable}
-                                onChange={handleChange}
-                                placeholder="0"
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label className={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    name="FlagEmision"
-                                    checked={formData.FlagEmision === 1}
-                                    onChange={handleChange}
-                                />
-                                <span>Flag Emisión</span>
-                            </label>
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label className={styles.checkboxLabel}>
-                                <input
-                                    type="checkbox"
-                                    name="FlagTodo"
-                                    checked={formData.FlagTodo === 1}
-                                    onChange={handleChange}
-                                />
-                                <span>Flag Todo</span>
-                            </label>
-                        </div>
+                                {showAdvanced && (
+                                    <div className={styles.advancedBox}>
+                                        <div className={styles.formGroup}>
+                                            <label htmlFor="IdFormaPago">Código</label>
+                                            <input
+                                                type="number"
+                                                id="IdFormaPago"
+                                                name="IdFormaPago"
+                                                className={styles.input}
+                                                value={formData.IdFormaPago}
+                                                onChange={handleChange}
+                                                placeholder="Automático"
+                                            />
+                                        </div>
+                                        <p className={styles.advancedHint}>
+                                            Si lo dejás vacío, el sistema asigna automáticamente el próximo código disponible.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
+                    {formError && <p className={styles.formError}>{formError}</p>}
+
                     <div className={styles.actions}>
-                        <button type="button" className={styles.btnCancel} onClick={onClose}>
-                            Cancelar
-                        </button>
-                        <button type="submit" className={styles.btnSubmit}>
-                            {initialData ? 'Actualizar' : 'Crear'} Forma de Pago
-                        </button>
+                        {isView ? (
+                            <>
+                                <Button type="button" variant="secondary" onClick={onClose}>
+                                    Cerrar
+                                </Button>
+                                <Button type="button" variant="primary" onClick={onRequestEdit}>
+                                    Editar
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
+                                    Cancelar
+                                </Button>
+                                <Button type="submit" variant="primary" loading={saving}>
+                                    {initialData ? 'Actualizar' : 'Crear'} Forma de Pago
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </form>
             </div>

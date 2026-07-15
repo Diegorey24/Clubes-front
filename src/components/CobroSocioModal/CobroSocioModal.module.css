@@ -1,13 +1,15 @@
 .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(15, 23, 42, 0.45);
     backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     padding: var(--spacing-lg);
+    animation: overlayFadeIn 0.15s ease-out;
 }
 
 .modal {
@@ -18,59 +20,129 @@
     max-width: 600px;
     max-height: 90vh;
     overflow-y: auto;
+    animation: dialogScaleIn 0.18s ease-out;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-xl);
-    border-bottom: 2px solid var(--gray-100);
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-bottom: 1px solid var(--gray-100);
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    min-width: 0;
+}
+
+.iconWrap {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: hsl(210, 76%, 95%);
+    color: var(--primary-700);
 }
 
 .title {
-    font-size: 1.5rem;
+    font-size: 1.15rem;
     font-weight: 700;
-    color: var(--gray-800);
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.stepLabel {
+    margin: 0.15rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+    font-weight: 500;
 }
 
 .closeBtn {
-    width: 36px;
-    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
     border: none;
     background: var(--gray-100);
-    border-radius: var(--radius-md);
+    border-radius: 999px;
+    color: var(--gray-500);
     cursor: pointer;
-    color: var(--gray-600);
+    transition: all var(--transition-fast);
 }
 
-.closeBtn:hover {
+.closeBtn:hover:not(:disabled) {
     background: var(--gray-200);
+    color: var(--gray-700);
+}
+
+.closeBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .body {
     padding: var(--spacing-xl);
 }
 
+/* ===== Búsqueda ===== */
 .searchRow {
     display: flex;
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
 }
 
-.searchRow input {
+.searchInputWrap {
     flex: 1;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: 2px solid var(--gray-200);
-    border-radius: var(--radius-md);
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 0.9rem;
+    display: flex;
+    color: var(--gray-400);
+    pointer-events: none;
+}
+
+.searchInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.65rem 0.9rem 0.65rem 2.6rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
     font-size: 0.9375rem;
+    font-family: inherit;
+    color: var(--gray-900);
+    transition: all var(--transition-fast);
 }
 
-.searchRow input:focus {
+.searchInput::placeholder {
+    color: var(--gray-400);
+}
+
+.searchInput:focus {
     outline: none;
-    border-color: var(--primary-600);
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
 }
 
+/* ===== Candidatos ===== */
 .candidatos {
     display: flex;
     flex-direction: column;
@@ -79,28 +151,62 @@
 }
 
 .candidatoBtn {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
     text-align: left;
-    padding: var(--spacing-md);
+    padding: 0.7rem 1rem;
     border: 1px solid var(--gray-200);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     background: white;
     cursor: pointer;
+    font-family: inherit;
+    transition: all var(--transition-fast);
 }
 
 .candidatoBtn:hover {
-    background: var(--gray-50);
+    background: hsl(210, 76%, 98%);
     border-color: var(--primary-400);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
 }
 
-.socioInfo {
-    padding: var(--spacing-md);
-    background: var(--primary-50);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--spacing-lg);
+.candidatoNombre {
     font-weight: 600;
-    color: var(--primary-700);
+    color: var(--gray-900);
+    font-size: 0.9375rem;
 }
 
+.candidatoMeta {
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+}
+
+/* ===== Socio encontrado ===== */
+.socioInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.85rem 1.1rem;
+    background: hsl(210, 76%, 97%);
+    border: 1px solid hsl(210, 76%, 91%);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.socioNombre {
+    font-weight: 700;
+    color: var(--primary-700);
+    font-size: 0.9375rem;
+}
+
+.socioMeta {
+    font-size: 0.8125rem;
+    color: var(--primary-700);
+    opacity: 0.75;
+}
+
+/* ===== Cuotas ===== */
 .cuotasList {
     display: flex;
     flex-direction: column;
@@ -112,83 +218,222 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: 0.7rem 1rem;
     border: 1px solid var(--gray-200);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
 }
 
-.cuotaRow label {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    gap: var(--spacing-md);
+.cuotaRow:hover {
+    border-color: var(--gray-300);
+    background: var(--gray-50);
+}
+
+.cuotaRowChecked {
+    border-color: var(--primary-400);
+    background: hsl(210, 76%, 97%);
+}
+
+.cuotaRowChecked:hover {
+    background: hsl(210, 76%, 95%);
+}
+
+.checkbox {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: var(--primary-600);
     cursor: pointer;
+}
+
+.cuotaPeriodo {
+    font-weight: 600;
+    color: var(--gray-700);
+    font-size: 0.875rem;
+    min-width: 64px;
+}
+
+.cuotaRubro {
+    flex: 1;
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.cuotaImporte {
+    font-weight: 700;
+    color: var(--gray-900);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ===== Formas de pago ===== */
+.formasPagoList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
 }
 
 .formaPagoRow {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+}
+
+.select {
+    flex: 2;
+    padding: 0.6rem 2.5rem 0.6rem 0.85rem;
     border: 1px solid var(--gray-200);
     border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--gray-700);
+    background-color: white;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none' stroke='%23667085' stroke-width='2'%3E%3Cpath d='M6 8l4 4 4-4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 16px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
 }
 
-.formaPagoRow select {
-    flex: 2;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: 2px solid var(--gray-200);
-    border-radius: var(--radius-md);
-    font-size: 0.9375rem;
+.select:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
 }
 
-.formaPagoRow input {
+.input {
     flex: 1;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: 2px solid var(--gray-200);
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--gray-200);
     border-radius: var(--radius-md);
-    font-size: 0.9375rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--gray-800);
+    transition: all var(--transition-fast);
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
 }
 
 .removeFormaPagoBtn {
-    width: 32px;
-    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
     border: none;
     background: var(--gray-100);
-    border-radius: var(--radius-md);
+    border-radius: 999px;
+    color: var(--gray-500);
     cursor: pointer;
-    color: var(--gray-600);
-    flex-shrink: 0;
+    transition: all var(--transition-fast);
 }
 
 .removeFormaPagoBtn:hover {
-    background: var(--gray-200);
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
 }
 
-.totalBoxAlerta {
-    background: #fef2f2;
-    color: var(--error-600, #dc2626);
-}
-
+/* ===== Totales ===== */
 .totalBox {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-md);
-    background: var(--success-50, #f0fdf4);
-    border-radius: var(--radius-md);
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--radius-lg);
+    margin: var(--spacing-md) 0 var(--spacing-lg);
+    background: hsl(142, 65%, 95%);
+    color: var(--success-600);
+}
+
+.totalLabel {
+    font-weight: 600;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.totalValue {
     font-weight: 700;
-    margin-bottom: var(--spacing-lg);
+    font-size: 1.25rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+}
+
+.totalBoxAlerta {
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
 }
 
 .empty {
     color: var(--gray-500);
     text-align: center;
-    padding: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    background-color: var(--gray-50);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--gray-200);
+    font-size: 0.9375rem;
+    margin-bottom: 0;
 }
 
+/* ===== Acciones ===== */
 .actions {
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     justify-content: flex-end;
+    margin-top: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+@keyframes overlayFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes dialogScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@media (max-width: 480px) {
+    .searchRow {
+        flex-direction: column;
+    }
+
+    .cuotaRow,
+    .formaPagoRow {
+        flex-wrap: wrap;
+    }
+
+    .actions {
+        flex-direction: column-reverse;
+    }
+
+    .actions > * {
+        width: 100%;
+    }
 }

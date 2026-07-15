@@ -1,8 +1,27 @@
 import { useState, useEffect } from 'react';
 import MediosPagoTable from '../components/MediosPagoTable/MediosPagoTable';
 import MediosPagoModal from '../components/MediosPagoModal/MediosPagoModal';
-import { fetchItems, createItem, updateItem, deleteItem } from '../services/api';
+import { Button, PageHeader } from '../components/ui';
+import { fetchItems, createItem, updateItem } from '../services/api';
 import styles from './MediosPagoPage.module.css';
+
+const PlusIcon = (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+);
+
+const SearchIcon = (
+    <svg width="18" height="18" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+    </svg>
+);
+
+const ClearIcon = (
+    <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+    </svg>
+);
 
 const MediosPagoPage = ({ showToast }) => {
     const [mediosPago, setMediosPago] = useState([]);
@@ -10,15 +29,18 @@ const MediosPagoPage = ({ showToast }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit' | 'view'
     const [editingMedioPago, setEditingMedioPago] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         loadMediosPago();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
         filterMediosPago();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mediosPago, searchTerm]);
 
     const loadMediosPago = async () => {
@@ -28,6 +50,7 @@ const MediosPagoPage = ({ showToast }) => {
             const data = await fetchItems('mediospago');
             setMediosPago(Array.isArray(data) ? data : []);
         } catch (err) {
+            console.error('Error loading medios de pago:', err);
             setError('Error al cargar los medios de pago');
             showToast('Error al cargar medios de pago', 'error');
         } finally {
@@ -50,24 +73,20 @@ const MediosPagoPage = ({ showToast }) => {
 
     const handleAdd = () => {
         setEditingMedioPago(null);
+        setModalMode('create');
         setIsModalOpen(true);
     };
 
     const handleEdit = (medioPago) => {
         setEditingMedioPago(medioPago);
+        setModalMode('edit');
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('¿Está seguro de eliminar este medio de pago?')) {
-            try {
-                await deleteItem('mediospago', id);
-                showToast('Medio de pago eliminado exitosamente', 'success');
-                loadMediosPago();
-            } catch (err) {
-                showToast('Error al eliminar el medio de pago', 'error');
-            }
-        }
+    const handleView = (medioPago) => {
+        setEditingMedioPago(medioPago);
+        setModalMode('view');
+        setIsModalOpen(true);
     };
 
     const handleSubmit = async (data) => {
@@ -82,61 +101,82 @@ const MediosPagoPage = ({ showToast }) => {
             setIsModalOpen(false);
             loadMediosPago();
         } catch (err) {
+            console.error('Error saving medio de pago:', err);
             if (err.response?.status === 409) {
                 showToast(err.response?.data?.error || 'El ID ya existe', 'error');
             } else {
                 showToast('Error al guardar el medio de pago', 'error');
             }
-            console.error('Error saving medio de pago:', err);
         }
     };
 
+    if (loading) {
+        return (
+            <div className={styles.page}>
+                <div className="loading-spinner">
+                    <div className="spinner"></div>
+                    <p>Cargando medios de pago...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.page}>
-            <div className={styles.header}>
-                <h2 className={styles.title}>Gestión de Medios de Pago</h2>
-                <button className="btn-primary" onClick={handleAdd}>
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                    <span>Nuevo Medio de Pago</span>
-                </button>
-            </div>
+            <PageHeader
+                title="Medios de Pago"
+                subtitle="Administrá los medios de pago disponibles"
+                actions={
+                    <Button variant="primary" icon={PlusIcon} onClick={handleAdd}>
+                        Nuevo Medio de Pago
+                    </Button>
+                }
+            />
 
-            <div className={styles.filters}>
+            <div className={styles.filtersCard}>
                 <div className={styles.searchBox}>
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                    </svg>
+                    {SearchIcon}
                     <input
                         type="text"
-                        placeholder="Buscar por descripción o ID..."
+                        placeholder="Buscar por descripción o ID"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                    {searchTerm && (
+                        <button
+                            type="button"
+                            className={styles.clearButton}
+                            onClick={() => setSearchTerm('')}
+                            title="Limpiar búsqueda"
+                            aria-label="Limpiar búsqueda"
+                        >
+                            {ClearIcon}
+                        </button>
+                    )}
                 </div>
 
                 <div className={styles.resultsCount}>
-                    {filteredMediosPago.length} de {mediosPago.length} medios de pago
+                    {filteredMediosPago.length} de {mediosPago.length} medio{mediosPago.length !== 1 ? 's' : ''} de pago
                 </div>
             </div>
 
-            {loading ? (
-                <div className={styles.loading}>Cargando...</div>
-            ) : error ? (
+            {error ? (
                 <p className={styles.error}>{error}</p>
             ) : (
                 <MediosPagoTable
                     mediosPago={filteredMediosPago}
+                    onView={handleView}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onDeleted={loadMediosPago}
                 />
             )}
 
             <MediosPagoModal
                 isOpen={isModalOpen}
+                mode={modalMode}
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleSubmit}
+                onRequestEdit={() => setModalMode('edit')}
                 initialData={editingMedioPago}
             />
         </div>

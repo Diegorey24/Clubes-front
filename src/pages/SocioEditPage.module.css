@@ -102,9 +102,21 @@
     grid-column: 1 / -1;
 }
 
-/* Fila fija de 3 columnas para agrupar Email / Teléfono / Celular. */
+/* Fila fija de 3 columnas para agrupar Email / Teléfono / Celular
+   (y también los datos de cada persona autorizada a retirar). */
 .gridThree {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.autorizadosHint {
+    margin: var(--spacing-lg) 0 -0.25rem;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--gray-100);
+    color: var(--gray-500);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .formGroup {

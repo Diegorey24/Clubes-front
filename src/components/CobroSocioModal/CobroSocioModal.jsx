@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { buscarCuotasPendientes, cobrarCuotasSocio, getMediosPago } from '../../services/api';
+import { Button } from '../ui';
 import styles from './CobroSocioModal.module.css';
 import jsPDF from 'jspdf';
 
@@ -15,6 +16,48 @@ const formatAniomes = (aniomes) => {
 };
 
 const nuevaFormaPago = (importe = '') => ({ medioPago: '', importe });
+
+const CobrarIcon = (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m9-8a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+const CloseIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
+const SearchIcon = (
+    <svg width="18" height="18" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+    </svg>
+);
+
+const PlusIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+);
+
+const RemoveIcon = (
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
+const BackArrowIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+);
+
+const DownloadIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+);
 
 const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast }) => {
     const [query, setQuery] = useState('');
@@ -39,13 +82,28 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
             setSelectedIds(new Set());
             setPaso('cuotas');
             setFormasPago([nuevaFormaPago()]);
+            setReciboData(null);
             getMediosPago()
                 .then((data) => setMediosPago(Array.isArray(data) ? data : []))
                 .catch(() => setMediosPago([]));
         }
     }, [isOpen]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKey = (e) => {
+            if (e.key === 'Escape' && !submitting) onClose?.();
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, submitting]);
+
     if (!isOpen) return null;
+
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget && !submitting) onClose?.();
+    };
 
     const buscar = async (params) => {
         setSearching(true);
@@ -235,27 +293,47 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
     };
 
     return (
-        <div className={styles.overlay} onClick={onClose}>
-            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.overlay} onClick={handleBackdropClick}>
+            <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="cobro-socio-title">
                 <div className={styles.header}>
-                    <h3 className={styles.title}>Cobrar Cuota a Socio</h3>
-                    <button className={styles.closeBtn} onClick={onClose}>×</button>
+                    <div className={styles.headerLeft}>
+                        <span className={styles.iconWrap}>{CobrarIcon}</span>
+                        <div>
+                            <h3 id="cobro-socio-title" className={styles.title}>Cobrar Cuota a Socio</h3>
+                            <p className={styles.stepLabel}>
+                                {paso === 'cuotas' ? 'Paso 1 · Buscar socio y seleccionar cuotas' : 'Paso 2 · Forma de pago'}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        className={styles.closeBtn}
+                        onClick={onClose}
+                        disabled={submitting}
+                        aria-label="Cerrar"
+                    >
+                        {CloseIcon}
+                    </button>
                 </div>
 
                 <div className={styles.body}>
                     {paso === 'cuotas' && (
                         <>
                             <form onSubmit={handleBuscar} className={styles.searchRow}>
-                                <input
-                                    type="text"
-                                    placeholder="Cédula o nombre del socio"
-                                    value={query}
-                                    onChange={(e) => setQuery(e.target.value)}
-                                    autoFocus
-                                />
-                                <button type="submit" className="btn-secondary" disabled={searching}>
-                                    {searching ? 'Buscando...' : 'Buscar'}
-                                </button>
+                                <div className={styles.searchInputWrap}>
+                                    <span className={styles.searchIcon}>{SearchIcon}</span>
+                                    <input
+                                        type="text"
+                                        className={styles.searchInput}
+                                        placeholder="Cédula o nombre del socio"
+                                        value={query}
+                                        onChange={(e) => setQuery(e.target.value)}
+                                        autoFocus
+                                    />
+                                </div>
+                                <Button type="submit" variant="soft" loading={searching}>
+                                    Buscar
+                                </Button>
                             </form>
 
                             {candidatos && (
@@ -263,10 +341,12 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                                     {candidatos.map((c) => (
                                         <button
                                             key={c.SocNro}
+                                            type="button"
                                             className={styles.candidatoBtn}
                                             onClick={() => handleElegirCandidato(c)}
                                         >
-                                            {c.SocNom?.trim()} — CI {c.SocDocIde}
+                                            <span className={styles.candidatoNombre}>{c.SocNom?.trim()}</span>
+                                            <span className={styles.candidatoMeta}>CI {c.SocDocIde}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -275,7 +355,8 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                             {socio && (
                                 <>
                                     <div className={styles.socioInfo}>
-                                        {socio.SocNom?.trim()} — CI {socio.SocDocIde} — Socio N° {socio.SocNro}
+                                        <span className={styles.socioNombre}>{socio.SocNom?.trim()}</span>
+                                        <span className={styles.socioMeta}>CI {socio.SocDocIde} · Socio N.° {socio.SocNro}</span>
                                     </div>
 
                                     {cuotas.length === 0 ? (
@@ -284,24 +365,27 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                                         <>
                                             <div className={styles.cuotasList}>
                                                 {cuotas.map((c) => (
-                                                    <div className={styles.cuotaRow} key={c.Id}>
+                                                    <label
+                                                        className={`${styles.cuotaRow} ${selectedIds.has(c.Id) ? styles.cuotaRowChecked : ''}`}
+                                                        key={c.Id}
+                                                        htmlFor={`cuota-${c.Id}`}
+                                                    >
                                                         <input
                                                             type="checkbox"
+                                                            className={styles.checkbox}
                                                             checked={selectedIds.has(c.Id)}
                                                             onChange={() => toggleCuota(c.Id)}
                                                             id={`cuota-${c.Id}`}
                                                         />
-                                                        <label htmlFor={`cuota-${c.Id}`}>
-                                                            <span>{formatAniomes(c.Aniomes)}</span>
-                                                            <span>{c.Rubro} - {c.RubroNombre?.trim() || 'Sin rubro'}</span>
-                                                            <span>{formatCurrency(c.Importe)}</span>
-                                                        </label>
-                                                    </div>
+                                                        <span className={styles.cuotaPeriodo}>{formatAniomes(c.Aniomes)}</span>
+                                                        <span className={styles.cuotaRubro}>{c.RubroNombre?.trim() || `Rubro ${c.Rubro}`}</span>
+                                                        <span className={styles.cuotaImporte}>{formatCurrency(c.Importe)}</span>
+                                                    </label>
                                                 ))}
                                             </div>
                                             <div className={styles.totalBox}>
-                                                <span>Total seleccionado</span>
-                                                <span>{formatCurrency(total)}</span>
+                                                <span className={styles.totalLabel}>Total seleccionado</span>
+                                                <span className={styles.totalValue}>{formatCurrency(total)}</span>
                                             </div>
                                         </>
                                     )}
@@ -313,14 +397,15 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                     {paso === 'pago' && (
                         <>
                             <div className={styles.socioInfo}>
-                                {socio.SocNom?.trim()} — CI {socio.SocDocIde} — Total a cobrar: {formatCurrency(total)}
+                                <span className={styles.socioNombre}>{socio.SocNom?.trim()}</span>
+                                <span className={styles.socioMeta}>CI {socio.SocDocIde} · Total a cobrar: {formatCurrency(total)}</span>
                             </div>
 
-
-                            <div className={styles.cuotasList}>
+                            <div className={styles.formasPagoList}>
                                 {formasPago.map((fp, index) => (
                                     <div className={styles.formaPagoRow} key={index}>
                                         <select
+                                            className={styles.select}
                                             value={fp.medioPago}
                                             onChange={(e) => handleChangeFormaPago(index, 'medioPago', e.target.value)}
                                         >
@@ -333,6 +418,7 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                                         </select>
                                         <input
                                             type="number"
+                                            className={styles.input}
                                             step="0.01"
                                             min="0"
                                             placeholder="Importe"
@@ -344,21 +430,28 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                                                 type="button"
                                                 className={styles.removeFormaPagoBtn}
                                                 onClick={() => handleQuitarFormaPago(index)}
+                                                aria-label="Quitar forma de pago"
                                             >
-                                                ×
+                                                {RemoveIcon}
                                             </button>
                                         )}
                                     </div>
                                 ))}
                             </div>
 
-                            <button type="button" className="btn-secondary" onClick={handleAgregarFormaPago}>
-                                + Agregar otra forma de pago
-                            </button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                icon={PlusIcon}
+                                onClick={handleAgregarFormaPago}
+                            >
+                                Agregar otra forma de pago
+                            </Button>
 
                             <div className={`${styles.totalBox} ${Math.abs(restante) >= 0.01 ? styles.totalBoxAlerta : ''}`}>
-                                <span>Restante por asignar</span>
-                                <span>{formatCurrency(restante)}</span>
+                                <span className={styles.totalLabel}>Restante por asignar</span>
+                                <span className={styles.totalValue}>{formatCurrency(restante)}</span>
                             </div>
                         </>
                     )}
@@ -366,38 +459,39 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                     <div className={styles.actions}>
                         {paso === 'cuotas' && (
                             <>
-                                <button type="button" className="btn-secondary" onClick={onClose}>
+                                <Button type="button" variant="secondary" onClick={onClose}>
                                     Cancelar
-                                </button>
+                                </Button>
                                 {socio && cuotas.length > 0 && (
-                                    <button
+                                    <Button
                                         type="button"
-                                        className="btn-primary"
+                                        variant="primary"
                                         onClick={handleIrAFormaPago}
                                         disabled={selectedIds.size === 0}
                                     >
                                         Continuar
-                                    </button>
+                                    </Button>
                                 )}
                             </>
                         )}
                         {paso === 'pago' && (
                             <>
-                                <button type="button" className="btn-secondary" onClick={handleVolverACuotas}>
+                                <Button type="button" variant="secondary" icon={BackArrowIcon} onClick={handleVolverACuotas}>
                                     Volver
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="button"
-                                    className="btn-primary"
+                                    variant="primary"
                                     onClick={handleCobrar}
-                                    disabled={submitting || !formasPagoValidas}
+                                    loading={submitting}
+                                    disabled={!formasPagoValidas}
                                 >
-                                    {submitting ? 'Procesando...' : 'Cobrar'}
-                                </button>
+                                    Cobrar
+                                </Button>
                                 {reciboData && (
-                                    <button type="button" className="btn-secondary" onClick={generarPDF}>
+                                    <Button type="button" variant="soft-success" icon={DownloadIcon} onClick={generarPDF}>
                                         Descargar recibo
-                                    </button>
+                                    </Button>
                                 )}
                             </>
                         )}

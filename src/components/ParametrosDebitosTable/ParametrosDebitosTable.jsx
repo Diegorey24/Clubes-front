@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { deleteItem } from '../../services/api';
+import { deleteParametroDebito } from '../../services/api';
 import { TableActions, ConfirmDialog } from '../ui';
-import styles from './RadiosTable.module.css';
+import styles from './ParametrosDebitosTable.module.css';
 
-const RadiosTable = ({ radios, onView, onEdit, onDeleted }) => {
+const ParametrosDebitosTable = ({ parametros, onView, onEdit, onDeleted }) => {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState('');
 
-    const requestDelete = (radio) => {
+    const requestDelete = (parametro) => {
         setDeleteError('');
-        setDeleteTarget(radio);
+        setDeleteTarget(parametro);
     };
 
     const closeConfirm = () => {
@@ -24,24 +24,24 @@ const RadiosTable = ({ radios, onView, onEdit, onDeleted }) => {
         setDeleting(true);
         setDeleteError('');
         try {
-            await deleteItem('radios', deleteTarget.IdRadio);
+            await deleteParametroDebito(deleteTarget.Nombre);
             setDeleteTarget(null);
             onDeleted?.();
         } catch (err) {
-            console.error('Error deleting radio:', err);
-            setDeleteError('No se pudo eliminar el radio. Intentá nuevamente.');
+            console.error('Error deleting parámetro de débito:', err);
+            setDeleteError('No se pudo eliminar el parámetro. Intentá nuevamente.');
         } finally {
             setDeleting(false);
         }
     };
 
-    if (!radios || radios.length === 0) {
+    if (!parametros || parametros.length === 0) {
         return (
             <div className={styles.emptyState}>
                 <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 5.25h16.5M3.75 12h16.5M3.75 18.75h16.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3M3.75 6h16.5a1.5 1.5 0 011.5 1.5v9a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5v-9a1.5 1.5 0 011.5-1.5z" />
                 </svg>
-                <p>No hay radios para mostrar</p>
+                <p>No hay parámetros de débitos para mostrar</p>
             </div>
         );
     }
@@ -51,21 +51,23 @@ const RadiosTable = ({ radios, onView, onEdit, onDeleted }) => {
             <table className={styles.table}>
                 <thead>
                     <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
+                        <th>Financiera</th>
+                        <th>Código de Comercio</th>
+                        <th>Sucursal</th>
                         <th className={styles.actionsHeader}>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {radios.map((radio) => (
-                        <tr key={radio.IdRadio} onClick={() => onView(radio)} title="Ver detalle del radio">
-                            <td className={styles.muted}>{radio.IdRadio}</td>
-                            <td className={styles.nameCell}>{radio.Nombre?.trim()}</td>
+                    {parametros.map((p) => (
+                        <tr key={p.Nombre} onClick={() => onView(p)} title="Ver detalle del parámetro">
+                            <td className={styles.nameCell}>{p.Nombre}</td>
+                            <td className={styles.muted}>{p.CodComercio || '-'}</td>
+                            <td className={styles.muted}>{p.Sucursal || '-'}</td>
                             <td className={styles.actionsCell}>
                                 <TableActions
-                                    onView={() => onView(radio)}
-                                    onEdit={() => onEdit(radio)}
-                                    onDelete={() => requestDelete(radio)}
+                                    onView={() => onView(p)}
+                                    onEdit={() => onEdit(p)}
+                                    onDelete={() => requestDelete(p)}
                                 />
                             </td>
                         </tr>
@@ -75,7 +77,7 @@ const RadiosTable = ({ radios, onView, onEdit, onDeleted }) => {
 
             <ConfirmDialog
                 isOpen={!!deleteTarget}
-                title="¿Eliminar radio?"
+                title="¿Eliminar parámetro?"
                 description="Esta acción no se puede deshacer."
                 confirmLabel="Sí, eliminar"
                 cancelLabel="Cancelar"
@@ -86,9 +88,9 @@ const RadiosTable = ({ radios, onView, onEdit, onDeleted }) => {
             >
                 {deleteTarget && (
                     <div className={styles.confirmSummary}>
-                        <div className={styles.confirmName}>{deleteTarget.Nombre?.trim()}</div>
+                        <div className={styles.confirmName}>{deleteTarget.Nombre}</div>
                         <div className={styles.confirmMeta}>
-                            <span>Código {deleteTarget.IdRadio}</span>
+                            <span>Código de comercio {deleteTarget.CodComercio || '-'}</span>
                         </div>
                     </div>
                 )}
@@ -98,4 +100,4 @@ const RadiosTable = ({ radios, onView, onEdit, onDeleted }) => {
     );
 };
 
-export default RadiosTable;
+export default ParametrosDebitosTable;

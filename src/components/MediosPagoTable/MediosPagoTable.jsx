@@ -1,16 +1,52 @@
+import { useState } from 'react';
+import { deleteItem } from '../../services/api';
+import { TableActions, Badge, ConfirmDialog } from '../ui';
 import styles from './MediosPagoTable.module.css';
 
-const MediosPagoTable = ({ mediosPago, onEdit, onDelete }) => {
-    const formatNumber = (value) => {
-        return new Intl.NumberFormat('es-UY').format(value || 0);
+const TIPO_BADGE_VARIANT = {
+    Efectivo: 'success',
+    Cheque: 'neutral',
+    Tarjeta: 'primary',
+    Proceso: 'neutral',
+};
+
+const MediosPagoTable = ({ mediosPago, onView, onEdit, onDeleted }) => {
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
+
+    const requestDelete = (medio) => {
+        setDeleteError('');
+        setDeleteTarget(medio);
+    };
+
+    const closeConfirm = () => {
+        if (deleting) return;
+        setDeleteTarget(null);
+        setDeleteError('');
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        setDeleteError('');
+        try {
+            await deleteItem('mediospago', deleteTarget.IdMedioPago);
+            setDeleteTarget(null);
+            onDeleted?.();
+        } catch (err) {
+            console.error('Error deleting medio de pago:', err);
+            setDeleteError('No se pudo eliminar el medio de pago. Intentá nuevamente.');
+        } finally {
+            setDeleting(false);
+        }
     };
 
     if (!mediosPago || mediosPago.length === 0) {
         return (
             <div className={styles.emptyState}>
-                <svg width="64" height="64" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                    <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0  002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3M3.75 6h16.5a1.5 1.5 0 011.5 1.5v9a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5v-9a1.5 1.5 0 011.5-1.5z" />
                 </svg>
                 <p>No hay medios de pago para mostrar</p>
             </div>
@@ -22,48 +58,55 @@ const MediosPagoTable = ({ mediosPago, onEdit, onDelete }) => {
             <table className={styles.table}>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>Código</th>
                         <th>Descripción</th>
                         <th>Tipo</th>
-                        <th>Rubro</th>
-                        <th>Rubro ME</th>
-                        <th>Acciones</th>
+                        <th className={styles.actionsHeader}>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {mediosPago.map((medio) => (
-                        <tr key={medio.IdMedioPago}>
-                            <td className={styles.idCell}>
-                                <span className={styles.idBadge}>{medio.IdMedioPago}</span>
-                            </td>
+                        <tr key={medio.IdMedioPago} onClick={() => onView(medio)} title="Ver detalle del medio de pago">
+                            <td className={styles.muted}>{medio.IdMedioPago}</td>
                             <td className={styles.nameCell}>{medio.Descripcion?.trim()}</td>
-                            <td>{medio.Tipo}</td>
-                            <td className={styles.numberCell}>{formatNumber(medio.Rubro)}</td>
-                            <td className={styles.numberCell}>{formatNumber(medio.RubroME)}</td>
+                            <td>
+                                <Badge variant={TIPO_BADGE_VARIANT[medio.Tipo] || 'neutral'}>
+                                    {medio.Tipo || '-'}
+                                </Badge>
+                            </td>
                             <td className={styles.actionsCell}>
-                                <button
-                                    className={styles.btnEdit}
-                                    onClick={() => onEdit(medio)}
-                                    title="Editar"
-                                >
-                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                    </svg>
-                                </button>
-                                <button
-                                    className={styles.btnDelete}
-                                    onClick={() => onDelete(medio.IdMedioPago)}
-                                    title="Eliminar"
-                                >
-                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                </button>
+                                <TableActions
+                                    onView={() => onView(medio)}
+                                    onEdit={() => onEdit(medio)}
+                                    onDelete={() => requestDelete(medio)}
+                                />
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+
+            <ConfirmDialog
+                isOpen={!!deleteTarget}
+                title="¿Eliminar medio de pago?"
+                description="Esta acción no se puede deshacer."
+                confirmLabel="Sí, eliminar"
+                cancelLabel="Cancelar"
+                variant="danger"
+                loading={deleting}
+                onConfirm={confirmDelete}
+                onCancel={closeConfirm}
+            >
+                {deleteTarget && (
+                    <div className={styles.confirmSummary}>
+                        <div className={styles.confirmName}>{deleteTarget.Descripcion?.trim()}</div>
+                        <div className={styles.confirmMeta}>
+                            <span>Código {deleteTarget.IdMedioPago}</span>
+                        </div>
+                    </div>
+                )}
+                {deleteError && <p className={styles.confirmError}>{deleteError}</p>}
+            </ConfirmDialog>
         </div>
     );
 };

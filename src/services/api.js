@@ -316,6 +316,11 @@ export const updateParametroDebito = async (nombre, data) => {
   return response.data;
 };
 
+export const deleteParametroDebito = async (nombre) => {
+  const response = await api.delete(`/parametros-debitos/${encodeURIComponent(nombre)}`);
+  return response.data;
+};
+
 export const loginSocio = async (ci, contrasena) => {
   const response = await api.post('/portal-socio/login', { ci, contrasena });
   return response.data;

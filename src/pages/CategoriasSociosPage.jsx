@@ -1,8 +1,27 @@
 import { useState, useEffect } from 'react';
 import CategoriasSociosTable from '../components/CategoriasSociosTable/CategoriasSociosTable';
 import CategoriasSociosModal from '../components/CategoriasSociosModal/CategoriasSociosModal';
-import { fetchItems, createItem, updateItem, deleteItem } from '../services/api';
+import { Button, PageHeader } from '../components/ui';
+import { fetchItems, createItem, updateItem } from '../services/api';
 import styles from './CategoriasSociosPage.module.css';
+
+const PlusIcon = (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+);
+
+const SearchIcon = (
+    <svg width="18" height="18" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+    </svg>
+);
+
+const ClearIcon = (
+    <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+    </svg>
+);
 
 const CategoriasSociosPage = ({ showToast }) => {
     const [categorias, setCategorias] = useState([]);
@@ -10,25 +29,29 @@ const CategoriasSociosPage = ({ showToast }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit' | 'view'
     const [editingCategoria, setEditingCategoria] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         loadCategorias();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
         filterCategorias();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [categorias, searchTerm]);
 
     const loadCategorias = async () => {
         setLoading(true);
         setError(null);
         try {
-            // "categoriaSocios" maps to /api/categoriaSocios as checked in server.js
+            // "categoriaSocios" maps to /api/categoriaSocios (ver server.js)
             const data = await fetchItems('categoriaSocios');
             setCategorias(Array.isArray(data) ? data : []);
         } catch (err) {
+            console.error('Error loading categorias:', err);
             setError('Error al cargar las categorías');
             showToast('Error al cargar categorías', 'error');
         } finally {
@@ -51,32 +74,25 @@ const CategoriasSociosPage = ({ showToast }) => {
 
     const handleAdd = () => {
         setEditingCategoria(null);
+        setModalMode('create');
         setIsModalOpen(true);
     };
 
     const handleEdit = (categoria) => {
         setEditingCategoria(categoria);
+        setModalMode('edit');
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('¿Está seguro de que desea eliminar esta categoría?')) {
-            return;
-        }
-
-        try {
-            await deleteItem('categoriaSocios', id);
-            showToast('Categoría eliminada exitosamente', 'success');
-            loadCategorias();
-        } catch (err) {
-            showToast('Error al eliminar la categoría', 'error');
-        }
+    const handleView = (categoria) => {
+        setEditingCategoria(categoria);
+        setModalMode('view');
+        setIsModalOpen(true);
     };
 
     const handleSubmit = async (data) => {
         try {
             if (editingCategoria) {
-                // Assuming CatCod is the ID
                 await updateItem('categoriaSocios', editingCategoria.CatCod, data);
                 showToast('Categoría actualizada exitosamente', 'success');
             } else {
@@ -86,6 +102,7 @@ const CategoriasSociosPage = ({ showToast }) => {
             setIsModalOpen(false);
             loadCategorias();
         } catch (err) {
+            console.error('Error saving categoria:', err);
             showToast('Error al guardar la categoría', 'error');
         }
     };
@@ -103,31 +120,40 @@ const CategoriasSociosPage = ({ showToast }) => {
 
     return (
         <div className={styles.page}>
-            <div className={styles.header}>
-                <h2 className={styles.title}>Gestión de Categorías de Socios</h2>
-                <button className="btn-primary" onClick={handleAdd}>
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                    <span>Nueva Categoría</span>
-                </button>
-            </div>
+            <PageHeader
+                title="Categorías de Socios"
+                subtitle="Definí los rangos de edad e importes de cada categoría"
+                actions={
+                    <Button variant="primary" icon={PlusIcon} onClick={handleAdd}>
+                        Nueva Categoría
+                    </Button>
+                }
+            />
 
-            <div className={styles.filters}>
+            <div className={styles.filtersCard}>
                 <div className={styles.searchBox}>
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                    </svg>
+                    {SearchIcon}
                     <input
                         type="text"
-                        placeholder="Buscar por nombre o ID..."
+                        placeholder="Buscar por nombre o código"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                    {searchTerm && (
+                        <button
+                            type="button"
+                            className={styles.clearButton}
+                            onClick={() => setSearchTerm('')}
+                            title="Limpiar búsqueda"
+                            aria-label="Limpiar búsqueda"
+                        >
+                            {ClearIcon}
+                        </button>
+                    )}
                 </div>
 
                 <div className={styles.resultsCount}>
-                    {filteredCategorias.length} de {categorias.length} categorías
+                    {filteredCategorias.length} de {categorias.length} categoría{categorias.length !== 1 ? 's' : ''}
                 </div>
             </div>
 
@@ -136,15 +162,18 @@ const CategoriasSociosPage = ({ showToast }) => {
             ) : (
                 <CategoriasSociosTable
                     categorias={filteredCategorias}
+                    onView={handleView}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onDeleted={loadCategorias}
                 />
             )}
 
             <CategoriasSociosModal
                 isOpen={isModalOpen}
+                mode={modalMode}
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleSubmit}
+                onRequestEdit={() => setModalMode('edit')}
                 initialData={editingCategoria}
             />
         </div>

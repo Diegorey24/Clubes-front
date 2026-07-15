@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import styles from './ParametrosForm.module.css';
 
+// Por ahora el formulario de Parámetros sólo expone los campos que
+// realmente se usan: Nro. Recibo, Nro. Otra Cobranza y Año/Mes Cargos.
+// El resto de los campos (Reg, IDSolicitud, NroOrden, NroRemitoS,
+// NombreBase, CarpetaBackups, CaminoBancos, CaminoCont, TopeCaja,
+// CaminoReloj, TopeSalidaCaja, ClaveAutorizaSalida, ARTICCTDO, RutaFotos,
+// ImpresoraCarne, ImpresoraRecibos) se mantienen en el estado (para no
+// perder sus valores al guardar) pero quedan comentados en el render
+// hasta que se decida usarlos.
 const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
     const [formData, setFormData] = useState({
         Reg: '',
@@ -45,7 +53,7 @@ const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
 
     return (
         <form onSubmit={handleSubmit} className={styles.form}>
-            {/* Sección: Identificación */}
+            {/* Sección: Identificación — deshabilitada por ahora, no se usa
             <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>Identificación</h3>
                 <div className={styles.formGrid}>
@@ -74,11 +82,13 @@ const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
                     </div>
                 </div>
             </div>
+            */}
 
             {/* Sección: Numeración */}
             <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>Numeración de Documentos</h3>
                 <div className={styles.formGrid}>
+                    {/* Nro. Orden y Nro. Remito — deshabilitados por ahora, no se usan
                     <div className={styles.formGroup}>
                         <label htmlFor="NroOrden">Nro. Orden</label>
                         <input
@@ -101,6 +111,7 @@ const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
                             placeholder="0"
                         />
                     </div>
+                    */}
                     <div className={styles.formGroup}>
                         <label htmlFor="NroRecibo">Nro. Recibo</label>
                         <input
@@ -130,6 +141,7 @@ const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
             <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>Base de Datos</h3>
                 <div className={styles.formGrid}>
+                    {/* Nombre Base de Datos y Carpeta Backups — deshabilitados por ahora, no se usan
                     <div className={styles.formGroup}>
                         <label htmlFor="NombreBase">Nombre Base de Datos</label>
                         <input
@@ -152,6 +164,7 @@ const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
                             placeholder="C:\\Backups"
                         />
                     </div>
+                    */}
                     <div className={styles.formGroup}>
                         <label htmlFor="AnioMesCargos">Año/Mes Cargos</label>
                         <input
@@ -166,7 +179,7 @@ const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
                 </div>
             </div>
 
-            {/* Sección: Rutas de Archivos */}
+            {/* Sección: Rutas de Archivos — deshabilitada por ahora, no se usa
             <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>Rutas de Archivos</h3>
                 <div className={styles.formGrid}>
@@ -216,8 +229,9 @@ const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
                     </div>
                 </div>
             </div>
+            */}
 
-            {/* Sección: Configuración de Caja */}
+            {/* Sección: Configuración de Caja — deshabilitada por ahora, no se usa
             <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>Configuración de Caja</h3>
                 <div className={styles.formGrid}>
@@ -258,8 +272,9 @@ const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
                     </div>
                 </div>
             </div>
+            */}
 
-            {/* Sección: Otros */}
+            {/* Sección: Otros — deshabilitada por ahora, no se usa
             <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>Otros</h3>
                 <div className={styles.formGrid}>
@@ -276,8 +291,9 @@ const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
                     </div>
                 </div>
             </div>
+            */}
 
-            {/* Sección: Impresoras */}
+            {/* Sección: Impresoras — deshabilitada por ahora, no se usa
             <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>Impresoras</h3>
                 <div className={styles.formGrid}>
@@ -305,6 +321,7 @@ const ParametrosForm = ({ initialData, onSubmit, onCancel }) => {
                     </div>
                 </div>
             </div>
+            */}
 
             {/* Botones de acción */}
             <div className={styles.actions}>

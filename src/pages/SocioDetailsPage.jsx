@@ -1,24 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSocioById, getSocioHistoricoById } from '../services/api';
-import { Button, Badge, Tabs, Title } from '../components/ui';
+import { Button, Badge, Tabs, Title, BackLink } from '../components/ui';
 import styles from './SocioDetailsPage.module.css';
 
-const RESPONSABLE_FIELDS = [
-    'ResponsableCI',
-    'ResponsableApellido',
-    'ResponsableNombre',
-    'ResponsableDomicilio',
-    'ResponsableDomicilioNroPuerta',
-    'ResponsableDomicilioApto',
-    'ResponsablePresentoDJ',
-];
+// Pestaña "Datos del Responsable" deshabilitada por ahora (a pedido).
+// Se deja el código comentado para poder reactivarla más adelante.
+// const RESPONSABLE_FIELDS = [
+//     'ResponsableCI',
+//     'ResponsableApellido',
+//     'ResponsableNombre',
+//     'ResponsableDomicilio',
+//     'ResponsableDomicilioNroPuerta',
+//     'ResponsableDomicilioApto',
+//     'ResponsablePresentoDJ',
+// ];
 
-const BackIcon = (
-    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-    </svg>
-);
+// Personas autorizadas a retirar a un socio menor de edad: hasta 3, cada
+// una con CI, nombre y teléfono.
+const AUTORIZADOS_KEYS = [1, 2, 3];
 
 const EditIcon = (
     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -87,6 +87,23 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
         if (!dateStr) return '-';
         const [y, m, d] = dateStr.split('-');
         return `${d}/${m}/${y}`;
+    };
+
+    // Trim seguro: varios campos de texto llegan de la base rellenados con
+    // espacios (char fijo), incluso cuando "no tienen dato".
+    const trim = (value) => (value || '').toString().trim();
+
+    // Edad calculada a partir de la fecha de nacimiento (null si no hay fecha).
+    const calcularEdad = (fechaNac) => {
+        if (!fechaNac) return null;
+        const nacimiento = new Date(fechaNac);
+        if (Number.isNaN(nacimiento.getTime())) return null;
+        const hoy = new Date();
+        let edad = hoy.getFullYear() - nacimiento.getFullYear();
+        const aunNoCumplio = hoy.getMonth() < nacimiento.getMonth()
+            || (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() < nacimiento.getDate());
+        if (aunNoCumplio) edad--;
+        return edad;
     };
 
     useEffect(() => {
@@ -186,25 +203,29 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
         );
     }
 
-    const hasResponsableData = RESPONSABLE_FIELDS.some((field) => {
-        const value = socio[field];
-        return value !== null && value !== undefined && value !== '';
-    });
+    // const hasResponsableData = RESPONSABLE_FIELDS.some((field) => {
+    //     const value = socio[field];
+    //     return value !== null && value !== undefined && value !== '';
+    // });
 
     // Solo tiene sentido mostrar la pestaña "Datos del Responsable" si el
     // socio pertenece a un grupo familiar (GruFamNro distinto de 0) y ese
     // grupo no es el suyo propio (si GruFamNro === SocDocIde, el socio ES
     // el titular del grupo, o sea su propio responsable).
-    const perteneceAGrupoFamiliar = socio.GruFamNro !== null
-        && socio.GruFamNro !== undefined
-        && Number(socio.GruFamNro) !== 0;
-    const esTitularDeSuGrupo = perteneceAGrupoFamiliar
-        && String(socio.GruFamNro) === String(socio.SocDocIde);
-    const mostrarTabResponsable = hasResponsableData && perteneceAGrupoFamiliar && !esTitularDeSuGrupo;
+    // const perteneceAGrupoFamiliar = socio.GruFamNro !== null
+    //     && socio.GruFamNro !== undefined
+    //     && Number(socio.GruFamNro) !== 0;
+    // const esTitularDeSuGrupo = perteneceAGrupoFamiliar
+    //     && String(socio.GruFamNro) === String(socio.SocDocIde);
+    // const mostrarTabResponsable = hasResponsableData && perteneceAGrupoFamiliar && !esTitularDeSuGrupo;
+
+    const edad = calcularEdad(socio.SocFchNac);
+    const esMenorDeEdad = edad !== null && edad < 18;
 
     const tabs = [
         { id: 'info', label: 'Información General' },
-        ...(mostrarTabResponsable ? [{ id: 'responsable', label: 'Datos del Responsable' }] : []),
+        // ...(mostrarTabResponsable ? [{ id: 'responsable', label: 'Datos del Responsable' }] : []),
+        ...(esMenorDeEdad ? [{ id: 'padres', label: 'Datos de los Padres/Responsables' }] : []),
         { id: 'cuentaCorriente', label: 'Cuenta Corriente' },
         { id: 'cuentaCorrienteFamiliar', label: 'Cuenta Corriente Familiar' },
     ];
@@ -212,14 +233,9 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
     return (
         <div className={styles.page}>
             <div className={styles.pageInner}>
-                <button
-                    type="button"
-                    className={styles.backLink}
-                    onClick={() => navigate(isHistorical ? '/socios-historicos' : '/socios')}
-                >
-                    {BackIcon}
+                <BackLink onClick={() => navigate(isHistorical ? '/socios-historicos' : '/socios')}>
                     Volver al listado
-                </button>
+                </BackLink>
 
                 <div className={styles.container}>
                     <div className={`${styles.header} ${isHistorical ? styles.headerInactive : ''}`}>
@@ -345,6 +361,7 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                         </>
                     )}
 
+                    {/* Pestaña "Datos del Responsable" deshabilitada por ahora (a pedido).
                     {activeTab === 'responsable' && mostrarTabResponsable && (
                         <div className={styles.section}>
                             <Title variant="section">Datos del responsable</Title>
@@ -379,6 +396,66 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                 </div>
                             </div>
                         </div>
+                    )}
+                    */}
+
+                    {activeTab === 'padres' && esMenorDeEdad && (
+                        <>
+                            <div className={styles.section}>
+                                <Title variant="section">Datos de los padres</Title>
+                                <div className={styles.grid}>
+                                    <div className={styles.field}>
+                                        <span className={styles.label}>Nombre del Padre</span>
+                                        <span className={styles.value}>{trim(socio.SocNomPad) || '-'}</span>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <span className={styles.label}>Teléfono del Padre</span>
+                                        <span className={styles.value}>{trim(socio.SocTelPad) || '-'}</span>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <span className={styles.label}>Nombre de la Madre</span>
+                                        <span className={styles.value}>{trim(socio.SocNomMad) || '-'}</span>
+                                    </div>
+                                    <div className={styles.field}>
+                                        <span className={styles.label}>Teléfono de la Madre</span>
+                                        <span className={styles.value}>{trim(socio.SocTelMad) || '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={styles.section}>
+                                <Title variant="section">Personas autorizadas a retirar</Title>
+                                {(() => {
+                                    const autorizados = AUTORIZADOS_KEYS.map((n) => ({
+                                        n,
+                                        ci: trim(socio[`SocAuto${n}CI`]),
+                                        nombre: trim(socio[`SocAuto${n}`]),
+                                        tel: trim(socio[`SocAuto${n}Tel`]),
+                                    })).filter((a) => a.ci || a.nombre || a.tel);
+
+                                    if (autorizados.length === 0) {
+                                        return <p className={styles.noData}>No hay personas autorizadas registradas.</p>;
+                                    }
+
+                                    return autorizados.map((a) => (
+                                        <div className={`${styles.grid} ${styles.autorizadoBlock}`} key={a.n}>
+                                            <div className={styles.field}>
+                                                <span className={styles.label}>Autorizado {a.n} · Nombre</span>
+                                                <span className={styles.value}>{a.nombre || '-'}</span>
+                                            </div>
+                                            <div className={styles.field}>
+                                                <span className={styles.label}>Autorizado {a.n} · Cédula</span>
+                                                <span className={styles.value}>{a.ci || '-'}</span>
+                                            </div>
+                                            <div className={styles.field}>
+                                                <span className={styles.label}>Autorizado {a.n} · Teléfono</span>
+                                                <span className={styles.value}>{a.tel || '-'}</span>
+                                            </div>
+                                        </div>
+                                    ));
+                                })()}
+                            </div>
+                        </>
                     )}
 
                     {activeTab === 'cuentaCorriente' && (
