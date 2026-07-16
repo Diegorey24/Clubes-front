@@ -1,0 +1,100 @@
+.page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+}
+
+.card {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-100);
+    margin-bottom: var(--spacing-lg);
+}
+
+.sectionLabel {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--gray-500);
+    margin: 0 0 var(--spacing-sm);
+}
+
+.sectionLabel:not(:first-child) {
+    margin-top: var(--spacing-lg);
+}
+
+.monthInput {
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-family: inherit;
+    color: var(--gray-900);
+}
+
+.monthInput:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
+.socioInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 0.85rem 1.1rem;
+}
+
+.socioInfo > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.socioNombre {
+    font-weight: 700;
+    color: var(--gray-900);
+    font-size: 0.9375rem;
+}
+
+.socioMeta {
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+}
+
+.cambiarBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    background: white;
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.cambiarBtn:hover {
+    background: var(--gray-100);
+}
+
+@media (max-width: 640px) {
+    .page {
+        padding: var(--spacing-md);
+    }
+
+    .socioInfo {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

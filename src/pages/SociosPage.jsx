@@ -31,6 +31,7 @@ const ExportIcon = (
 const SociosPage = ({ showToast }) => {
     const [socios, setSocios] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [exporting, setExporting] = useState(false);
     const [filters, setFilters] = useState({
         search: '',
         categoria: '',
@@ -130,7 +131,10 @@ const SociosPage = ({ showToast }) => {
                         <Button
                             variant="soft-success"
                             icon={ExportIcon}
+                            loading={exporting}
                             onClick={async () => {
+                                if (exporting) return;
+                                setExporting(true);
                                 try {
                                     const { exportSocios } = await import('../services/api');
                                     const blob = await exportSocios(filters);
@@ -145,10 +149,12 @@ const SociosPage = ({ showToast }) => {
                                 } catch (error) {
                                     console.error('Error exporting:', error);
                                     showToast('Error al exportar datos', 'error');
+                                } finally {
+                                    setExporting(false);
                                 }
                             }}
                         >
-                            Exportar Excel
+                            {exporting ? 'Exportando...' : 'Exportar Excel'}
                         </Button>
                     </>
                 }

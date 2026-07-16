@@ -15,12 +15,14 @@ import SociosHistoricosPage from './pages/SociosHistoricosPage';
 import DashboardPage from './pages/DashboardPage';
 import CategoriasSociosPage from './pages/CategoriasSociosPage';
 import GruposFamiliaresPage from './pages/GruposFamiliaresPage';
+import GrupoFamiliarDetailPage from './pages/GrupoFamiliarDetailPage';
 import MotivosBajaPage from './pages/MotivosBajaPage';
 import SocioDetailsPage from './pages/SocioDetailsPage';
 import SocioEditPage from './pages/SocioEditPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import GenerarCuotasPage from './pages/GenerarCuotasPage';
+import RechazosPage from './pages/RechazosPage';
 import CajaPage from './pages/CajaPage';
 import CajaHistoricoPage from './pages/CajaHistoricoPage';
 import GeneracionArchivosPage from './pages/GeneracionArchivosPage';
@@ -106,9 +108,11 @@ function App() {
           <Route path="/socios-historicos" element={<PrivateRoute usuario={usuario}><SociosHistoricosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/socios-historicos/:id" element={<PrivateRoute usuario={usuario}><SocioDetailsPage isHistorical={true} /></PrivateRoute>} />
           <Route path="/grupos-familiares" element={<PrivateRoute usuario={usuario}><GruposFamiliaresPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/grupos-familiares/:socDocIde" element={<PrivateRoute usuario={usuario}><GrupoFamiliarDetailPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/categorias-socios" element={<PrivateRoute usuario={usuario}><CategoriasSociosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/motivos-baja" element={<PrivateRoute usuario={usuario}><MotivosBajaPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/generar-cuotas" element={<PrivateRoute usuario={usuario}><GenerarCuotasPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/rechazos" element={<PrivateRoute usuario={usuario}><RechazosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/caja" element={<PrivateRoute usuario={usuario}><CajaPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
           <Route path="/caja/historico" element={<PrivateRoute usuario={usuario}><CajaHistoricoPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
           <Route path="/socios/:id" element={<PrivateRoute usuario={usuario}><SocioDetailsPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />

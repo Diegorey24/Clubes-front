@@ -1,0 +1,114 @@
+.wrap {
+    position: relative;
+}
+
+.inputWrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 0.9rem;
+    display: flex;
+    color: var(--gray-400);
+    pointer-events: none;
+}
+
+.input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.65rem 2.5rem 0.65rem 2.6rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    color: var(--gray-900);
+    transition: all var(--transition-fast);
+}
+
+.input::placeholder {
+    color: var(--gray-400);
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
+.input:disabled {
+    background: var(--gray-50);
+    color: var(--gray-400);
+    cursor: not-allowed;
+}
+
+.spinner {
+    position: absolute;
+    right: 0.9rem;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--gray-200);
+    border-top-color: var(--primary-500);
+    border-radius: 50%;
+    animation: picker-spin 0.7s linear infinite;
+}
+
+@keyframes picker-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.results {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.resultItem {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    text-align: left;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    background: white;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all var(--transition-fast);
+}
+
+.resultItem:hover {
+    background: hsl(210, 76%, 98%);
+    border-color: var(--primary-400);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.resultName {
+    font-weight: 600;
+    color: var(--gray-900);
+    font-size: 0.9rem;
+}
+
+.resultMeta {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+}
+
+.noResults {
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    color: var(--gray-500);
+    font-size: 0.875rem;
+    background: var(--gray-50);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--gray-200);
+}

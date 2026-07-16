@@ -261,6 +261,22 @@ export const getCuotasPendientes = async (aniomes) => {
   }
 };
 
+// Registros de cuenta corriente de un socio (por CI) cuya FechaPago cae
+// dentro del mes indicado (mes en formato "YYYY-MM"). Se usa en Rechazos
+// para encontrar el pago concreto que hay que revertir.
+export const getPagosCuentaCorriente = async (ci, mes) => {
+  const response = await api.get(`/cuenta-corriente/pagos/${ci}/${mes}`);
+  return response.data;
+};
+
+// Revierte un pago de cuenta corriente: el backend vuelve el registro a
+// estado "sin pagar" (NroRecibo = 0, FechaPago = NULL, FormaPago = '').
+// Devuelve 404 si el id no existe.
+export const rechazarPago = async (id) => {
+  const response = await api.put(`/cuenta-corriente/rechazar/${id}`);
+  return response.data;
+};
+
 export const generarCuotas = async (aniomes) => {
   try {
     const response = await api.post('/cuotas/generar', { aniomes });
@@ -376,6 +392,65 @@ export const getCuentaCorrienteSocio = async (ci) => {
 
 export const actualizarDatosSocio = async (ci, datos) => {
   const response = await api.put(`/portal-socio/ficha/${ci}`, datos);
+  return response.data;
+};
+
+// Grupos familiares: no existe una tabla propia, todo vive en Socios.GruFamNro.
+// El controller tiene su propia base (/api/gruposfamiliares) y usa siempre la
+// cédula (SocDocIde) del titular como identificador, no un id autonumérico.
+export const getGruposFamiliares = async () => {
+  const response = await api.get('/gruposfamiliares');
+  return response.data;
+};
+
+// Detalle de un grupo (titular + integrantes). Puede devolver 404 si esa
+// cédula no es titular de ningún grupo; se deja que el caller decida cómo
+// tratar ese caso (ver comentario en CrearGrupoFamiliarModal).
+export const getGrupoFamiliar = async (socDocIde) => {
+  const response = await api.get(`/gruposfamiliares/${socDocIde}`);
+  return response.data;
+};
+
+// Socios con GruFamNro = 0 (sin grupo todavía): son los únicos candidatos
+// válidos para armar o sumar a un grupo. search es opcional, filtra por
+// cédula o nombre/apellido; el backend topea la respuesta en 200 filas.
+export const getSociosSinGrupo = async (search = '') => {
+  const response = await api.get('/gruposfamiliares/sin-grupo', { params: { search } });
+  return response.data;
+};
+
+// titularSocDocIde: cédula del socio que va a ser titular (requerido).
+// socNros: SocNro de los integrantes a agregar (no hace falta incluir el
+// del titular, el backend lo agrega solo).
+export const createGrupoFamiliar = async ({ titularSocDocIde, socNros }) => {
+  const response = await api.post('/gruposfamiliares', { titularSocDocIde, socNros });
+  return response.data;
+};
+
+// Sincroniza los integrantes de un grupo existente: socNros debe ser la
+// lista COMPLETA de SocNro que deben quedar en el grupo (sin contar al
+// titular, que se mantiene siempre). No es un PATCH incremental.
+export const updateGrupoFamiliar = async (socDocIde, socNros) => {
+  const response = await api.put(`/gruposfamiliares/${socDocIde}`, { socNros });
+  return response.data;
+};
+
+// Disuelve el grupo completo (titular + integrantes vuelven a GruFamNro = 0).
+export const deleteGrupoFamiliar = async (socDocIde) => {
+  const response = await api.delete(`/gruposfamiliares/${socDocIde}`);
+  return response.data;
+};
+
+// Cambia el titular de un grupo existente. socDocIde (URL) es el titular
+// ACTUAL; nuevoTitularSocDocIde tiene que ser alguien que ya figure como
+// integrante de ese mismo grupo (el backend responde 400 si no lo es, o si
+// ya es el titular actual). Si todo sale bien, mueve GruFamNro de todo el
+// grupo (y CodGrupo en CuentaCorriente) a la nueva cédula y devuelve el
+// grupo actualizado, ahora identificado por nuevoTitularSocDocIde -- el
+// socDocIde viejo deja de existir como titular, así que el caller tiene que
+// actualizar la URL/estado a la cédula nueva después de esta respuesta.
+export const cambiarTitularGrupoFamiliar = async (socDocIde, nuevoTitularSocDocIde) => {
+  const response = await api.put(`/gruposfamiliares/${socDocIde}/titular`, { nuevoTitularSocDocIde });
   return response.data;
 };
 

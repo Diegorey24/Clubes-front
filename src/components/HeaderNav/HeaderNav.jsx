@@ -13,6 +13,7 @@ const UTILIDADES_PATHS = [
     '/parametros',
     '/parametros-debitos',
     '/generar-cuotas',
+    '/rechazos',
     '/generacion-archivos',
     '/usuarios',
 ];
@@ -185,6 +186,12 @@ const HeaderNav = ({ usuario, onLogout }) => {
                                             <path fillRule="evenodd" d="M4 4a2 2 0 012-2h6.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm9 9a1 1 0 10-2 0v1H9a1 1 0 100 2h2v1a1 1 0 102 0v-1h2a1 1 0 100-2h-2v-1z" clipRule="evenodd" />
                                         </svg>
                                         <span>Generar Cuotas</span>
+                                    </NavLink>
+                                    <NavLink to="/rechazos" className={styles.dropdownItem} onClick={closeDropdown}>
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                        </svg>
+                                        <span>Rechazos</span>
                                     </NavLink>
                                     <NavLink to="/generacion-archivos" className={styles.dropdownItem} onClick={closeDropdown}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">

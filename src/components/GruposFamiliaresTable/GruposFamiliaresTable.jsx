@@ -1,12 +1,18 @@
 import { useState } from 'react';
-import { deleteItem } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
+import { deleteGrupoFamiliar } from '../../services/api';
 import { TableActions, ConfirmDialog } from '../ui';
 import styles from './GruposFamiliaresTable.module.css';
 
-const GruposFamiliaresTable = ({ grupos, onView, onEdit, onDeleted }) => {
+const GruposFamiliaresTable = ({ grupos, onDeleted }) => {
+    const navigate = useNavigate();
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState('');
+
+    const handleRowClick = (grupo) => {
+        navigate(`/grupos-familiares/${grupo.TitularSocDocIde}`);
+    };
 
     const requestDelete = (grupo) => {
         setDeleteError('');
@@ -24,12 +30,12 @@ const GruposFamiliaresTable = ({ grupos, onView, onEdit, onDeleted }) => {
         setDeleting(true);
         setDeleteError('');
         try {
-            await deleteItem('grupos-familiares', deleteTarget.GruFamNro);
+            await deleteGrupoFamiliar(deleteTarget.TitularSocDocIde);
             setDeleteTarget(null);
             onDeleted?.();
         } catch (err) {
-            console.error('Error deleting grupo familiar:', err);
-            setDeleteError('No se pudo eliminar el grupo familiar. Intentá nuevamente.');
+            console.error('Error disolviendo el grupo familiar:', err);
+            setDeleteError('No se pudo disolver el grupo familiar. Intentá nuevamente.');
         } finally {
             setDeleting(false);
         }
@@ -51,22 +57,21 @@ const GruposFamiliaresTable = ({ grupos, onView, onEdit, onDeleted }) => {
             <table className={styles.table}>
                 <thead>
                     <tr>
-                        <th>Número</th>
                         <th>Titular</th>
+                        <th>Cédula</th>
                         <th>Integrantes</th>
                         <th className={styles.actionsHeader}>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {grupos.map((grupo) => (
-                        <tr key={grupo.GruFamNro} onClick={() => onView(grupo)} title="Ver detalle del grupo familiar">
-                            <td className={styles.muted}>{grupo.GruFamNro}</td>
-                            <td className={styles.nameCell}>{grupo.GruFamTit?.trim?.() || grupo.GruFamTit}</td>
-                            <td>{grupo.GruCntInt ?? '-'}</td>
+                        <tr key={grupo.GruFamNro} onClick={() => handleRowClick(grupo)} title="Ver detalle del grupo familiar">
+                            <td className={styles.nameCell}>{grupo.TitularNombre?.trim?.() || grupo.TitularNombre}</td>
+                            <td className={styles.muted}>{grupo.TitularSocDocIde}</td>
+                            <td>{grupo.CantidadIntegrantes ?? '-'}</td>
                             <td className={styles.actionsCell}>
                                 <TableActions
-                                    onView={() => onView(grupo)}
-                                    onEdit={() => onEdit(grupo)}
+                                    onView={() => handleRowClick(grupo)}
                                     onDelete={() => requestDelete(grupo)}
                                 />
                             </td>
@@ -77,9 +82,9 @@ const GruposFamiliaresTable = ({ grupos, onView, onEdit, onDeleted }) => {
 
             <ConfirmDialog
                 isOpen={!!deleteTarget}
-                title="¿Eliminar grupo familiar?"
-                description="Esta acción no se puede deshacer."
-                confirmLabel="Sí, eliminar"
+                title="¿Disolver grupo familiar?"
+                description="El titular y todos los integrantes quedan desvinculados del grupo. Esta acción no se puede deshacer."
+                confirmLabel="Sí, disolver"
                 cancelLabel="Cancelar"
                 variant="danger"
                 loading={deleting}
@@ -88,9 +93,11 @@ const GruposFamiliaresTable = ({ grupos, onView, onEdit, onDeleted }) => {
             >
                 {deleteTarget && (
                     <div className={styles.confirmSummary}>
-                        <div className={styles.confirmName}>{deleteTarget.GruFamTit?.trim?.() || deleteTarget.GruFamTit}</div>
+                        <div className={styles.confirmName}>{deleteTarget.TitularNombre?.trim?.() || deleteTarget.TitularNombre}</div>
                         <div className={styles.confirmMeta}>
-                            <span>Número {deleteTarget.GruFamNro}</span>
+                            <span>CI {deleteTarget.TitularSocDocIde}</span>
+                            <span>·</span>
+                            <span>{deleteTarget.CantidadIntegrantes ?? 0} integrante{deleteTarget.CantidadIntegrantes !== 1 ? 's' : ''}</span>
                         </div>
                     </div>
                 )}

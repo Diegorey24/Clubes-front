@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import GruposFamiliaresTable from '../components/GruposFamiliaresTable/GruposFamiliaresTable';
-import GruposFamiliaresModal from '../components/GruposFamiliaresModal/GruposFamiliaresModal';
+import CrearGrupoFamiliarModal from '../components/GruposFamiliaresModal/GruposFamiliaresModal';
 import { Button, PageHeader } from '../components/ui';
-import { fetchItems, createItem, updateItem } from '../services/api';
+import { getGruposFamiliares } from '../services/api';
 import styles from './GruposFamiliaresPage.module.css';
 
 const PlusIcon = (
@@ -29,13 +29,10 @@ const GruposFamiliaresPage = ({ showToast }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit' | 'view'
-    const [editingGrupo, setEditingGrupo] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         loadGrupos();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -47,8 +44,9 @@ const GruposFamiliaresPage = ({ showToast }) => {
         setLoading(true);
         setError(null);
         try {
-            // "grupos-familiares" mapea a /api/grupos-familiares (ver server.js)
-            const data = await fetchItems('grupos-familiares');
+            // No hay paginación ni búsqueda en el GET general (ver guía del
+            // backend): se trae todo y se filtra acá mismo.
+            const data = await getGruposFamiliares();
             setGrupos(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error loading grupos familiares:', err);
@@ -63,9 +61,10 @@ const GruposFamiliaresPage = ({ showToast }) => {
         let filtered = [...grupos];
 
         if (searchTerm) {
-            filtered = filtered.filter(grupo =>
-                grupo.GruFamTit?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                grupo.GruFamNro?.toString().includes(searchTerm)
+            const term = searchTerm.toLowerCase();
+            filtered = filtered.filter((grupo) =>
+                grupo.TitularNombre?.toLowerCase().includes(term) ||
+                grupo.TitularSocDocIde?.toString().includes(searchTerm)
             );
         }
 
@@ -73,38 +72,13 @@ const GruposFamiliaresPage = ({ showToast }) => {
     };
 
     const handleAdd = () => {
-        setEditingGrupo(null);
-        setModalMode('create');
         setIsModalOpen(true);
     };
 
-    const handleEdit = (grupo) => {
-        setEditingGrupo(grupo);
-        setModalMode('edit');
-        setIsModalOpen(true);
-    };
-
-    const handleView = (grupo) => {
-        setEditingGrupo(grupo);
-        setModalMode('view');
-        setIsModalOpen(true);
-    };
-
-    const handleSubmit = async (data) => {
-        try {
-            if (editingGrupo) {
-                await updateItem('grupos-familiares', editingGrupo.GruFamNro, data);
-                showToast('Grupo familiar actualizado exitosamente', 'success');
-            } else {
-                await createItem('grupos-familiares', data);
-                showToast('Grupo familiar creado exitosamente', 'success');
-            }
-            setIsModalOpen(false);
-            loadGrupos();
-        } catch (err) {
-            console.error('Error saving grupo familiar:', err);
-            showToast('Error al guardar el grupo familiar', 'error');
-        }
+    const handleGrupoCreado = () => {
+        setIsModalOpen(false);
+        showToast('Grupo familiar creado exitosamente', 'success');
+        loadGrupos();
     };
 
     if (loading) {
@@ -135,7 +109,7 @@ const GruposFamiliaresPage = ({ showToast }) => {
                     {SearchIcon}
                     <input
                         type="text"
-                        placeholder="Buscar por titular o número de grupo"
+                        placeholder="Buscar por titular o cédula"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -162,19 +136,14 @@ const GruposFamiliaresPage = ({ showToast }) => {
             ) : (
                 <GruposFamiliaresTable
                     grupos={filteredGrupos}
-                    onView={handleView}
-                    onEdit={handleEdit}
                     onDeleted={loadGrupos}
                 />
             )}
 
-            <GruposFamiliaresModal
+            <CrearGrupoFamiliarModal
                 isOpen={isModalOpen}
-                mode={modalMode}
                 onClose={() => setIsModalOpen(false)}
-                onSubmit={handleSubmit}
-                onRequestEdit={() => setModalMode('edit')}
-                initialData={editingGrupo}
+                onSuccess={handleGrupoCreado}
             />
         </div>
     );

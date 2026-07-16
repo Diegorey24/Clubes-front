@@ -206,6 +206,7 @@
     overflow-x: auto;
     border: 1px solid var(--gray-100);
     border-radius: var(--radius-lg);
+    margin-top: 1rem;
 }
 
 .ccTable {

@@ -724,7 +724,6 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
                                                 <th>N.° Recibo</th>
                                                 <th>Rubro</th>
                                                 <th>Mes</th>
-                                                <th>Fecha Cargo</th>
                                                 <th>Fecha Vencimiento</th>
                                                 <th>Importe</th>
                                                 <th>Estado</th>
@@ -758,7 +757,6 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
                                                     </td>
                                                     <td>{mov.RubDsc?.trim() || '-'}</td>
                                                     <td>{formatMonthYear(mov.Mes)}</td>
-                                                    <td>{formatFecha(mov.FechaCargo)}</td>
                                                     <td>{formatFecha(mov.FechaVto)}</td>
                                                     <td className={styles.amount}>{formatCurrency(parseFloat(mov.Importe) || 0)}</td>
                                                     <td>

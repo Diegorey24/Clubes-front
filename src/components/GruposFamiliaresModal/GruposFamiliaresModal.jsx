@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
+import { getGrupoFamiliar, createGrupoFamiliar } from '../../services/api';
+import { nombreCompleto } from '../../utils/socioNombre';
+import { describeGrupoFamiliarConflict } from '../../utils/grupoFamiliarError';
 import { Button } from '../ui';
+import SocioSearchPicker from '../SocioSearchPicker/SocioSearchPicker';
 import styles from './GruposFamiliaresModal.module.css';
 
 const FamilyIcon = (
@@ -14,36 +18,53 @@ const CloseIcon = (
     </svg>
 );
 
-const emptyForm = {
-    GruFamTit: '',
-    GruMasVie: '',
-    GruCntInt: '',
-};
+const BackArrowIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+);
 
-// GruMasVie viene tal cual de la tabla gruposfamiliares y todavía no tiene
-// validación propia ni significado confirmado en el backend (por el nombre,
-// probablemente el socio de mayor edad del grupo). Se deja como texto libre
-// hasta confirmar con la base; se termina de pulir más adelante.
-const GruposFamiliaresModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onRequestEdit, initialData }) => {
-    const isView = mode === 'view';
+const RemoveIcon = (
+    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
 
-    const [formData, setFormData] = useState(emptyForm);
+/**
+ * Alta de un grupo familiar. No existe una tabla propia de grupos: crear
+ * uno es, en el fondo, elegir un titular (por su cédula) y una lista de
+ * integrantes (por su SocNro) para que el backend les cargue GruFamNro.
+ *
+ * Paso 1: elegir el titular. Se valida enseguida (GET /gruposfamiliares/:ci)
+ * si esa cédula ya es titular de otro grupo, para avisar antes de que el
+ * usuario arme toda la lista de integrantes y se encuentre con el error
+ * recién al final.
+ * Paso 2: elegir los integrantes (además del titular) y confirmar el alta.
+ * El buscador de socios (SocioSearchPicker) ya solo ofrece gente sin grupo
+ * familiar (GruFamNro = 0), pero el backend igual revalida todo al crear:
+ * si algún SocNro enviado ya pertenece a otra familia, responde 409 con el
+ * detalle de quiénes son (ver describeGrupoFamiliarConflict), por si hubo
+ * un cambio entre que se buscó y se confirmó.
+ */
+const CrearGrupoFamiliarModal = ({ isOpen, onClose, onSuccess }) => {
+    const [step, setStep] = useState('titular'); // 'titular' | 'integrantes'
+    const [titular, setTitular] = useState(null);
+    const [checkingTitular, setCheckingTitular] = useState(false);
+    const [titularError, setTitularError] = useState('');
+    const [integrantes, setIntegrantes] = useState([]);
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
 
     useEffect(() => {
         if (!isOpen) return;
+        setStep('titular');
+        setTitular(null);
+        setCheckingTitular(false);
+        setTitularError('');
+        setIntegrantes([]);
+        setSaving(false);
         setFormError('');
-        if (initialData) {
-            setFormData({
-                GruFamTit: (typeof initialData.GruFamTit === 'string' ? initialData.GruFamTit.trim() : initialData.GruFamTit) || '',
-                GruMasVie: initialData.GruMasVie ?? '',
-                GruCntInt: initialData.GruCntInt ?? '',
-            });
-        } else {
-            setFormData(emptyForm);
-        }
-    }, [initialData, isOpen]);
+    }, [isOpen]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -61,33 +82,77 @@ const GruposFamiliaresModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onReq
         if (e.target === e.currentTarget && !saving) onClose?.();
     };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+    const handlePickTitular = async (socio) => {
+        setTitular(socio);
+        setTitularError('');
+        setCheckingTitular(true);
+        try {
+            // Si esto resuelve sin error, ya existe un grupo con este titular.
+            await getGrupoFamiliar(socio.SocDocIde);
+            setTitularError('Este socio ya es titular de un grupo familiar. Para modificarlo, entrá a su grupo y editá los integrantes.');
+        } catch (err) {
+            if (err.response?.status !== 404) {
+                console.error('Error verificando si el socio ya es titular:', err);
+                setTitularError('No se pudo verificar el socio. Intentá de nuevo.');
+            }
+            // 404 = no es titular de ningún grupo todavía: todo bien.
+        } finally {
+            setCheckingTitular(false);
+        }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!formData.GruFamTit.trim()) {
-            setFormError('El titular del grupo es requerido');
-            return;
-        }
+    const handleCambiarTitular = () => {
+        setTitular(null);
+        setTitularError('');
+    };
+
+    const handleContinuar = () => {
+        if (!titular || titularError || checkingTitular) return;
+        setStep('integrantes');
+    };
+
+    const handleVolver = () => {
+        setFormError('');
+        setStep('titular');
+    };
+
+    const handleAgregarIntegrante = (socio) => {
+        setIntegrantes((prev) => [...prev, socio]);
+    };
+
+    const handleQuitarIntegrante = (socNro) => {
+        setIntegrantes((prev) => prev.filter((s) => s.SocNro !== socNro));
+    };
+
+    const handleCrear = async () => {
         setFormError('');
         setSaving(true);
         try {
-            const payload = {
-                GruFamTit: formData.GruFamTit.trim(),
-                GruMasVie: formData.GruMasVie === '' ? null : formData.GruMasVie,
-                GruCntInt: formData.GruCntInt === '' ? null : Number(formData.GruCntInt),
-            };
-            await onSubmit(payload);
+            await createGrupoFamiliar({
+                titularSocDocIde: titular.SocDocIde,
+                socNros: integrantes.map((s) => s.SocNro),
+            });
+            await onSuccess?.();
+        } catch (err) {
+            console.error('Error creando el grupo familiar:', err);
+            if (err.response?.status === 409) {
+                setFormError(describeGrupoFamiliarConflict(err));
+            } else if (err.response?.status === 404) {
+                setFormError('No se encontró un socio con esa cédula.');
+            } else if (err.response?.status === 400) {
+                setFormError('Faltan datos para crear el grupo.');
+            } else {
+                setFormError('No se pudo crear el grupo familiar. Intentá nuevamente.');
+            }
         } finally {
             setSaving(false);
         }
     };
+
+    const excludeSocNros = [
+        ...(titular ? [titular.SocNro] : []),
+        ...integrantes.map((s) => s.SocNro),
+    ];
 
     return (
         <div className={styles.overlay} onClick={handleBackdropClick}>
@@ -95,9 +160,12 @@ const GruposFamiliaresModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onReq
                 <div className={styles.header}>
                     <div className={styles.headerLeft}>
                         <span className={styles.iconWrap}>{FamilyIcon}</span>
-                        <h3 id="grupo-familiar-modal-title" className={styles.title}>
-                            {isView ? 'Ver Grupo Familiar' : initialData ? 'Editar Grupo Familiar' : 'Nuevo Grupo Familiar'}
-                        </h3>
+                        <div>
+                            <h3 id="grupo-familiar-modal-title" className={styles.title}>Nuevo Grupo Familiar</h3>
+                            <p className={styles.stepLabel}>
+                                {step === 'titular' ? 'Paso 1 · Elegir titular' : 'Paso 2 · Elegir integrantes'}
+                            </p>
+                        </div>
                     </div>
                     <button
                         type="button"
@@ -110,99 +178,106 @@ const GruposFamiliaresModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onReq
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className={styles.form}>
-                    <div className={styles.formGrid}>
-                        {initialData && (
-                            <div className={styles.formGroup}>
-                                <label htmlFor="GruFamNro">Número</label>
-                                <input
-                                    type="text"
-                                    id="GruFamNro"
-                                    className={styles.input}
-                                    value={initialData.GruFamNro}
-                                    disabled
-                                />
-                            </div>
-                        )}
-
-                        <div className={`${styles.formGroup} ${initialData ? styles.formGroupFull2 : styles.formGroupFull}`}>
-                            <label htmlFor="GruFamTit">Titular del grupo <span className={styles.required}>*</span></label>
-                            <input
-                                type="text"
-                                id="GruFamTit"
-                                name="GruFamTit"
-                                className={styles.input}
-                                value={formData.GruFamTit}
-                                onChange={handleChange}
-                                required
-                                placeholder="Nombre del titular"
-                                disabled={isView}
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label htmlFor="GruCntInt">Cantidad de integrantes</label>
-                            <input
-                                type="number"
-                                id="GruCntInt"
-                                name="GruCntInt"
-                                className={styles.input}
-                                value={formData.GruCntInt}
-                                onChange={handleChange}
-                                placeholder="0"
-                                min="0"
-                                disabled={isView}
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label htmlFor="GruMasVie">GruMasVie</label>
-                            <input
-                                type="text"
-                                id="GruMasVie"
-                                name="GruMasVie"
-                                className={styles.input}
-                                value={formData.GruMasVie}
-                                onChange={handleChange}
-                                placeholder="A confirmar con la base"
-                                disabled={isView}
-                            />
-                        </div>
-
-                        {!initialData && (
-                            <p className={styles.autoCodeHint}>
-                                El número de grupo se asigna automáticamente al guardar.
+                <div className={styles.body}>
+                    {step === 'titular' && (
+                        <>
+                            <p className={styles.hint}>
+                                Buscá y elegí el socio que va a ser el titular del grupo. Su cédula queda como identificador del grupo.
                             </p>
-                        )}
-                    </div>
 
-                    {formError && <p className={styles.formError}>{formError}</p>}
+                            {!titular ? (
+                                <SocioSearchPicker onPick={handlePickTitular} autoFocus placeholder="Buscar titular por nombre o cédula" />
+                            ) : (
+                                <div className={`${styles.socioInfo} ${titularError ? styles.socioInfoError : ''}`}>
+                                    <div>
+                                        <span className={styles.socioNombre}>{nombreCompleto(titular)}</span>
+                                        <span className={styles.socioMeta}>
+                                            CI {titular.SocDocIde} · Socio N.° {titular.SocNro}
+                                        </span>
+                                    </div>
+                                    <Button type="button" variant="ghost" size="sm" onClick={handleCambiarTitular} disabled={checkingTitular}>
+                                        Cambiar
+                                    </Button>
+                                </div>
+                            )}
+
+                            {checkingTitular && <p className={styles.checking}>Verificando...</p>}
+                            {titularError && <p className={styles.formError}>{titularError}</p>}
+                        </>
+                    )}
+
+                    {step === 'integrantes' && (
+                        <>
+                            <div className={styles.socioInfo}>
+                                <div>
+                                    <span className={styles.socioNombre}>{nombreCompleto(titular)}</span>
+                                    <span className={styles.socioMeta}>Titular · CI {titular.SocDocIde}</span>
+                                </div>
+                            </div>
+
+                            <p className={styles.hint}>Buscá y agregá los demás integrantes del grupo (el titular ya queda incluido).</p>
+
+                            <SocioSearchPicker
+                                onPick={handleAgregarIntegrante}
+                                excludeSocNros={excludeSocNros}
+                                placeholder="Buscar integrante por nombre o cédula"
+                            />
+
+                            {integrantes.length === 0 ? (
+                                <p className={styles.empty}>Todavía no agregaste integrantes.</p>
+                            ) : (
+                                <div className={styles.chips}>
+                                    {integrantes.map((s) => (
+                                        <span className={styles.chip} key={s.SocNro}>
+                                            {nombreCompleto(s)}
+                                            <button
+                                                type="button"
+                                                className={styles.chipRemove}
+                                                onClick={() => handleQuitarIntegrante(s.SocNro)}
+                                                aria-label={`Quitar a ${nombreCompleto(s)}`}
+                                            >
+                                                {RemoveIcon}
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            {formError && <p className={styles.formError}>{formError}</p>}
+                        </>
+                    )}
 
                     <div className={styles.actions}>
-                        {isView ? (
+                        {step === 'titular' && (
                             <>
                                 <Button type="button" variant="secondary" onClick={onClose}>
-                                    Cerrar
-                                </Button>
-                                <Button type="button" variant="primary" onClick={onRequestEdit}>
-                                    Editar
-                                </Button>
-                            </>
-                        ) : (
-                            <>
-                                <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
                                     Cancelar
                                 </Button>
-                                <Button type="submit" variant="primary" loading={saving}>
-                                    {initialData ? 'Actualizar' : 'Crear'} Grupo
+                                <Button
+                                    type="button"
+                                    variant="primary"
+                                    onClick={handleContinuar}
+                                    disabled={!titular || !!titularError || checkingTitular}
+                                >
+                                    Continuar
+                                </Button>
+                            </>
+                        )}
+                        {step === 'integrantes' && (
+                            <>
+                                <Button type="button" variant="secondary" icon={BackArrowIcon} onClick={handleVolver} disabled={saving}>
+                                    Volver
+                                </Button>
+                                <Button type="button" variant="primary" onClick={handleCrear} loading={saving}>
+                                    Crear Grupo
                                 </Button>
                             </>
                         )}
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );
 };
 
-export default GruposFamiliaresModal;
+export default CrearGrupoFamiliarModal;
