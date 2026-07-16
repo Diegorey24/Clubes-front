@@ -14,6 +14,7 @@ import SociosPage from './pages/SociosPage';
 import SociosHistoricosPage from './pages/SociosHistoricosPage';
 import DashboardPage from './pages/DashboardPage';
 import CategoriasSociosPage from './pages/CategoriasSociosPage';
+import MotivosBajaPage from './pages/MotivosBajaPage';
 import SocioDetailsPage from './pages/SocioDetailsPage';
 import SocioEditPage from './pages/SocioEditPage';
 import LoginPage from './pages/LoginPage';
@@ -103,10 +104,11 @@ function App() {
           <Route path="/socios-historicos" element={<PrivateRoute usuario={usuario}><SociosHistoricosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/socios-historicos/:id" element={<PrivateRoute usuario={usuario}><SocioDetailsPage isHistorical={true} /></PrivateRoute>} />
           <Route path="/categorias-socios" element={<PrivateRoute usuario={usuario}><CategoriasSociosPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/motivos-baja" element={<PrivateRoute usuario={usuario}><MotivosBajaPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/generar-cuotas" element={<PrivateRoute usuario={usuario}><GenerarCuotasPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/caja" element={<PrivateRoute usuario={usuario}><CajaPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
           <Route path="/caja/historico" element={<PrivateRoute usuario={usuario}><CajaHistoricoPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
-          <Route path="/socios/:id" element={<PrivateRoute usuario={usuario}><SocioDetailsPage /></PrivateRoute>} />
+          <Route path="/socios/:id" element={<PrivateRoute usuario={usuario}><SocioDetailsPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
           <Route path="/socios/edit/:id" element={<PrivateRoute usuario={usuario}><SocioEditPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/generacion-archivos" element={<PrivateRoute usuario={usuario}><GeneracionArchivosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/parametros-debitos" element={<PrivateRoute usuario={usuario}><ParametrosDebitosPage showToast={showToast} /></PrivateRoute>} />

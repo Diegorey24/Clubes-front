@@ -259,6 +259,34 @@
     color: var(--gray-900);
 }
 
+.reciboCell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.downloadBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.downloadBtn:hover {
+    background: hsl(210, 76%, 95%);
+    border-color: var(--primary-400);
+    color: var(--primary-700);
+}
+
 .noData {
     color: var(--gray-500);
     text-align: center;
@@ -274,8 +302,24 @@
     font-size: 0.9375rem;
 }
 
-.debtSummary {
+.ccHeaderRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
+}
+
+.ccActions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+
+.debtSummary {
     padding: 0.9rem 1.5rem 0.9rem 1rem;
     background-color: white;
     border: 1px solid var(--gray-100);
@@ -396,5 +440,19 @@
     .debtSummary {
         width: 100%;
         box-sizing: border-box;
+    }
+
+    .ccHeaderRow {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ccActions {
+        margin-left: 0;
+        justify-content: stretch;
+    }
+
+    .ccActions > * {
+        flex: 1;
     }
 }

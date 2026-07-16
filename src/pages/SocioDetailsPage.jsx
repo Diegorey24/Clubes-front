@@ -2,7 +2,16 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSocioById, getSocioHistoricoById } from '../services/api';
 import { Button, Badge, Tabs, Title, BackLink } from '../components/ui';
+import { formatFecha } from '../utils/date';
+import { generarReciboPDF } from '../utils/reciboPdf';
+import CrearCargoModal from '../components/CrearCargoModal/CrearCargoModal';
+import AnularCargoModal from '../components/AnularCargoModal/AnularCargoModal';
 import styles from './SocioDetailsPage.module.css';
+
+// Placeholder de "N.° Recibo" que usa la API para los débitos automáticos:
+// no generan un recibo de cobro real, así que en vez de un recibo se arma
+// un comprobante de pago distinto, usando el Nro de Emisión (mov.Id).
+const NRO_RECIBO_DEBITO_AUTOMATICO = 9999999;
 
 // Pestaña "Datos del Responsable" deshabilitada por ahora (a pedido).
 // Se deja el código comentado para poder reactivarla más adelante.
@@ -38,6 +47,24 @@ const InfoIcon = (
     </svg>
 );
 
+const PlusIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+);
+
+const MinusIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
+    </svg>
+);
+
+const DownloadIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+);
+
 // Por defecto, la cuenta corriente se filtra desde el primer día del mes,
 // un año atrás, hasta hoy. Por ejemplo si hoy es 14/07/2026, se busca desde
 // el 01/07/2025. Esto evita traer demasiados registros en cada llamado,
@@ -49,7 +76,7 @@ const getDefaultDateRange = () => {
     return { start: fmt(start), end: fmt(end) };
 };
 
-const SocioDetailsPage = ({ isHistorical = false }) => {
+const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [socio, setSocio] = useState(null);
@@ -67,6 +94,9 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
     const [cuentaCorrienteFamiliar, setCuentaCorrienteFamiliar] = useState([]);
     const [loadingCCFam, setLoadingCCFam] = useState(false);
     const [ccFamLoaded, setCcFamLoaded] = useState(false);
+
+    const [isCrearCargoOpen, setIsCrearCargoOpen] = useState(false);
+    const [isAnularCargoOpen, setIsAnularCargoOpen] = useState(false);
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(amount);
@@ -92,19 +122,6 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
     // Trim seguro: varios campos de texto llegan de la base rellenados con
     // espacios (char fijo), incluso cuando "no tienen dato".
     const trim = (value) => (value || '').toString().trim();
-
-    // Edad calculada a partir de la fecha de nacimiento (null si no hay fecha).
-    const calcularEdad = (fechaNac) => {
-        if (!fechaNac) return null;
-        const nacimiento = new Date(fechaNac);
-        if (Number.isNaN(nacimiento.getTime())) return null;
-        const hoy = new Date();
-        let edad = hoy.getFullYear() - nacimiento.getFullYear();
-        const aunNoCumplio = hoy.getMonth() < nacimiento.getMonth()
-            || (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() < nacimiento.getDate());
-        if (aunNoCumplio) edad--;
-        return edad;
-    };
 
     useEffect(() => {
         loadSocio();
@@ -167,6 +184,68 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
         }
     };
 
+    const handleCargoCreado = () => {
+        if (socio) loadCuentaCorriente(socio.SocDocIde);
+    };
+
+    // Un movimiento se puede descargar cuando tiene N.° de Recibo cargado.
+    // Ojo: acá se usa el mismo criterio "truthy" que la celda para decidir
+    // si muestra el número o un "-" (mov.NroRecibo || '-'), así que un
+    // NroRecibo en 0 (o null/undefined/'') se considera "sin recibo todavía"
+    // y no debe mostrar el botón de descarga.
+    const tieneComprobante = (mov) => Boolean(mov?.NroRecibo);
+
+    const esDebitoAutomatico = (mov) => Number(mov?.NroRecibo) === NRO_RECIBO_DEBITO_AUTOMATICO;
+
+    // Descarga el comprobante de un movimiento de cuenta corriente (propia
+    // o familiar). "movimientos" es la lista completa donde buscar otros
+    // renglones con el mismo N.° de Recibo (un recibo puede cubrir varias
+    // cuotas cobradas juntas). Para débitos automáticos (N.° Recibo 9999999)
+    // no existe un recibo de cobro real, así que se arma un comprobante de
+    // pago simple para ese único movimiento, usando el Nro de Emisión.
+    const handleDescargarComprobante = async (mov, movimientos, nombreSocio, ci) => {
+        try {
+            if (esDebitoAutomatico(mov)) {
+                await generarReciboPDF({
+                    nroDoc: mov.Id,
+                    titulo: 'Comprobante de Pago',
+                    numeroLabel: 'Emisión N°',
+                    nombreSocio,
+                    ci,
+                    items: [{
+                        periodo: formatMonthYear(mov.Mes),
+                        concepto: mov.RubDsc?.trim() || '-',
+                        importe: parseFloat(mov.Importe) || 0,
+                    }],
+                    total: parseFloat(mov.Importe) || 0,
+                    fecha: formatFecha(mov.FechaPago),
+                    meta: 'Débito Automático',
+                    filenamePrefix: 'comprobante',
+                });
+            } else {
+                const mismoRecibo = movimientos.filter((m) => String(m.NroRecibo) === String(mov.NroRecibo));
+                const total = mismoRecibo.reduce((acc, m) => acc + (parseFloat(m.Importe) || 0), 0);
+                await generarReciboPDF({
+                    nroDoc: mov.NroRecibo,
+                    titulo: 'Recibo de Cobro',
+                    nombreSocio,
+                    ci,
+                    items: mismoRecibo.map((m) => ({
+                        periodo: formatMonthYear(m.Mes),
+                        concepto: m.RubDsc?.trim() || '-',
+                        importe: parseFloat(m.Importe) || 0,
+                    })),
+                    total,
+                    fecha: formatFecha(mov.FechaPago),
+                    filenamePrefix: 'recibo',
+                });
+            }
+        } catch (err) {
+            console.error('Error generando el comprobante:', err);
+            showToast?.('No se pudo generar el comprobante', 'error');
+        }
+    };
+
     const handleClearDates = () => {
         const { start, end } = getDefaultDateRange();
         setStartDate(start);
@@ -219,13 +298,10 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
     //     && String(socio.GruFamNro) === String(socio.SocDocIde);
     // const mostrarTabResponsable = hasResponsableData && perteneceAGrupoFamiliar && !esTitularDeSuGrupo;
 
-    const edad = calcularEdad(socio.SocFchNac);
-    const esMenorDeEdad = edad !== null && edad < 18;
-
     const tabs = [
         { id: 'info', label: 'Información General' },
         // ...(mostrarTabResponsable ? [{ id: 'responsable', label: 'Datos del Responsable' }] : []),
-        ...(esMenorDeEdad ? [{ id: 'padres', label: 'Datos de los Padres/Responsables' }] : []),
+        { id: 'padres', label: 'Datos de los Padres/Responsables' },
         { id: 'cuentaCorriente', label: 'Cuenta Corriente' },
         { id: 'cuentaCorrienteFamiliar', label: 'Cuenta Corriente Familiar' },
     ];
@@ -292,7 +368,7 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                     <div className={styles.field}>
                                         <span className={styles.label}>Fecha de Nacimiento</span>
                                         <span className={styles.value}>
-                                            {socio.SocFchNac ? new Date(socio.SocFchNac).toLocaleDateString() : '-'}
+                                            {formatFecha(socio.SocFchNac)}
                                         </span>
                                     </div>
                                     <div className={styles.field}>
@@ -334,7 +410,7 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                     <div className={styles.field}>
                                         <span className={styles.label}>Fecha de Ingreso</span>
                                         <span className={styles.value}>
-                                            {socio.SocFchIng ? new Date(socio.SocFchIng).toLocaleDateString() : '-'}
+                                            {formatFecha(socio.SocFchIng)}
                                         </span>
                                     </div>
                                     <div className={styles.field}>
@@ -399,7 +475,7 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                     )}
                     */}
 
-                    {activeTab === 'padres' && esMenorDeEdad && (
+                    {activeTab === 'padres' && (
                         <>
                             <div className={styles.section}>
                                 <Title variant="section">Datos de los padres</Title>
@@ -495,21 +571,44 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                 )}
                             </div>
 
-                            {!loadingCC && cuentaCorriente.length > 0 && (
-                                <div className={styles.debtSummary}>
-                                    <span className={styles.debtIconWrap}>{DebtIcon}</span>
-                                    <div className={styles.debtText}>
-                                        <span className={styles.debtLabel}>Total Adeudado</span>
-                                        <span className={styles.debtValue}>
-                                            {formatCurrency(
-                                                cuentaCorriente
-                                                    .filter(mov => !mov.FechaPago)
-                                                    .reduce((acc, mov) => acc + (parseFloat(mov.Importe) || 0), 0)
-                                            )}
-                                        </span>
+                            <div className={styles.ccHeaderRow}>
+                                {!loadingCC && cuentaCorriente.length > 0 && (
+                                    <div className={styles.debtSummary}>
+                                        <span className={styles.debtIconWrap}>{DebtIcon}</span>
+                                        <div className={styles.debtText}>
+                                            <span className={styles.debtLabel}>Total Adeudado</span>
+                                            <span className={styles.debtValue}>
+                                                {formatCurrency(
+                                                    cuentaCorriente
+                                                        .filter(mov => !mov.FechaPago)
+                                                        .reduce((acc, mov) => acc + (parseFloat(mov.Importe) || 0), 0)
+                                                )}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+
+                                {!isHistorical && (
+                                    <div className={styles.ccActions}>
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            icon={PlusIcon}
+                                            onClick={() => setIsCrearCargoOpen(true)}
+                                        >
+                                            Crear Cargo
+                                        </Button>
+                                        <Button
+                                            variant="soft-danger"
+                                            size="sm"
+                                            icon={MinusIcon}
+                                            onClick={() => setIsAnularCargoOpen(true)}
+                                        >
+                                            Anular Cargo
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
 
                             {loadingCC ? (
                                 <p className={styles.loadingText}>Cargando movimientos...</p>
@@ -532,15 +631,35 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                             {cuentaCorriente.map((mov, index) => (
                                                 <tr key={index}>
                                                     <td className={styles.muted}>{mov.Id || '-'}</td>
-                                                    <td>{mov.NroRecibo || '-'}</td>
+                                                    <td>
+                                                        <span className={styles.reciboCell}>
+                                                            {mov.NroRecibo || '-'}
+                                                            {tieneComprobante(mov) && (
+                                                                <button
+                                                                    type="button"
+                                                                    className={styles.downloadBtn}
+                                                                    onClick={() => handleDescargarComprobante(
+                                                                        mov,
+                                                                        cuentaCorriente,
+                                                                        [socio.PrimerNombre, socio.SegundoNombre, socio.PrimerApellido, socio.SegundoApellido].map(trim).filter(Boolean).join(' '),
+                                                                        socio.SocDocIde
+                                                                    )}
+                                                                    title={esDebitoAutomatico(mov) ? 'Descargar comprobante de pago' : 'Descargar recibo'}
+                                                                    aria-label={esDebitoAutomatico(mov) ? 'Descargar comprobante de pago' : 'Descargar recibo'}
+                                                                >
+                                                                    {DownloadIcon}
+                                                                </button>
+                                                            )}
+                                                        </span>
+                                                    </td>
                                                     <td>{mov.RubDsc?.trim() || '-'}</td>
                                                     <td>{formatMonthYear(mov.Mes)}</td>
                                                     {/* <td>{mov.FechaCargo ? new Date(mov.FechaCargo).toLocaleDateString() : '-'}</td> */}
-                                                    <td>{mov.FechaVto ? new Date(mov.FechaVto).toLocaleDateString() : '-'}</td>
+                                                    <td>{formatFecha(mov.FechaVto)}</td>
                                                     <td className={styles.amount}>{formatCurrency(parseFloat(mov.Importe) || 0)}</td>
                                                     <td>
                                                         {mov.FechaPago ? (
-                                                            <Badge variant="success">{new Date(mov.FechaPago).toLocaleDateString()}</Badge>
+                                                            <Badge variant="success">{formatFecha(mov.FechaPago)}</Badge>
                                                         ) : (
                                                             <Badge variant="danger">Pendiente</Badge>
                                                         )}
@@ -616,15 +735,35 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                                                 <tr key={index}>
                                                     <td className={styles.nameCell}>{mov.IntegranteNombre?.trim() || mov.IntegranteCi || '-'}</td>
                                                     <td className={styles.muted}>{mov.Id || '-'}</td>
-                                                    <td>{mov.NroRecibo || '-'}</td>
+                                                    <td>
+                                                        <span className={styles.reciboCell}>
+                                                            {mov.NroRecibo || '-'}
+                                                            {tieneComprobante(mov) && (
+                                                                <button
+                                                                    type="button"
+                                                                    className={styles.downloadBtn}
+                                                                    onClick={() => handleDescargarComprobante(
+                                                                        mov,
+                                                                        cuentaCorrienteFamiliar.filter((m) => String(m.IntegranteCi) === String(mov.IntegranteCi)),
+                                                                        mov.IntegranteNombre?.trim() || '-',
+                                                                        mov.IntegranteCi
+                                                                    )}
+                                                                    title={esDebitoAutomatico(mov) ? 'Descargar comprobante de pago' : 'Descargar recibo'}
+                                                                    aria-label={esDebitoAutomatico(mov) ? 'Descargar comprobante de pago' : 'Descargar recibo'}
+                                                                >
+                                                                    {DownloadIcon}
+                                                                </button>
+                                                            )}
+                                                        </span>
+                                                    </td>
                                                     <td>{mov.RubDsc?.trim() || '-'}</td>
                                                     <td>{formatMonthYear(mov.Mes)}</td>
-                                                    <td>{mov.FechaCargo ? new Date(mov.FechaCargo).toLocaleDateString() : '-'}</td>
-                                                    <td>{mov.FechaVto ? new Date(mov.FechaVto).toLocaleDateString() : '-'}</td>
+                                                    <td>{formatFecha(mov.FechaCargo)}</td>
+                                                    <td>{formatFecha(mov.FechaVto)}</td>
                                                     <td className={styles.amount}>{formatCurrency(parseFloat(mov.Importe) || 0)}</td>
                                                     <td>
                                                         {mov.FechaPago ? (
-                                                            <Badge variant="success">{new Date(mov.FechaPago).toLocaleDateString()}</Badge>
+                                                            <Badge variant="success">{formatFecha(mov.FechaPago)}</Badge>
                                                         ) : (
                                                             <Badge variant="danger">Pendiente</Badge>
                                                         )}
@@ -642,6 +781,23 @@ const SocioDetailsPage = ({ isHistorical = false }) => {
                 </div>
                 </div>
             </div>
+
+            <CrearCargoModal
+                isOpen={isCrearCargoOpen}
+                onClose={() => setIsCrearCargoOpen(false)}
+                onSuccess={handleCargoCreado}
+                socio={socio}
+                usuario={usuario?.nombre}
+                showToast={showToast}
+            />
+
+            <AnularCargoModal
+                isOpen={isAnularCargoOpen}
+                onClose={() => setIsAnularCargoOpen(false)}
+                onSuccess={handleCargoCreado}
+                socio={socio}
+                showToast={showToast}
+            />
         </div>
     );
 };

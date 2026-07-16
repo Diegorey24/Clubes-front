@@ -105,9 +105,11 @@ export const updateSocio = async (id, data) => {
   }
 };
 
-export const deleteSocio = async (id) => {
+export const deleteSocio = async (id, socMotivoBaja) => {
   try {
-    const response = await api.delete(`/socios/${id}`);
+    const response = await api.delete(`/socios/${id}`, {
+      data: { SocMotivoBaja: socMotivoBaja },
+    });
     return response.data;
   } catch (error) {
     console.error('Error deleting socio:', error);
@@ -196,6 +198,42 @@ export const getCuentaCorriente = async (ci, startDate, endDate) => {
     throw new Error('Error al obtener cuenta corriente');
   }
   return await response.json();
+};
+
+// Crea un cargo manual en la cuenta corriente de un socio. El body ya
+// viene armado desde el modal (CI, Mes, Rubro, Importe, Aniomes, Usuario,
+// FechaVto), acá solo se hace el POST.
+export const crearCargo = async (data) => {
+  try {
+    const response = await api.post('/cuenta-corriente', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al crear el cargo:', error);
+    throw error;
+  }
+};
+
+// Cargos anulables de un socio: registros de cuenta corriente con NroRecibo
+// = 0 (todavía sin recibo emitido). Si no hay ninguno la API responde [].
+export const getCargosAnulables = async (ci) => {
+  try {
+    const response = await api.get(`/cuenta-corriente/anulables/${ci}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener los cargos anulables:', error);
+    throw error;
+  }
+};
+
+// Anula (elimina) un cargo de cuenta corriente por su Id.
+export const anularCargo = async (id) => {
+  try {
+    const response = await api.delete(`/cuenta-corriente/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al anular el cargo:', error);
+    throw error;
+  }
 };
 
 export const getCuentaCorrienteFamiliar = async (ci, startDate, endDate) => {

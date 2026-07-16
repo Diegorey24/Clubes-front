@@ -1,10 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import styles from './HeaderNav.module.css';
+
+// Rutas que "viven" adentro del menú Utilidades: si el usuario está en
+// cualquiera de ellas, el trigger del dropdown queda marcado como activo
+// aunque el menú esté cerrado, para que sepa dónde está parado.
+const UTILIDADES_PATHS = [
+    '/categorias-socios',
+    '/rubros',
+    '/radios',
+    '/formapago',
+    '/mediospago',
+    '/motivos-baja',
+    '/parametros',
+    '/parametros-debitos',
+    '/generar-cuotas',
+    '/generacion-archivos',
+];
 
 const HeaderNav = ({ usuario, onLogout }) => {
     const [utilidadesOpen, setUtilidadesOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const location = useLocation();
+    const isUtilidadesActive = UTILIDADES_PATHS.some((p) => location.pathname.startsWith(p));
 
     useEffect(() => {
         if (!utilidadesOpen) return;
@@ -43,32 +61,32 @@ const HeaderNav = ({ usuario, onLogout }) => {
                 </Link>
 
                 <nav className={styles.nav}>
-                    <Link to="/" className={styles.navLink}>
+                    <NavLink to="/" end className={styles.navLink}>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                         </svg>
                         <span>Panel</span>
-                    </Link>
+                    </NavLink>
 
-                    <Link to="/socios" className={styles.navLink}>
+                    <NavLink to="/socios" className={styles.navLink}>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
                         <span>Socios</span>
-                    </Link>
+                    </NavLink>
 
-                    <Link to="/caja" className={styles.navLink}>
+                    <NavLink to="/caja" className={styles.navLink}>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
                             <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
                         </svg>
                         <span>Caja</span>
-                    </Link>
+                    </NavLink>
 
                     <div className={styles.dropdown} ref={dropdownRef}>
                         <button
                             type="button"
-                            className={`${styles.dropdownTrigger} ${utilidadesOpen ? styles.dropdownTriggerActive : ''}`}
+                            className={`${styles.dropdownTrigger} ${(utilidadesOpen || isUtilidadesActive) ? styles.dropdownTriggerActive : ''}`}
                             onClick={() => setUtilidadesOpen((open) => !open)}
                             aria-expanded={utilidadesOpen}
                         >
@@ -91,69 +109,75 @@ const HeaderNav = ({ usuario, onLogout }) => {
                             <div className={styles.dropdownContent}>
                                 <div className={styles.dropdownGroup}>
                                     <span className={styles.dropdownGroupLabel}>Tablas</span>
-                                    <Link to="/categorias-socios" className={styles.dropdownItem} onClick={closeDropdown}>
+                                    <NavLink to="/categorias-socios" className={styles.dropdownItem} onClick={closeDropdown}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                                         </svg>
                                         <span>Categorías</span>
-                                    </Link>
-                                    <Link to="/rubros" className={styles.dropdownItem} onClick={closeDropdown}>
+                                    </NavLink>
+                                    <NavLink to="/rubros" className={styles.dropdownItem} onClick={closeDropdown}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
                                         </svg>
                                         <span>Rubros</span>
-                                    </Link>
-                                    <Link to="/radios" className={styles.dropdownItem} onClick={closeDropdown}>
+                                    </NavLink>
+                                    <NavLink to="/radios" className={styles.dropdownItem} onClick={closeDropdown}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1z m0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                                         </svg>
                                         <span>Radios</span>
-                                    </Link>
-                                    <Link to="/formapago" className={styles.dropdownItem} onClick={closeDropdown}>
+                                    </NavLink>
+                                    <NavLink to="/formapago" className={styles.dropdownItem} onClick={closeDropdown}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
                                             <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
                                         </svg>
                                         <span>Forma de Pago</span>
-                                    </Link>
-                                    <Link to="/mediospago" className={styles.dropdownItem} onClick={closeDropdown}>
+                                    </NavLink>
+                                    <NavLink to="/mediospago" className={styles.dropdownItem} onClick={closeDropdown}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                                         </svg>
                                         <span>Medio de Pago</span>
-                                    </Link>
+                                    </NavLink>
+                                    <NavLink to="/motivos-baja" className={styles.dropdownItem} onClick={closeDropdown}>
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 2a1 1 0 01.894.553l7 14A1 1 0 0117 18H3a1 1 0 01-.894-1.447l7-14A1 1 0 0110 2zm0 5a1 1 0 00-1 1v3a1 1 0 102 0V8a1 1 0 00-1-1zm0 7a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
+                                        </svg>
+                                        <span>Motivos de Baja</span>
+                                    </NavLink>
                                 </div>
 
                                 <div className={styles.dropdownGroup}>
                                     <span className={styles.dropdownGroupLabel}>Parámetros</span>
-                                    <Link to="/parametros" className={styles.dropdownItem} onClick={closeDropdown}>
+                                    <NavLink to="/parametros" className={styles.dropdownItem} onClick={closeDropdown}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                                         </svg>
                                         <span>Parámetros</span>
-                                    </Link>
-                                    <Link to="/parametros-debitos" className={styles.dropdownItem} onClick={closeDropdown}>
+                                    </NavLink>
+                                    <NavLink to="/parametros-debitos" className={styles.dropdownItem} onClick={closeDropdown}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                             <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
                                             <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
                                         </svg>
                                         <span>Parámetros Débitos</span>
-                                    </Link>
+                                    </NavLink>
                                 </div>
 
                                 <div className={styles.dropdownGroup}>
-                                    <Link to="/generar-cuotas" className={styles.dropdownItem} onClick={closeDropdown}>
+                                    <NavLink to="/generar-cuotas" className={styles.dropdownItem} onClick={closeDropdown}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M4 4a2 2 0 012-2h6.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm9 9a1 1 0 10-2 0v1H9a1 1 0 100 2h2v1a1 1 0 102 0v-1h2a1 1 0 100-2h-2v-1z" clipRule="evenodd" />
                                         </svg>
                                         <span>Generar Cuotas</span>
-                                    </Link>
-                                    <Link to="/generacion-archivos" className={styles.dropdownItem} onClick={closeDropdown}>
+                                    </NavLink>
+                                    <NavLink to="/generacion-archivos" className={styles.dropdownItem} onClick={closeDropdown}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                                             <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                                         </svg>
                                         <span>Generación de Archivos</span>
-                                    </Link>
+                                    </NavLink>
                                 </div>
                             </div>
                         )}

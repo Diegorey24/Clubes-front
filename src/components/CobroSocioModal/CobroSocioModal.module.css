@@ -326,6 +326,26 @@
     box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
 }
 
+.select:disabled,
+.input:disabled {
+    background: var(--gray-50);
+    color: var(--gray-400);
+    cursor: not-allowed;
+}
+
+.reciboListo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: hsl(142, 65%, 95%);
+    color: var(--success-600);
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0;
+}
+
 .removeFormaPagoBtn {
     display: flex;
     align-items: center;

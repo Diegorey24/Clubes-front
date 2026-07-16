@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getFichaSocio, getCuentaCorrienteSocio, actualizarDatosSocio } from '../services/api';
+import { formatFecha } from '../utils/date';
 import styles from './PortalSocioPage.module.css';
 
 const PortalSocioPage = ({ socio, onLogout, showToast }) => {
@@ -100,11 +101,11 @@ const PortalSocioPage = ({ socio, onLogout, showToast }) => {
                             </div>
                             <div className={styles.infoItem}>
                                 <span className={styles.infoLabel}>Fecha de nacimiento</span>
-                                <span className={styles.infoValue}>{ficha.SocFchNac ? new Date(ficha.SocFchNac).toLocaleDateString('es-UY') : '-'}</span>
+                                <span className={styles.infoValue}>{formatFecha(ficha.SocFchNac)}</span>
                             </div>
                             <div className={styles.infoItem}>
                                 <span className={styles.infoLabel}>Fecha de ingreso</span>
-                                <span className={styles.infoValue}>{ficha.SocFchIng ? new Date(ficha.SocFchIng).toLocaleDateString('es-UY') : '-'}</span>
+                                <span className={styles.infoValue}>{formatFecha(ficha.SocFchIng)}</span>
                             </div>
                             <div className={styles.infoItem}>
                                 <span className={styles.infoLabel}>Mutual</span>
@@ -187,7 +188,7 @@ const PortalSocioPage = ({ socio, onLogout, showToast }) => {
                                                         {row.NroRecibo === 0 ? 'Pendiente' : 'Pagado'}
                                                     </span>
                                                 </td>
-                                                <td>{row.FechaPago ? new Date(row.FechaPago).toLocaleDateString('es-UY') : '-'}</td>
+                                                <td>{formatFecha(row.FechaPago)}</td>
                                                 <td>{row.FormaPago?.trim() || '-'}</td>
                                             </tr>
                                         ))

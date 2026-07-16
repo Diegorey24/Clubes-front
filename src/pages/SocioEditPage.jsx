@@ -23,7 +23,7 @@ const SocioEditPage = ({ showToast }) => {
         SocDom: '', SocEMail: '', SocTel: '', SocTelCel: '', ResponsableDomicilio: '',
         SocFchIng: '', CatCod: '', ForPagCod: '', RadCod: '', SocFchMed: '',
         SocObserva: '',
-        // Datos de padres/responsables (solo se muestran/editan si el socio es menor de edad)
+        // Datos de padres/responsables (se muestran/editan para todos los socios)
         SocNomPad: '', SocTelPad: '', SocNomMad: '', SocTelMad: '',
         SocAuto1CI: '', SocAuto1: '', SocAuto1Tel: '',
         SocAuto2CI: '', SocAuto2: '', SocAuto2Tel: '',
@@ -106,23 +106,6 @@ const SocioEditPage = ({ showToast }) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
-
-    // Edad calculada a partir de la fecha de nacimiento cargada en el
-    // formulario (se recalcula en vivo si el usuario cambia la fecha).
-    const calcularEdad = (fechaNac) => {
-        if (!fechaNac) return null;
-        const nacimiento = new Date(fechaNac);
-        if (Number.isNaN(nacimiento.getTime())) return null;
-        const hoy = new Date();
-        let edad = hoy.getFullYear() - nacimiento.getFullYear();
-        const aunNoCumplio = hoy.getMonth() < nacimiento.getMonth()
-            || (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() < nacimiento.getDate());
-        if (aunNoCumplio) edad--;
-        return edad;
-    };
-
-    const edad = calcularEdad(formData.SocFchNac);
-    const esMenorDeEdad = edad !== null && edad < 18;
 
     // Compara de forma laxa (ignorando null/undefined/'' y diferencias de
     // tipo string vs number) para no marcar como "cambiado" un campo que
@@ -251,75 +234,73 @@ const SocioEditPage = ({ showToast }) => {
                                 </div>
                             </div>
 
-                            {esMenorDeEdad && (
-                                <div className={styles.section}>
-                                    <Title
-                                        variant="section"
-                                        subtitle="El socio es menor de edad: completá estos datos si están disponibles."
-                                    >
-                                        Datos de los Padres/Responsables
-                                    </Title>
-                                    <div className={styles.grid}>
-                                        <div className={styles.formGroup}>
-                                            <label>Nombre del Padre</label>
-                                            <input name="SocNomPad" value={formData.SocNomPad || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Teléfono del Padre</label>
-                                            <input name="SocTelPad" value={formData.SocTelPad || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Nombre de la Madre</label>
-                                            <input name="SocNomMad" value={formData.SocNomMad || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Teléfono de la Madre</label>
-                                            <input name="SocTelMad" value={formData.SocTelMad || ''} onChange={handleChange} />
-                                        </div>
+                            <div className={styles.section}>
+                                <Title
+                                    variant="section"
+                                    subtitle="Completá estos datos si están disponibles."
+                                >
+                                    Datos de los Padres/Responsables
+                                </Title>
+                                <div className={styles.grid}>
+                                    <div className={styles.formGroup}>
+                                        <label>Nombre del Padre</label>
+                                        <input name="SocNomPad" value={formData.SocNomPad || ''} onChange={handleChange} />
                                     </div>
-
-                                    <p className={styles.autorizadosHint}>Personas autorizadas a retirar al socio</p>
-
-                                    <div className={`${styles.grid} ${styles.gridThree}`}>
-                                        <div className={styles.formGroup}>
-                                            <label>Autorizado 1 · Nombre</label>
-                                            <input name="SocAuto1" value={formData.SocAuto1 || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Autorizado 1 · Cédula</label>
-                                            <input name="SocAuto1CI" value={formData.SocAuto1CI || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Autorizado 1 · Teléfono</label>
-                                            <input name="SocAuto1Tel" value={formData.SocAuto1Tel || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Autorizado 2 · Nombre</label>
-                                            <input name="SocAuto2" value={formData.SocAuto2 || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Autorizado 2 · Cédula</label>
-                                            <input name="SocAuto2CI" value={formData.SocAuto2CI || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Autorizado 2 · Teléfono</label>
-                                            <input name="SocAuto2Tel" value={formData.SocAuto2Tel || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Autorizado 3 · Nombre</label>
-                                            <input name="SocAuto3" value={formData.SocAuto3 || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Autorizado 3 · Cédula</label>
-                                            <input name="SocAuto3CI" value={formData.SocAuto3CI || ''} onChange={handleChange} />
-                                        </div>
-                                        <div className={styles.formGroup}>
-                                            <label>Autorizado 3 · Teléfono</label>
-                                            <input name="SocAuto3Tel" value={formData.SocAuto3Tel || ''} onChange={handleChange} />
-                                        </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Teléfono del Padre</label>
+                                        <input name="SocTelPad" value={formData.SocTelPad || ''} onChange={handleChange} />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Nombre de la Madre</label>
+                                        <input name="SocNomMad" value={formData.SocNomMad || ''} onChange={handleChange} />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Teléfono de la Madre</label>
+                                        <input name="SocTelMad" value={formData.SocTelMad || ''} onChange={handleChange} />
                                     </div>
                                 </div>
-                            )}
+
+                                <p className={styles.autorizadosHint}>Personas autorizadas a retirar al socio</p>
+
+                                <div className={`${styles.grid} ${styles.gridThree}`}>
+                                    <div className={styles.formGroup}>
+                                        <label>Autorizado 1 · Nombre</label>
+                                        <input name="SocAuto1" value={formData.SocAuto1 || ''} onChange={handleChange} />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Autorizado 1 · Cédula</label>
+                                        <input name="SocAuto1CI" value={formData.SocAuto1CI || ''} onChange={handleChange} />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Autorizado 1 · Teléfono</label>
+                                        <input name="SocAuto1Tel" value={formData.SocAuto1Tel || ''} onChange={handleChange} />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Autorizado 2 · Nombre</label>
+                                        <input name="SocAuto2" value={formData.SocAuto2 || ''} onChange={handleChange} />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Autorizado 2 · Cédula</label>
+                                        <input name="SocAuto2CI" value={formData.SocAuto2CI || ''} onChange={handleChange} />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Autorizado 2 · Teléfono</label>
+                                        <input name="SocAuto2Tel" value={formData.SocAuto2Tel || ''} onChange={handleChange} />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Autorizado 3 · Nombre</label>
+                                        <input name="SocAuto3" value={formData.SocAuto3 || ''} onChange={handleChange} />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Autorizado 3 · Cédula</label>
+                                        <input name="SocAuto3CI" value={formData.SocAuto3CI || ''} onChange={handleChange} />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Autorizado 3 · Teléfono</label>
+                                        <input name="SocAuto3Tel" value={formData.SocAuto3Tel || ''} onChange={handleChange} />
+                                    </div>
+                                </div>
+                            </div>
 
                             <div className={styles.section}>
                                 <Title variant="section">Información de contacto</Title>

@@ -253,6 +253,18 @@
     color: var(--primary-600);
 }
 
+/* Página actual dentro del menú Utilidades: mismo criterio visual que
+   .navLink:global(.active), pero más sutil porque conviven varios items
+   en una lista en vez de una sola barra de navegación. */
+.dropdownItem:global(.active) {
+    background-color: hsl(210, 76%, 96%);
+    color: var(--primary-700);
+}
+
+.dropdownItem:global(.active) svg {
+    color: var(--primary-600);
+}
+
 @media (max-width: 768px) {
     .dropdownTrigger span {
         display: none;

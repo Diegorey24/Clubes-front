@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteSocio } from '../../services/api';
+import { deleteSocio, fetchItems } from '../../services/api';
 import { TableActions, Badge, ConfirmDialog } from '../ui';
 import styles from './SociosTable.module.css';
 
@@ -9,6 +9,20 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState('');
+    const [motivos, setMotivos] = useState([]);
+    const [motivoBaja, setMotivoBaja] = useState('');
+
+    useEffect(() => {
+        const loadMotivos = async () => {
+            try {
+                const data = await fetchItems('motivos-baja');
+                setMotivos(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error('Error loading motivos de baja:', error);
+            }
+        };
+        loadMotivos();
+    }, []);
 
     const handleRowClick = (id) => {
         navigate(`${detailPath}/${id}`);
@@ -16,6 +30,7 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
 
     const requestDelete = (socio) => {
         setDeleteError('');
+        setMotivoBaja('');
         setDeleteTarget(socio);
     };
 
@@ -23,15 +38,27 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
         if (deleting) return;
         setDeleteTarget(null);
         setDeleteError('');
+        setMotivoBaja('');
     };
 
     const confirmDelete = async () => {
         if (!deleteTarget) return;
+        if (!motivoBaja) {
+            setDeleteError('Seleccioná el motivo de la baja para continuar.');
+            return;
+        }
+        const motivoSeleccionado = motivos.find((m) => String(m.Id) === String(motivoBaja));
+        const motivoTexto = motivoSeleccionado?.Descripcion?.trim();
+        if (!motivoTexto) {
+            setDeleteError('Seleccioná el motivo de la baja para continuar.');
+            return;
+        }
         setDeleting(true);
         setDeleteError('');
         try {
-            await deleteSocio(deleteTarget.SocNro);
+            await deleteSocio(deleteTarget.SocNro, motivoTexto);
             setDeleteTarget(null);
+            setMotivoBaja('');
             if (onSocioDeleted) onSocioDeleted();
         } catch (error) {
             console.error('Error deleting socio:', error);
@@ -120,6 +147,28 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
                         </div>
                     </div>
                 )}
+
+                <div className={styles.motivoField}>
+                    <label htmlFor="motivoBaja">
+                        Motivo de la baja <span className={styles.required}>*</span>
+                    </label>
+                    <select
+                        id="motivoBaja"
+                        className={styles.motivoSelect}
+                        value={motivoBaja}
+                        onChange={(e) => {
+                            setMotivoBaja(e.target.value);
+                            if (deleteError) setDeleteError('');
+                        }}
+                        disabled={deleting}
+                    >
+                        <option value="">Seleccione un motivo...</option>
+                        {motivos.map((m) => (
+                            <option key={m.Id} value={m.Id}>{m.Descripcion?.trim()}</option>
+                        ))}
+                    </select>
+                </div>
+
                 {deleteError && <p className={styles.confirmError}>{deleteError}</p>}
             </ConfirmDialog>
         </div>

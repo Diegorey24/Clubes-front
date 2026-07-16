@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getCajaHistorico } from '../services/api';
 import { Button, PageHeader, BackLink } from '../components/ui';
+import { formatFecha } from '../utils/date';
 import styles from './CajaHistoricoPage.module.css';
 
 const formatCurrency = (amount) => {
@@ -93,7 +94,7 @@ const CajaHistoricoPage = ({ usuario, showToast }) => {
                         <tbody>
                             {movimientos.map((m) => (
                                 <tr key={m.ID}>
-                                    <td>{m.Fecha ? new Date(m.Fecha).toLocaleDateString() : '-'}</td>
+                                    <td>{formatFecha(m.Fecha)}</td>
                                     <td>{m.TipoDoc?.trim()}</td>
                                     <td className={styles.nameCell}>{m.Nombre?.trim() || m.Detalle?.trim() || '-'}</td>
                                     <td className={styles.debe}>{m.TotalDebe ? formatCurrency(m.TotalDebe) : '-'}</td>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../ui';
-import styles from './RubrosModal.module.css';
+import styles from './MotivosBajaModal.module.css';
 
 const TagIcon = (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -15,35 +15,23 @@ const CloseIcon = (
     </svg>
 );
 
-const ChevronIcon = (
-    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-);
-
 const emptyForm = {
-    IdRubro: '',
-    Nombre: '',
-    Importe: '',
+    Descripcion: '',
 };
 
-const RubrosModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onRequestEdit, initialData }) => {
+const MotivosBajaModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onRequestEdit, initialData }) => {
     const isView = mode === 'view';
 
     const [formData, setFormData] = useState(emptyForm);
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
-    const [showAdvanced, setShowAdvanced] = useState(false);
 
     useEffect(() => {
         if (!isOpen) return;
         setFormError('');
-        setShowAdvanced(false);
         if (initialData) {
             setFormData({
-                IdRubro: initialData.IdRubro ?? '',
-                Nombre: initialData.Nombre?.trim() || '',
-                Importe: initialData.Importe ?? '',
+                Descripcion: initialData.Descripcion?.trim() || '',
             });
         } else {
             setFormData(emptyForm);
@@ -76,21 +64,14 @@ const RubrosModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onRequestEdit, 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.Nombre.trim()) {
-            setFormError('El nombre es requerido');
-            return;
-        }
-        if (formData.Importe === '' || formData.Importe === null || Number.isNaN(Number(formData.Importe))) {
-            setFormError('El importe es requerido');
+        if (!formData.Descripcion.trim()) {
+            setFormError('La descripción es requerida');
             return;
         }
         setFormError('');
         setSaving(true);
         try {
-            const payload = { ...formData };
-            payload.IdRubro = formData.IdRubro === '' ? null : Number(formData.IdRubro);
-            payload.Importe = Number(formData.Importe);
-            await onSubmit(payload);
+            await onSubmit({ Descripcion: formData.Descripcion.trim() });
         } finally {
             setSaving(false);
         }
@@ -98,12 +79,12 @@ const RubrosModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onRequestEdit, 
 
     return (
         <div className={styles.overlay} onClick={handleBackdropClick}>
-            <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="rubro-modal-title">
+            <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="motivo-baja-modal-title">
                 <div className={styles.header}>
                     <div className={styles.headerLeft}>
                         <span className={styles.iconWrap}>{TagIcon}</span>
-                        <h3 id="rubro-modal-title" className={styles.title}>
-                            {isView ? 'Ver Rubro' : initialData ? 'Editar Rubro' : 'Nuevo Rubro'}
+                        <h3 id="motivo-baja-modal-title" className={styles.title}>
+                            {isView ? 'Ver Motivo de Baja' : initialData ? 'Editar Motivo de Baja' : 'Nuevo Motivo de Baja'}
                         </h3>
                     </div>
                     <button
@@ -121,82 +102,36 @@ const RubrosModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onRequestEdit, 
                     <div className={styles.formGrid}>
                         {initialData && (
                             <div className={styles.formGroup}>
-                                <label htmlFor="IdRubro">Código</label>
+                                <label htmlFor="Id">Código</label>
                                 <input
                                     type="text"
-                                    id="IdRubro"
+                                    id="Id"
                                     className={styles.input}
-                                    value={initialData.IdRubro}
+                                    value={initialData.Id}
                                     disabled
                                 />
                             </div>
                         )}
 
-                        <div className={`${styles.formGroup} ${styles.formGroupFull2}`}>
-                            <label htmlFor="Nombre">Nombre <span className={styles.required}>*</span></label>
+                        <div className={`${styles.formGroup} ${initialData ? styles.formGroupFull2 : styles.formGroupFull}`}>
+                            <label htmlFor="Descripcion">Descripción <span className={styles.required}>*</span></label>
                             <input
                                 type="text"
-                                id="Nombre"
-                                name="Nombre"
+                                id="Descripcion"
+                                name="Descripcion"
                                 className={styles.input}
-                                value={formData.Nombre}
+                                value={formData.Descripcion}
                                 onChange={handleChange}
                                 required
-                                placeholder="Nombre del rubro"
-                                disabled={isView}
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label htmlFor="Importe">Importe <span className={styles.required}>*</span></label>
-                            <input
-                                type="number"
-                                id="Importe"
-                                name="Importe"
-                                className={styles.input}
-                                value={formData.Importe}
-                                onChange={handleChange}
-                                required
-                                placeholder="0.00"
-                                step="0.01"
+                                placeholder="Descripción del motivo de baja"
                                 disabled={isView}
                             />
                         </div>
 
                         {!initialData && (
-                            <div className={styles.formGroupFull}>
-                                <button
-                                    type="button"
-                                    className={styles.advancedToggle}
-                                    onClick={() => setShowAdvanced((v) => !v)}
-                                    aria-expanded={showAdvanced}
-                                >
-                                    <span className={`${styles.chevron} ${showAdvanced ? styles.chevronOpen : ''}`}>
-                                        {ChevronIcon}
-                                    </span>
-                                    {showAdvanced ? 'Ocultar' : 'Mostrar'} opciones avanzadas
-                                </button>
-
-                                {showAdvanced && (
-                                    <div className={styles.advancedBox}>
-                                        <div className={styles.formGroup}>
-                                            <label htmlFor="IdRubro">Código</label>
-                                            <input
-                                                type="number"
-                                                id="IdRubro"
-                                                name="IdRubro"
-                                                className={styles.input}
-                                                value={formData.IdRubro}
-                                                onChange={handleChange}
-                                                placeholder="Automático"
-                                            />
-                                        </div>
-                                        <p className={styles.advancedHint}>
-                                            Si lo dejás vacío, el sistema asigna automáticamente el próximo código disponible.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
+                            <p className={styles.autoCodeHint}>
+                                El código se asigna automáticamente al guardar.
+                            </p>
                         )}
                     </div>
 
@@ -218,7 +153,7 @@ const RubrosModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onRequestEdit, 
                                     Cancelar
                                 </Button>
                                 <Button type="submit" variant="primary" loading={saving}>
-                                    {initialData ? 'Actualizar' : 'Crear'} Rubro
+                                    {initialData ? 'Actualizar' : 'Crear'} Motivo
                                 </Button>
                             </>
                         )}
@@ -229,4 +164,4 @@ const RubrosModal = ({ isOpen, mode = 'edit', onClose, onSubmit, onRequestEdit, 
     );
 };
 
-export default RubrosModal;
+export default MotivosBajaModal;
