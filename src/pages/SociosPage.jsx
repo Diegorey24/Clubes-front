@@ -16,6 +16,12 @@ const HistoryIcon = (
     </svg>
 );
 
+const FamilyIcon = (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M7 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM14.5 9a2 2 0 100-4 2 2 0 000 4zM2.5 16.5c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5a1 1 0 01-1 1H3.5a1 1 0 01-1-1zM12.5 12.35c1.762.372 3.05 1.98 3.05 3.9a1 1 0 01-.083.35H14.5a1 1 0 01-1-1c0-1.212-.395-2.33-1.062-3.24.02-.003.041-.007.062-.01z" />
+    </svg>
+);
+
 const ExportIcon = (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -114,6 +120,9 @@ const SociosPage = ({ showToast }) => {
                     <>
                         <Button to="/agregar-socio" variant="primary" icon={PlusIcon}>
                             Nuevo Socio
+                        </Button>
+                        <Button to="/grupos-familiares" variant="soft-warning" icon={FamilyIcon}>
+                            Grupos Familiares
                         </Button>
                         <Button to="/socios-historicos" variant="soft" icon={HistoryIcon}>
                             Histórico de Socios

@@ -14,6 +14,7 @@ import SociosPage from './pages/SociosPage';
 import SociosHistoricosPage from './pages/SociosHistoricosPage';
 import DashboardPage from './pages/DashboardPage';
 import CategoriasSociosPage from './pages/CategoriasSociosPage';
+import GruposFamiliaresPage from './pages/GruposFamiliaresPage';
 import MotivosBajaPage from './pages/MotivosBajaPage';
 import SocioDetailsPage from './pages/SocioDetailsPage';
 import SocioEditPage from './pages/SocioEditPage';
@@ -103,6 +104,7 @@ function App() {
           <Route path="/socios" element={<PrivateRoute usuario={usuario}><SociosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/socios-historicos" element={<PrivateRoute usuario={usuario}><SociosHistoricosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/socios-historicos/:id" element={<PrivateRoute usuario={usuario}><SocioDetailsPage isHistorical={true} /></PrivateRoute>} />
+          <Route path="/grupos-familiares" element={<PrivateRoute usuario={usuario}><GruposFamiliaresPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/categorias-socios" element={<PrivateRoute usuario={usuario}><CategoriasSociosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/motivos-baja" element={<PrivateRoute usuario={usuario}><MotivosBajaPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/generar-cuotas" element={<PrivateRoute usuario={usuario}><GenerarCuotasPage showToast={showToast} /></PrivateRoute>} />
