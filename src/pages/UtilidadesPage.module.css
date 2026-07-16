@@ -1,0 +1,90 @@
+.page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+}
+
+/* ===== Paneles agrupados (Procesos / Informes / Tablas / Parámetros) ===== */
+.panel {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Grilla de columnas fijas: todos los tiles del mismo tamaño. Con un
+   número fijo de columnas (en vez de auto-fill/auto-fit) una fila
+   incompleta (ej. 7 tiles -> 4 + 3) simplemente deja celdas vacías al
+   final en vez de estirar los últimos tiles para "rellenar" el ancho. */
+.tileGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+}
+
+.tile {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-100);
+    background: white;
+    text-decoration: none;
+    color: var(--gray-700);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    transition: all var(--transition-fast);
+}
+
+.tile:hover {
+    border-color: var(--primary-400);
+    background: hsl(210, 76%, 98%);
+    color: var(--primary-700);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.tileIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    background: var(--gray-100);
+    color: var(--gray-500);
+    flex-shrink: 0;
+    transition: all var(--transition-fast);
+}
+
+.tile:hover .tileIcon {
+    background: hsl(210, 76%, 96%);
+    color: var(--primary-600);
+}
+
+@media (max-width: 900px) {
+    .tileGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: var(--spacing-md);
+    }
+
+    .tileGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .tileGrid {
+        grid-template-columns: 1fr;
+    }
+}

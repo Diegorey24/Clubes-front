@@ -1,8 +1,25 @@
 import { useState, useEffect } from 'react';
-import { crearCargo } from '../../services/api';
+import { crearCargo, getCategoriaSocio, getGrupoFamiliar } from '../../services/api';
 import { Button } from '../ui';
 import BuscarRubroModal from '../BuscarRubroModal/BuscarRubroModal';
 import styles from './CrearCargoModal.module.css';
+
+// Rubro especial: "cuota de categoría". Para este rubro el importe no lo
+// define el rubro (a diferencia del resto) sino la categoría del socio y,
+// si pertenece a un grupo familiar, la cantidad de integrantes de ese grupo.
+const ID_RUBRO_CATEGORIA = 1;
+
+// Mapea la cantidad total de integrantes del grupo familiar (titular +
+// integrantes) al campo de importe escalonado que corresponde en la
+// categoría del socio.
+const importeSegunIntegrantes = (cantidad, categoria) => {
+    if (cantidad <= 2) return categoria.CatPrc;
+    if (cantidad === 3) return categoria.Importe3;
+    if (cantidad === 4) return categoria.Importe4;
+    if (cantidad === 5) return categoria.Importe5;
+    if (cantidad === 6) return categoria.Importe6;
+    return categoria.Importe7; // 7 o más integrantes
+};
 
 const CargoIcon = (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -45,6 +62,7 @@ const CrearCargoModal = ({ isOpen, onClose, onSuccess, socio, usuario, showToast
     const [showBuscarRubro, setShowBuscarRubro] = useState(false);
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
+    const [calculandoImporte, setCalculandoImporte] = useState(false);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -53,6 +71,7 @@ const CrearCargoModal = ({ isOpen, onClose, onSuccess, socio, usuario, showToast
         setImporte('');
         setShowBuscarRubro(false);
         setFormError('');
+        setCalculandoImporte(false);
     }, [isOpen]);
 
     useEffect(() => {
@@ -70,12 +89,46 @@ const CrearCargoModal = ({ isOpen, onClose, onSuccess, socio, usuario, showToast
         if (e.target === e.currentTarget && !saving) onClose?.();
     };
 
-    const rubroImporteFijo = rubro && Number(rubro.Importe) !== 0;
+    const esRubroCategoria = rubro && Number(rubro.IdRubro) === ID_RUBRO_CATEGORIA;
+    const rubroImporteFijo = rubro && !esRubroCategoria && Number(rubro.Importe) !== 0;
 
-    const handleSelectRubro = (rubroSeleccionado) => {
+    const handleSelectRubro = async (rubroSeleccionado) => {
         setRubro(rubroSeleccionado);
-        setImporte(Number(rubroSeleccionado.Importe) !== 0 ? rubroSeleccionado.Importe : '');
         setShowBuscarRubro(false);
+        setFormError('');
+
+        if (Number(rubroSeleccionado.IdRubro) !== ID_RUBRO_CATEGORIA) {
+            setImporte(Number(rubroSeleccionado.Importe) !== 0 ? rubroSeleccionado.Importe : '');
+            return;
+        }
+
+        // Rubro de "cuota de categoría": el importe se calcula, no lo carga
+        // el usuario ni lo trae el rubro.
+        setImporte('');
+
+        if (!socio?.CatCod) {
+            setFormError('El socio no tiene categoría asignada, no se puede calcular el importe.');
+            return;
+        }
+
+        setCalculandoImporte(true);
+        try {
+            const categoria = await getCategoriaSocio(socio.CatCod);
+            const grupoNro = Number(socio.GruFamNro) || 0;
+
+            if (grupoNro === 0) {
+                setImporte(categoria.CatPrc ?? '');
+            } else {
+                const grupo = await getGrupoFamiliar(grupoNro);
+                const cantidadIntegrantes = 1 + (grupo?.integrantes?.length || 0);
+                setImporte(importeSegunIntegrantes(cantidadIntegrantes, categoria) ?? '');
+            }
+        } catch (err) {
+            console.error('Error calculando importe por categoría:', err);
+            setFormError('No se pudo calcular el importe de la categoría. Intentá nuevamente.');
+        } finally {
+            setCalculandoImporte(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -86,6 +139,10 @@ const CrearCargoModal = ({ isOpen, onClose, onSuccess, socio, usuario, showToast
         }
         if (!rubro) {
             setFormError('Seleccioná un rubro');
+            return;
+        }
+        if (calculandoImporte) {
+            setFormError('Esperá a que termine de calcularse el importe');
             return;
         }
         if (importe === '' || Number.isNaN(Number(importe)) || Number(importe) <= 0) {
@@ -220,14 +277,19 @@ const CrearCargoModal = ({ isOpen, onClose, onSuccess, socio, usuario, showToast
                                     min="0"
                                     placeholder="0.00"
                                     required
-                                    disabled={saving || rubroImporteFijo}
+                                    disabled={saving || rubroImporteFijo || esRubroCategoria || calculandoImporte}
                                 />
-                                {rubroImporteFijo && (
+                                {esRubroCategoria ? (
+                                    <span className={styles.hint}>
+                                        {calculandoImporte
+                                            ? 'Calculando importe según la categoría del socio...'
+                                            : 'Importe calculado según la categoría del socio.'}
+                                    </span>
+                                ) : rubroImporteFijo ? (
                                     <span className={styles.hint}>Importe fijo del rubro seleccionado.</span>
-                                )}
-                                {rubro && !rubroImporteFijo && (
+                                ) : rubro ? (
                                     <span className={styles.hint}>Este rubro no tiene importe fijo, ingresalo manualmente.</span>
-                                )}
+                                ) : null}
                             </div>
 
                             <div className={styles.formGroup}>
@@ -248,7 +310,7 @@ const CrearCargoModal = ({ isOpen, onClose, onSuccess, socio, usuario, showToast
                             <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>
                                 Cancelar
                             </Button>
-                            <Button type="submit" variant="primary" loading={saving}>
+                            <Button type="submit" variant="primary" loading={saving} disabled={calculandoImporte}>
                                 Crear Cargo
                             </Button>
                         </div>

@@ -30,6 +30,11 @@ import ParametrosDebitosPage from './pages/ParametrosDebitosPage';
 import PortalSocioLoginPage from './pages/PortalSocioLoginPage';
 import PortalSocioPage from './pages/PortalSocioPage';
 import UsuariosPage from './pages/UsuariosPage';
+import UtilidadesPage from './pages/UtilidadesPage';
+import InformeSociosContactoPage from './pages/InformeSociosContactoPage';
+import InformeSociosDeudasPage from './pages/InformeSociosDeudasPage';
+import InformeSociosDeudasDetallePage from './pages/InformeSociosDeudasDetallePage';
+import InformeCobranzaPeriodoPage from './pages/InformeCobranzaPeriodoPage';
 import './App.css';
 
 const getUsuarioGuardado = () => {
@@ -122,6 +127,11 @@ function App() {
           <Route path="/portal-socio/login" element={socio ? <Navigate to="/portal-socio" replace /> : <PortalSocioLoginPage onLogin={handleLoginSocio} />} />
           <Route path="/portal-socio" element={socio ? <PortalSocioPage socio={socio} onLogout={handleLogoutSocio} showToast={showToast} /> : <Navigate to="/portal-socio/login" replace />} />
           <Route path="/usuarios" element={<PrivateRoute usuario={usuario}>{usuario?.tipo === 'Administrador' ? <UsuariosPage showToast={showToast} /> : <Navigate to="/" replace />}</PrivateRoute>} />
+          <Route path="/utilidades" element={<PrivateRoute usuario={usuario}><UtilidadesPage usuario={usuario} /></PrivateRoute>} />
+          <Route path="/informe-socios-contacto" element={<PrivateRoute usuario={usuario}><InformeSociosContactoPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/informe-socios-deudas" element={<PrivateRoute usuario={usuario}><InformeSociosDeudasPage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/informe-socios-deudas-detalle" element={<PrivateRoute usuario={usuario}><InformeSociosDeudasDetallePage showToast={showToast} /></PrivateRoute>} />
+          <Route path="/informe-cobranza-periodo" element={<PrivateRoute usuario={usuario}><InformeCobranzaPeriodoPage showToast={showToast} /></PrivateRoute>} />
         </Routes></main>
         {(usuario || socio) && <Footer />}
         <Toast

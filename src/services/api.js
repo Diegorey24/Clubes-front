@@ -75,6 +75,24 @@ export const getSocios = async (page = 1, limit = 10, search = '', categoria = '
   }
 };
 
+// Informe "Listado de socios y sus deudas". Paginado igual que getSocios
+// ({ items, total, page, limit, totalPages }): el corte se hace en la
+// consulta SQL (OFFSET/FETCH) y la deuda se calcula solo para los socios de
+// esa página, así que el costo por página es constante aunque haya miles
+// de socios. Cada objeto de "items" incluye el detalle de sus movimientos
+// pendientes de recibo en DetalleDeuda.
+export const getSociosDeudas = async (page = 1, limit = 10, search = '', categoria = '', radio = '') => {
+  try {
+    const response = await api.get('/socios/deudas', {
+      params: { page, limit, search, categoria, radio }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener el listado de socios y sus deudas:', error);
+    throw error;
+  }
+};
+
 export const getSocioById = async (id) => {
   try {
     const response = await api.get(`/socios/${id}`);
@@ -167,6 +185,29 @@ export const exportSocios = async (filters = {}) => {
   }
 };
 
+// Informe "Listado de socios con datos de contacto". Por ahora reutiliza el
+// mismo endpoint de exportación de /socios (mismos filtros), a la espera de
+// que el backend tenga un método propio con el join completo de datos de
+// contacto. Cuando ese endpoint exista, solo hay que cambiar la URL acá
+// adentro; la page que lo consume no debería tener que cambiar.
+export const exportSociosContacto = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams();
+    if (filters.search) params.append('search', filters.search);
+    if (filters.categoria) params.append('categoria', filters.categoria);
+    if (filters.radio) params.append('radio', filters.radio);
+
+    const response = await api.get(`/socios/export`, {
+      params: params,
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar el informe de socios con datos de contacto:', error);
+    throw error;
+  }
+};
+
 export const exportSociosHistoricos = async (filters = {}) => {
   try {
     const params = new URLSearchParams();
@@ -213,6 +254,15 @@ export const crearCargo = async (data) => {
   }
 };
 
+// Detalle de una categoría de socio (incluye CatPrc y los importes
+// escalonados Importe3..Importe7 según cantidad de integrantes del grupo
+// familiar). Usado por CrearCargoModal cuando el rubro elegido es el
+// especial de "cuota de categoría" (IdRubro = 1).
+export const getCategoriaSocio = async (catCod) => {
+  const response = await api.get(`/categoriaSocios/${catCod}`);
+  return response.data;
+};
+
 // Cargos anulables de un socio: registros de cuenta corriente con NroRecibo
 // = 0 (todavía sin recibo emitido). Si no hay ninguno la API responde [].
 export const getCargosAnulables = async (ci) => {
@@ -249,6 +299,44 @@ export const getCuentaCorrienteFamiliar = async (ci, startDate, endDate) => {
     throw new Error('Error al obtener cuenta corriente familiar');
   }
   return await response.json();
+};
+
+// Informe "Cobranza por período". Paginado igual que getSocios/getSociosDeudas
+// ({ items, total, page, limit, totalPages }): el corte lo hace SQL con
+// OFFSET/FETCH, así que un rango de varios meses no trae todo de una para
+// cortarlo en el cliente. Filtra los registros de CuentaCorriente cobrados
+// (NroRecibo <> 0) cuya FechaPago cae dentro de [fechaDesde, fechaHasta] --
+// el backend incluye el día completo de fechaHasta, no corta a las 00:00.
+// fechaDesde/fechaHasta son obligatorios; si faltan o son inválidos el
+// backend responde 400 con { error }, que se deja propagar tal cual para
+// que el caller muestre ese mensaje puntual.
+export const getCobranzaPeriodo = async (fechaDesde, fechaHasta, page = 1, limit = 50) => {
+  try {
+    const response = await api.get('/cuenta-corriente/cobranza', {
+      params: { fechaDesde, fechaHasta, page, limit }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener la cobranza del período:', error);
+    throw error;
+  }
+};
+
+// Excel del informe "Cobranza por período". Mismo filtro que
+// getCobranzaPeriodo (NroRecibo <> 0, FechaPago en rango) pero sin
+// paginar: trae el período completo y el backend devuelve directamente el
+// archivo .xlsx, igual que exportSocios.
+export const exportCobranzaPeriodo = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/cuenta-corriente/cobranza/export', {
+      params: { fechaDesde, fechaHasta },
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar la cobranza del período:', error);
+    throw error;
+  }
 };
 
 export const getCuotasPendientes = async (aniomes) => {

@@ -35,3 +35,20 @@ export const toInputDate = (fechaIso) => {
     const datePart = String(fechaIso).slice(0, 10);
     return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : '';
 };
+
+/**
+ * Formatea una fecha "date-only" como "MM/YYYY". Se usa para columnas de
+ * período (ej. el mes al que corresponde un cargo de CuentaCorriente),
+ * donde el día no aporta información. Mismo cuidado con zona horaria que
+ * formatFecha: nunca pasa por el constructor `Date`.
+ * @param {string|null|undefined} fechaIso - ej: "2026-06-01T00:00:00.000Z"
+ * @returns {string} "06/2026" o "-" si no hay fecha / es inválida
+ */
+export const formatMesAnio = (fechaIso) => {
+    if (!fechaIso) return '-';
+    const datePart = String(fechaIso).slice(0, 10);
+    const match = /^(\d{4})-(\d{2})-\d{2}$/.exec(datePart);
+    if (!match) return '-';
+    const [, year, month] = match;
+    return `${month}/${year}`;
+};

@@ -1,0 +1,35 @@
+.page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+}
+
+.panel {
+    padding: 3.5rem 2rem;
+    text-align: center;
+    color: var(--gray-400);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-100);
+}
+
+.panel svg {
+    color: var(--gray-300);
+}
+
+.panel p {
+    color: var(--gray-500);
+    font-size: 0.9375rem;
+    max-width: 420px;
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: var(--spacing-md);
+    }
+}

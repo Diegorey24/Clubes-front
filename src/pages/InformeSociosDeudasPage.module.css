@@ -1,0 +1,16 @@
+.summaryGroup {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.deudaPill {
+    padding: 0.5rem 1rem;
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
