@@ -2,9 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import styles from './HeaderNav.module.css';
 
-// Rutas que "viven" adentro del menú Utilidades: si el usuario está en
-// cualquiera de ellas, el trigger del dropdown queda marcado como activo
-// aunque el menú esté cerrado, para que sepa dónde está parado.
 const UTILIDADES_PATHS = [
     '/categorias-socios',
     '/grupos-familiares',
@@ -17,6 +14,7 @@ const UTILIDADES_PATHS = [
     '/parametros-debitos',
     '/generar-cuotas',
     '/generacion-archivos',
+    '/usuarios',
 ];
 
 const HeaderNav = ({ usuario, onLogout }) => {
@@ -27,7 +25,6 @@ const HeaderNav = ({ usuario, onLogout }) => {
 
     useEffect(() => {
         if (!utilidadesOpen) return;
-
         const handleClickOutside = (e) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
                 setUtilidadesOpen(false);
@@ -36,7 +33,6 @@ const HeaderNav = ({ usuario, onLogout }) => {
         const handleEscape = (e) => {
             if (e.key === 'Escape') setUtilidadesOpen(false);
         };
-
         document.addEventListener('mousedown', handleClickOutside);
         document.addEventListener('keydown', handleEscape);
         return () => {
@@ -58,7 +54,6 @@ const HeaderNav = ({ usuario, onLogout }) => {
                             className={styles.brandIconImg}
                         />
                     </div>
-                    {/* <span className={styles.brandText}>Gestión de Socios</span> */}
                 </Link>
 
                 <nav className={styles.nav}>
@@ -108,6 +103,18 @@ const HeaderNav = ({ usuario, onLogout }) => {
 
                         {utilidadesOpen && (
                             <div className={styles.dropdownContent}>
+                                {usuario?.tipo === 'Administrador' && (
+                                    <div className={styles.dropdownGroup}>
+                                        <span className={styles.dropdownGroupLabel}>Administración</span>
+                                        <NavLink to="/usuarios" className={styles.dropdownItem} onClick={closeDropdown}>
+                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                                            </svg>
+                                            <span>Usuarios</span>
+                                        </NavLink>
+                                    </div>
+                                )}
+
                                 <div className={styles.dropdownGroup}>
                                     <span className={styles.dropdownGroupLabel}>Tablas</span>
                                     <NavLink to="/categorias-socios" className={styles.dropdownItem} onClick={closeDropdown}>

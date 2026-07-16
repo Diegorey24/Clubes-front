@@ -27,6 +27,7 @@ import GeneracionArchivosPage from './pages/GeneracionArchivosPage';
 import ParametrosDebitosPage from './pages/ParametrosDebitosPage';
 import PortalSocioLoginPage from './pages/PortalSocioLoginPage';
 import PortalSocioPage from './pages/PortalSocioPage';
+import UsuariosPage from './pages/UsuariosPage';
 import './App.css';
 
 const getUsuarioGuardado = () => {
@@ -116,6 +117,7 @@ function App() {
           <Route path="/parametros-debitos" element={<PrivateRoute usuario={usuario}><ParametrosDebitosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/portal-socio/login" element={socio ? <Navigate to="/portal-socio" replace /> : <PortalSocioLoginPage onLogin={handleLoginSocio} />} />
           <Route path="/portal-socio" element={socio ? <PortalSocioPage socio={socio} onLogout={handleLogoutSocio} showToast={showToast} /> : <Navigate to="/portal-socio/login" replace />} />
+          <Route path="/usuarios" element={<PrivateRoute usuario={usuario}>{usuario?.tipo === 'Administrador' ? <UsuariosPage showToast={showToast} /> : <Navigate to="/" replace />}</PrivateRoute>} />
         </Routes></main>
         {(usuario || socio) && <Footer />}
         <Toast
