@@ -147,6 +147,27 @@ export const exportSociosDeudasDetalle = async (search = '', categoria = '', rad
   }
 };
 
+// Informe "Planilla de socios y deudas". A diferencia de getSociosDeudas,
+// fechaDesde/fechaHasta son obligatorios: definen las columnas de la
+// planilla (un mes -Aniomes AAAAMM- por columna). El backend hace la
+// conversión de YYYY-MM-DD a Aniomes, acá solo se mandan las fechas.
+// rubro (opcional) acota la planilla a un solo concepto; sin él, cada
+// celda suma todos los rubros. Respuesta: { meses, items, total, page,
+// limit, totalPages }, donde cada item trae PorMes: { [aniomes]: importe }.
+export const getSociosDeudasPlanilla = async (page = 1, limit = 10, fechaDesde, fechaHasta, search = '', categoria = '', radio = '', soloConDeuda = false, rubro = '') => {
+  try {
+    const params = { page, limit, fechaDesde, fechaHasta, search, categoria, radio };
+    if (soloConDeuda) params.soloConDeuda = 'true';
+    if (rubro) params.rubro = rubro;
+
+    const response = await api.get('/socios/deudas/planilla', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener la planilla de socios y deudas:', error);
+    throw error;
+  }
+};
+
 export const getSocioById = async (id) => {
   try {
     const response = await api.get(`/socios/${id}`);

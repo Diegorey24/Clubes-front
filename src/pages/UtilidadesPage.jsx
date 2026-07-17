@@ -73,6 +73,19 @@ const INFORMES = [
     ),
   },
   {
+    to: "/informe-planilla-socios",
+    label: "Planilla de Socios y Deudas",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fillRule="evenodd"
+          d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 1v2h2V5H5zm4 0v2h2V5H9zm4 0v2h2V5h-2zM5 9v2h2V9H5zm4 0v2h2V9H9zm4 0v2h2V9h-2zM5 13v2h2v-2H5zm4 0v2h2v-2H9zm4 0v2h2v-2h-2z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ),
+  },
+  {
     to: "/informe-cobranza-periodo",
     label: "Cobranza por Período",
     icon: (
