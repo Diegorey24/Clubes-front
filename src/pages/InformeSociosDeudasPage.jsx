@@ -9,6 +9,24 @@ const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(amount || 0);
 };
 
+const ExportIcon = (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+);
+
+// Descarga un blob ya recibido con el nombre de archivo indicado.
+const descargarBlob = (blob, nombreArchivo) => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+};
+
 // Informe "Listado de socios y sus deudas". Consume GET /socios/deudas, que
 // pagina igual que /socios ({ items, total, page, limit, totalPages }): el
 // corte se hace en la consulta SQL, no acá, así que sigue siendo liviano
@@ -21,10 +39,15 @@ const InformeSociosDeudasPage = ({ showToast }) => {
     const [filters, setFilters] = useState({
         search: '',
         categoria: '',
-        radio: ''
+        radio: '',
+        soloConDeuda: false,
+        fechaDesde: '',
+        fechaHasta: ''
     });
     const [categorias, setCategorias] = useState([]);
     const [radios, setRadios] = useState([]);
+    const [exportingListado, setExportingListado] = useState(false);
+    const [exportingDetalle, setExportingDetalle] = useState(false);
 
     // Pagination state
     const [page, setPage] = useState(1);
@@ -67,19 +90,19 @@ const InformeSociosDeudasPage = ({ showToast }) => {
     // Cada vez que cambia algún filtro "efectivo", volvemos a la página 1.
     useEffect(() => {
         setPage(1);
-    }, [debouncedSearch, filters.categoria, filters.radio]);
+    }, [debouncedSearch, filters.categoria, filters.radio, filters.soloConDeuda, filters.fechaDesde, filters.fechaHasta]);
 
     // Única fuente de carga de datos: reacciona a la página o a los filtros
     // ya resueltos.
     useEffect(() => {
-        loadSocios(page, debouncedSearch, filters.categoria, filters.radio);
+        loadSocios(page, debouncedSearch, filters.categoria, filters.radio, filters.soloConDeuda, filters.fechaDesde, filters.fechaHasta);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, debouncedSearch, filters.categoria, filters.radio]);
+    }, [page, debouncedSearch, filters.categoria, filters.radio, filters.soloConDeuda, filters.fechaDesde, filters.fechaHasta]);
 
-    const loadSocios = async (currentPage, search, cat, rad) => {
+    const loadSocios = async (currentPage, search, cat, rad, soloConDeuda, fechaDesde, fechaHasta) => {
         setLoading(true);
         try {
-            const data = await getSociosDeudas(currentPage, limit, search, cat, rad);
+            const data = await getSociosDeudas(currentPage, limit, search, cat, rad, soloConDeuda, fechaDesde, fechaHasta);
             setSocios(data.items || []);
             setTotalPages(data.totalPages || 1);
             setTotalItems(data.total || 0);
@@ -97,6 +120,52 @@ const InformeSociosDeudasPage = ({ showToast }) => {
 
     const handleNext = () => {
         if (page < totalPages) setPage(prev => prev + 1);
+    };
+
+    const handleExportListado = async () => {
+        if (exportingListado) return;
+        setExportingListado(true);
+        try {
+            const { exportSociosDeudas } = await import('../services/api');
+            const blob = await exportSociosDeudas(
+                debouncedSearch,
+                filters.categoria,
+                filters.radio,
+                filters.soloConDeuda,
+                filters.fechaDesde,
+                filters.fechaHasta
+            );
+            descargarBlob(blob, 'socios_deudas.xlsx');
+        } catch (err) {
+            console.error('Error exporting socios y sus deudas:', err);
+            const mensaje = err.response?.data?.error || 'Error al exportar el listado de socios y sus deudas';
+            showToast?.(mensaje, 'error');
+        } finally {
+            setExportingListado(false);
+        }
+    };
+
+    const handleExportDetalle = async () => {
+        if (exportingDetalle) return;
+        setExportingDetalle(true);
+        try {
+            const { exportSociosDeudasDetalle } = await import('../services/api');
+            const blob = await exportSociosDeudasDetalle(
+                debouncedSearch,
+                filters.categoria,
+                filters.radio,
+                filters.soloConDeuda,
+                filters.fechaDesde,
+                filters.fechaHasta
+            );
+            descargarBlob(blob, 'socios_deudas_detalle.xlsx');
+        } catch (err) {
+            console.error('Error exporting detalle de deudas:', err);
+            const mensaje = err.response?.data?.error || 'Error al exportar el detalle de deudas';
+            showToast?.(mensaje, 'error');
+        } finally {
+            setExportingDetalle(false);
+        }
     };
 
     // La deuda total solo puede sumarse sobre los socios de la página
@@ -185,6 +254,50 @@ const InformeSociosDeudasPage = ({ showToast }) => {
                         </div>
                     </div>
                 </div>
+
+                <div className={localStyles.extraFiltersRow}>
+                    <div className={localStyles.checkboxGroup}>
+                        <input
+                            type="checkbox"
+                            id="soloConDeuda"
+                            checked={filters.soloConDeuda}
+                            onChange={(e) => setFilters(prev => ({ ...prev, soloConDeuda: e.target.checked }))}
+                        />
+                        <label htmlFor="soloConDeuda">Solo socios con deuda pendiente</label>
+                    </div>
+
+                    <div className={localStyles.dateFilterGroup}>
+                        <label htmlFor="fechaDesde">Desde</label>
+                        <input
+                            type="date"
+                            id="fechaDesde"
+                            className={localStyles.dateInput}
+                            value={filters.fechaDesde}
+                            onChange={(e) => setFilters(prev => ({ ...prev, fechaDesde: e.target.value }))}
+                        />
+                    </div>
+
+                    <div className={localStyles.dateFilterGroup}>
+                        <label htmlFor="fechaHasta">Hasta</label>
+                        <input
+                            type="date"
+                            id="fechaHasta"
+                            className={localStyles.dateInput}
+                            value={filters.fechaHasta}
+                            onChange={(e) => setFilters(prev => ({ ...prev, fechaHasta: e.target.value }))}
+                        />
+                    </div>
+
+                    {(filters.soloConDeuda || filters.fechaDesde || filters.fechaHasta) && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setFilters(prev => ({ ...prev, soloConDeuda: false, fechaDesde: '', fechaHasta: '' }))}
+                        >
+                            Limpiar
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {
@@ -195,6 +308,27 @@ const InformeSociosDeudasPage = ({ showToast }) => {
                     </div>
                 ) : (
                     <>
+                        <div className={localStyles.tableToolbar}>
+                            <Button
+                                variant="soft"
+                                size="sm"
+                                icon={ExportIcon}
+                                loading={exportingListado}
+                                onClick={handleExportListado}
+                            >
+                                {exportingListado ? 'Exportando...' : 'Descargar Excel'}
+                            </Button>
+                            <Button
+                                variant="soft-warning"
+                                size="sm"
+                                icon={ExportIcon}
+                                loading={exportingDetalle}
+                                onClick={handleExportDetalle}
+                            >
+                                {exportingDetalle ? 'Exportando...' : 'Descargar Excel (detalle)'}
+                            </Button>
+                        </div>
+
                         <SociosDeudasTable socios={socios} />
 
                         {/* Pagination Controls */}

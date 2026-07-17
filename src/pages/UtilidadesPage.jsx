@@ -73,19 +73,6 @@ const INFORMES = [
     ),
   },
   {
-    to: "/informe-socios-deudas-detalle",
-    label: "Listado de Socios y sus Deudas con Detalles",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-        <path
-          fillRule="evenodd"
-          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 8a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3zm-3-4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-  },
-  {
     to: "/informe-cobranza-periodo",
     label: "Cobranza por Período",
     icon: (

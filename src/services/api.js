@@ -81,14 +81,68 @@ export const getSocios = async (page = 1, limit = 10, search = '', categoria = '
 // esa página, así que el costo por página es constante aunque haya miles
 // de socios. Cada objeto de "items" incluye el detalle de sus movimientos
 // pendientes de recibo en DetalleDeuda.
-export const getSociosDeudas = async (page = 1, limit = 10, search = '', categoria = '', radio = '') => {
+// soloConDeuda: si es true, solo trae socios con al menos un movimiento
+// pendiente (NroRecibo = 0). fechaDesde/fechaHasta (YYYY-MM-DD) acotan esos
+// movimientos por el campo Mes; combinado con soloConDeuda, solo devuelve
+// socios con deuda pendiente dentro de ese rango.
+export const getSociosDeudas = async (page = 1, limit = 10, search = '', categoria = '', radio = '', soloConDeuda = false, fechaDesde = '', fechaHasta = '') => {
   try {
-    const response = await api.get('/socios/deudas', {
-      params: { page, limit, search, categoria, radio }
-    });
+    const params = { page, limit, search, categoria, radio };
+    if (soloConDeuda) params.soloConDeuda = 'true';
+    if (fechaDesde) params.fechaDesde = fechaDesde;
+    if (fechaHasta) params.fechaHasta = fechaHasta;
+
+    const response = await api.get('/socios/deudas', { params });
     return response.data;
   } catch (error) {
     console.error('Error al obtener el listado de socios y sus deudas:', error);
+    throw error;
+  }
+};
+
+// Exporta el listado de socios y sus deudas (una fila por socio). Mismos
+// filtros que getSociosDeudas, pero sin paginar: el backend arma el Excel
+// completo para el filtro dado.
+export const exportSociosDeudas = async (search = '', categoria = '', radio = '', soloConDeuda = false, fechaDesde = '', fechaHasta = '') => {
+  try {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (categoria) params.append('categoria', categoria);
+    if (radio) params.append('radio', radio);
+    if (soloConDeuda) params.append('soloConDeuda', 'true');
+    if (fechaDesde) params.append('fechaDesde', fechaDesde);
+    if (fechaHasta) params.append('fechaHasta', fechaHasta);
+
+    const response = await api.get('/socios/deudas/export', {
+      params,
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar el listado de socios y sus deudas:', error);
+    throw error;
+  }
+};
+
+// Exporta el detalle de deudas (una fila por movimiento pendiente de
+// recibo, DetalleDeuda). Mismos filtros que exportSociosDeudas.
+export const exportSociosDeudasDetalle = async (search = '', categoria = '', radio = '', soloConDeuda = false, fechaDesde = '', fechaHasta = '') => {
+  try {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (categoria) params.append('categoria', categoria);
+    if (radio) params.append('radio', radio);
+    if (soloConDeuda) params.append('soloConDeuda', 'true');
+    if (fechaDesde) params.append('fechaDesde', fechaDesde);
+    if (fechaHasta) params.append('fechaHasta', fechaHasta);
+
+    const response = await api.get('/socios/deudas/export-detalle', {
+      params,
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar el detalle de deudas:', error);
     throw error;
   }
 };

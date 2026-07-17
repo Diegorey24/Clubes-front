@@ -33,7 +33,6 @@ import UsuariosPage from './pages/UsuariosPage';
 import UtilidadesPage from './pages/UtilidadesPage';
 import InformeSociosContactoPage from './pages/InformeSociosContactoPage';
 import InformeSociosDeudasPage from './pages/InformeSociosDeudasPage';
-import InformeSociosDeudasDetallePage from './pages/InformeSociosDeudasDetallePage';
 import InformeCobranzaPeriodoPage from './pages/InformeCobranzaPeriodoPage';
 import './App.css';
 
@@ -130,7 +129,6 @@ function App() {
           <Route path="/utilidades" element={<PrivateRoute usuario={usuario}><UtilidadesPage usuario={usuario} /></PrivateRoute>} />
           <Route path="/informe-socios-contacto" element={<PrivateRoute usuario={usuario}><InformeSociosContactoPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/informe-socios-deudas" element={<PrivateRoute usuario={usuario}><InformeSociosDeudasPage showToast={showToast} /></PrivateRoute>} />
-          <Route path="/informe-socios-deudas-detalle" element={<PrivateRoute usuario={usuario}><InformeSociosDeudasDetallePage showToast={showToast} /></PrivateRoute>} />
           <Route path="/informe-cobranza-periodo" element={<PrivateRoute usuario={usuario}><InformeCobranzaPeriodoPage showToast={showToast} /></PrivateRoute>} />
         </Routes></main>
         {(usuario || socio) && <Footer />}
