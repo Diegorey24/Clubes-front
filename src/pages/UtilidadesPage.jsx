@@ -3,6 +3,41 @@ import PageHeader from "../components/ui/PageHeader/PageHeader";
 import Title from "../components/ui/Title/Title";
 import styles from "./UtilidadesPage.module.css";
 
+// Un ícono representativo por sección, para el badge de color junto al
+// título. Son decorativos: el mismo criterio de heroicons 20x20 que ya se
+// usa en el resto de los tiles.
+const ProcesosSectionIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" />
+  </svg>
+);
+
+const InformesSectionIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M15.5 2A1.5 1.5 0 0014 3.5v13a1.5 1.5 0 001.5 1.5h1a1.5 1.5 0 001.5-1.5v-13A1.5 1.5 0 0016.5 2h-1zM9.5 6A1.5 1.5 0 008 7.5v9A1.5 1.5 0 009.5 18h1a1.5 1.5 0 001.5-1.5v-9A1.5 1.5 0 0010.5 6h-1zM3.5 10A1.5 1.5 0 002 11.5v5A1.5 1.5 0 003.5 18h1A1.5 1.5 0 006 16.5v-5A1.5 1.5 0 004.5 10h-1z" />
+  </svg>
+);
+
+const TablasSectionIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+    <path
+      fillRule="evenodd"
+      d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 1v2h2V5H5zm4 0v2h2V5H9zm4 0v2h2V5h-2zM5 9v2h2V9H5zm4 0v2h2V9H9zm4 0v2h2V9h-2zM5 13v2h2v-2H5zm4 0v2h2v-2H9zm4 0v2h2v-2h-2z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
+const ParametrosSectionIcon = (
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+    <path
+      fillRule="evenodd"
+      d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
 // Procesos: antes eran tarjetas grandes destacadas; ahora son accesos
 // discretos más, con el mismo look chico (icono + label) que el resto de
 // las secciones, para que no compitan visualmente con Informes/Tablas/etc.
@@ -243,8 +278,11 @@ const UtilidadesPage = ({ usuario }) => {
         subtitle="Procesos, tablas maestras y parámetros del sistema"
       />
 
-      <section className={styles.panel}>
-        <Title variant="section">Procesos</Title>
+      <section className={`${styles.panel} ${styles.procesos}`}>
+        <div className={styles.panelHeader}>
+          <span className={styles.panelIcon}>{ProcesosSectionIcon}</span>
+          <Title variant="section" subtitle="Tareas operativas del día a día">Procesos</Title>
+        </div>
         <div className={styles.tileGrid}>
           {PROCESOS.map((item) => (
             <Link key={item.to} to={item.to} className={styles.tile}>
@@ -255,8 +293,11 @@ const UtilidadesPage = ({ usuario }) => {
         </div>
       </section>
 
-      <section className={styles.panel}>
-        <Title variant="section">Informes</Title>
+      <section className={`${styles.panel} ${styles.informes}`}>
+        <div className={styles.panelHeader}>
+          <span className={styles.panelIcon}>{InformesSectionIcon}</span>
+          <Title variant="section" subtitle="Reportes y listados para seguir el estado del club">Informes</Title>
+        </div>
         <div className={styles.tileGrid}>
           {INFORMES.map((item) => (
             <Link key={item.to} to={item.to} className={styles.tile}>
@@ -267,8 +308,11 @@ const UtilidadesPage = ({ usuario }) => {
         </div>
       </section>
 
-      <section className={styles.panel}>
-        <Title variant="section">Tablas</Title>
+      <section className={`${styles.panel} ${styles.tablas}`}>
+        <div className={styles.panelHeader}>
+          <span className={styles.panelIcon}>{TablasSectionIcon}</span>
+          <Title variant="section" subtitle="Catálogos maestros que alimentan el resto del sistema">Tablas</Title>
+        </div>
         <div className={styles.tileGrid}>
           {TABLAS.map((item) => (
             <Link key={item.to} to={item.to} className={styles.tile}>
@@ -279,8 +323,11 @@ const UtilidadesPage = ({ usuario }) => {
         </div>
       </section>
 
-      <section className={styles.panel}>
-        <Title variant="section">Parámetros</Title>
+      <section className={`${styles.panel} ${styles.parametros}`}>
+        <div className={styles.panelHeader}>
+          <span className={styles.panelIcon}>{ParametrosSectionIcon}</span>
+          <Title variant="section" subtitle="Configuración general y accesos administrativos">Parámetros</Title>
+        </div>
         <div className={styles.tileGrid}>
           {parametrosTiles.map((item) => (
             <Link key={item.to} to={item.to} className={styles.tile}>

@@ -270,43 +270,126 @@
 }
 
 .mesHeader {
-    min-width: 92px;
-}
-
-.montoCell {
-    font-variant-numeric: tabular-nums;
-    color: var(--gray-300);
-}
-
-.montoDeuda {
-    font-weight: 700;
-    color: var(--error-600);
+    min-width: 148px;
 }
 
 .totalHeader {
-    min-width: 110px;
+    min-width: 148px;
 }
 
-.totalCell {
-    font-weight: 700;
-    color: var(--gray-800);
+/* Leyenda de colores arriba de la tabla */
+.legend {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+    padding: 0 0.2rem;
+}
+
+.legendItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+}
+
+.legendDot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.legendDot.adeudado {
+    background: var(--gray-400);
+}
+
+.legendDot.recibido {
+    background: var(--success-500);
+}
+
+.legendDot.pendiente {
+    background: var(--error-500);
+}
+
+/* Celda con el desglose Adeudado / Recibido / Pendiente de un mes (o del
+   total). Cada renglón tiene su propio color, consistente con la leyenda. */
+.montoCellWrap {
+    padding: 0.5rem 0.9rem !important;
+}
+
+.montoStack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    text-align: right;
     font-variant-numeric: tabular-nums;
 }
 
-.totalCell.montoDeuda {
+.montoRow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    line-height: 1.3;
+}
+
+.montoLabel {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: inherit;
+    opacity: 0.75;
+}
+
+.montoAdeudado {
+    color: var(--gray-500);
+}
+
+.montoRecibido {
+    color: var(--success-600);
+}
+
+.montoPendiente {
+    color: var(--gray-400);
+}
+
+.montoPendiente.montoDeuda {
     color: var(--error-600);
+    font-weight: 700;
+}
+
+.montoPendiente.montoDeuda .montoLabel {
+    opacity: 1;
+}
+
+.montoVacio {
+    color: var(--gray-300);
+}
+
+.totalCellWrap {
+    padding: 0.5rem 0.9rem !important;
+    border-left: 1px solid var(--gray-100);
+}
+
+.totalCellWrap .montoRow {
+    font-size: 0.82rem;
+    font-weight: 600;
 }
 
 /* Fila de totales de la página actual */
 .footerRow td {
     background: hsl(210, 76%, 97%);
-    font-weight: 700;
-    color: var(--primary-700);
     border-top: 2px solid var(--gray-100);
 }
 
 .footerRow .socioCell {
     background: hsl(210, 76%, 97%);
+    font-weight: 700;
+    color: var(--primary-700);
 }
 
 .noData {

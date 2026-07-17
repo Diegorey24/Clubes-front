@@ -43,6 +43,47 @@ const ClearIcon = (
     </svg>
 );
 
+// Cada celda de la planilla (un mes de un socio, o un total) trae tres
+// datos: lo que se le generó (Adeudado), lo que ya pagó (Recibido) y lo
+// que todavía debe (Pendiente). Se muestran apiladas para no perder
+// ninguna, con un color fijo por dato (ver leyenda arriba de la tabla);
+// "Pendiente" además se resalta en rojo y negrita cuando hay deuda real.
+const MontoStack = ({ valores }) => {
+    const { Adeudado = 0, Recibido = 0, Pendiente = 0 } = valores || {};
+    const sinMovimiento = !Adeudado && !Recibido && !Pendiente;
+
+    if (sinMovimiento) {
+        return <span className={styles.montoVacio}>-</span>;
+    }
+
+    return (
+        <div className={styles.montoStack}>
+            <div className={`${styles.montoRow} ${styles.montoAdeudado}`}>
+                <span className={styles.montoLabel}>Adeud.</span>
+                <span>{formatCurrency(Adeudado)}</span>
+            </div>
+            <div className={`${styles.montoRow} ${styles.montoRecibido}`}>
+                <span className={styles.montoLabel}>Recib.</span>
+                <span>{formatCurrency(Recibido)}</span>
+            </div>
+            <div className={`${styles.montoRow} ${styles.montoPendiente} ${Pendiente > 0 ? styles.montoDeuda : ''}`}>
+                <span className={styles.montoLabel}>Pend.</span>
+                <span>{formatCurrency(Pendiente)}</span>
+            </div>
+        </div>
+    );
+};
+
+// Suma tres objetos { Adeudado, Recibido, Pendiente } (para los totales de
+// pie de tabla, que el backend no calcula porque cambian según la página).
+const sumarValores = (acc, valores) => ({
+    Adeudado: acc.Adeudado + (valores?.Adeudado || 0),
+    Recibido: acc.Recibido + (valores?.Recibido || 0),
+    Pendiente: acc.Pendiente + (valores?.Pendiente || 0)
+});
+
+const VALORES_VACIOS = { Adeudado: 0, Recibido: 0, Pendiente: 0 };
+
 const getDefaultFilters = () => ({
     search: '',
     categoria: '',
@@ -173,12 +214,13 @@ const InformePlanillaSociosPage = ({ showToast }) => {
         || filters.fechaDesde !== getDefaultFechaDesde() || filters.fechaHasta !== getDefaultFechaHasta();
 
     // Totales por columna (mes) y total general, solo de los socios de la
-    // página actual.
+    // página actual. Cada celda es { Adeudado, Recibido, Pendiente }, así
+    // que se suman los tres valores por separado.
     const totalesPorMes = meses.reduce((acc, mes) => {
-        acc[mes] = items.reduce((sum, item) => sum + (item.PorMes?.[mes] || 0), 0);
+        acc[mes] = items.reduce((sum, item) => sumarValores(sum, item.PorMes?.[mes]), { ...VALORES_VACIOS });
         return acc;
     }, {});
-    const totalGeneralPagina = items.reduce((sum, item) => sum + (item.Total || 0), 0);
+    const totalGeneralPagina = items.reduce((sum, item) => sumarValores(sum, item.Total), { ...VALORES_VACIOS });
 
     return (
         <div className={styles.page}>
@@ -316,6 +358,21 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                 <p className={styles.noData}>No hay socios que coincidan con los filtros seleccionados.</p>
             ) : (
                 <>
+                    <div className={styles.legend}>
+                        <span className={styles.legendItem}>
+                            <span className={`${styles.legendDot} ${styles.adeudado}`}></span>
+                            Adeudado
+                        </span>
+                        <span className={styles.legendItem}>
+                            <span className={`${styles.legendDot} ${styles.recibido}`}></span>
+                            Recibido
+                        </span>
+                        <span className={styles.legendItem}>
+                            <span className={`${styles.legendDot} ${styles.pendiente}`}></span>
+                            Pendiente
+                        </span>
+                    </div>
+
                     <div className={styles.tableContainer}>
                         <table className={styles.table}>
                             <thead>
@@ -338,19 +395,13 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                                                 N.° {item.NroSocio} · CI {item.CI}
                                             </div>
                                         </td>
-                                        {meses.map(mes => {
-                                            const importe = item.PorMes?.[mes] || 0;
-                                            return (
-                                                <td
-                                                    key={mes}
-                                                    className={`${styles.montoCell} ${importe > 0 ? styles.montoDeuda : ''}`}
-                                                >
-                                                    {importe > 0 ? formatCurrency(importe) : '-'}
-                                                </td>
-                                            );
-                                        })}
-                                        <td className={`${styles.totalCell} ${item.Total > 0 ? styles.montoDeuda : ''}`}>
-                                            {formatCurrency(item.Total)}
+                                        {meses.map(mes => (
+                                            <td key={mes} className={styles.montoCellWrap}>
+                                                <MontoStack valores={item.PorMes?.[mes]} />
+                                            </td>
+                                        ))}
+                                        <td className={styles.totalCellWrap}>
+                                            <MontoStack valores={item.Total} />
                                         </td>
                                     </tr>
                                 ))}
@@ -359,11 +410,13 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                                 <tr className={styles.footerRow}>
                                     <td className={styles.socioCell}>Total de esta página</td>
                                     {meses.map(mes => (
-                                        <td key={mes}>
-                                            {totalesPorMes[mes] > 0 ? formatCurrency(totalesPorMes[mes]) : '-'}
+                                        <td key={mes} className={styles.montoCellWrap}>
+                                            <MontoStack valores={totalesPorMes[mes]} />
                                         </td>
                                     ))}
-                                    <td>{formatCurrency(totalGeneralPagina)}</td>
+                                    <td className={styles.totalCellWrap}>
+                                        <MontoStack valores={totalGeneralPagina} />
+                                    </td>
                                 </tr>
                             </tfoot>
                         </table>
