@@ -380,6 +380,71 @@
     font-weight: 600;
 }
 
+/* ===== Vista "Importe": un número por celda ===== */
+.importePagado {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--success-600);
+}
+
+.importePendiente {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--error-600);
+}
+
+/* ===== Vista "Cruces": solo un indicador de saldado ===== */
+.cruzCellWrap {
+    padding: 0.75rem 1rem !important;
+}
+
+.cruzMarca {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: hsl(142, 65%, 94%);
+    color: var(--success-600);
+    font-weight: 700;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+/* Selector de "Vista" (Detalle / Importe / Cruces): mismo look de los
+   selects de fecha, pero un poco más angosto ya que solo tiene 3 opciones. */
+.vistaSelect {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0.5rem 2.25rem 0.5rem 0.85rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    background-color: white;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none' stroke='%23667085' stroke-width='2'%3E%3Cpath d='M6 8l4 4 4-4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 14px;
+    color: var(--gray-700);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    height: 34px;
+    min-width: 130px;
+}
+
+.vistaSelect:hover {
+    border-color: var(--gray-300);
+}
+
+.vistaSelect:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
 /* Fila de totales de la página actual */
 .footerRow td {
     background: hsl(210, 76%, 97%);

@@ -74,6 +74,38 @@ const MontoStack = ({ valores }) => {
     );
 };
 
+// Vista "Importe": un solo número por celda. Si todavía debe algo ese mes
+// se muestra en rojo lo pendiente; si no debe nada y hubo un cargo, se
+// muestra en verde lo recibido (ya pagado). Sin movimiento, celda vacía.
+const MontoImporte = ({ valores }) => {
+    const { Adeudado = 0, Recibido = 0, Pendiente = 0 } = valores || {};
+    const sinMovimiento = !Adeudado && !Recibido && !Pendiente;
+
+    if (sinMovimiento) {
+        return <span className={styles.montoVacio}>-</span>;
+    }
+
+    if (Pendiente > 0) {
+        return <span className={styles.importePendiente}>{formatCurrency(Pendiente)}</span>;
+    }
+
+    return <span className={styles.importePagado}>{formatCurrency(Recibido)}</span>;
+};
+
+// Vista "Cruces": no importa el monto, solo si ese mes quedó saldado. Una
+// cruz verde si se pagó todo lo generado; celda vacía si quedó algo
+// pendiente o si directamente no hubo cargo ese mes.
+const MontoCruz = ({ valores }) => {
+    const { Adeudado = 0, Pendiente = 0 } = valores || {};
+    const pagado = Adeudado > 0 && Pendiente === 0;
+
+    if (!pagado) {
+        return null;
+    }
+
+    return <span className={styles.cruzMarca} aria-label="Pagado">✕</span>;
+};
+
 // Suma tres objetos { Adeudado, Recibido, Pendiente } (para los totales de
 // pie de tabla, que el backend no calcula porque cambian según la página).
 const sumarValores = (acc, valores) => ({
@@ -96,18 +128,26 @@ const getDefaultFilters = () => ({
 
 // Informe "Planilla de Socios y Deudas". Consume GET /socios/deudas/planilla,
 // que a diferencia de /socios/deudas pivotea el resultado: cada columna es
-// un mes (Aniomes) dentro de [fechaDesde, fechaHasta] y cada celda es el
-// importe adeudado por ese socio en ese mes. El backend pagina por socio
-// ({ items, total, page, limit, totalPages }) igual que los demás informes,
-// así que el costo por página es constante aunque el rango de fechas sea
-// largo. Los totales por columna que se muestran en el pie de la tabla son
-// solo de la página actual (el backend no expone un agregado global), por
-// eso se etiquetan explícitamente como "de esta página".
+// un mes (Aniomes) dentro de [fechaDesde, fechaHasta] y cada celda trae
+// { Adeudado, Recibido, Pendiente } para ese socio en ese mes. El backend
+// pagina por socio ({ items, total, page, limit, totalPages }) igual que
+// los demás informes, así que el costo por página es constante aunque el
+// rango de fechas sea largo. Los totales por columna que se muestran en el
+// pie de la tabla son solo de la página actual (el backend no expone un
+// agregado global), por eso se etiquetan explícitamente como "de esta
+// página" y siempre se muestran con el detalle completo, sin importar la
+// vista elegida.
 const InformePlanillaSociosPage = ({ showToast }) => {
     const [filters, setFilters] = useState(getDefaultFilters());
     const [categorias, setCategorias] = useState([]);
     const [radios, setRadios] = useState([]);
     const [rubros, setRubros] = useState([]);
+
+    // Vista: cómo se presenta cada celda de la planilla. No es un filtro de
+    // datos (no dispara un nuevo pedido al backend), solo cambia cómo se
+    // renderiza lo que ya se cargó. "Importe" es la vista más usada, así
+    // que arranca seleccionada por defecto.
+    const [vista, setVista] = useState('importe');
 
     const [meses, setMeses] = useState([]);
     const [items, setItems] = useState([]);
@@ -335,6 +375,20 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                         <label htmlFor="soloConDeuda">Solo socios con deuda pendiente</label>
                     </div>
 
+                    <div className={styles.dateFilterGroup}>
+                        <label htmlFor="vista">Vista</label>
+                        <select
+                            id="vista"
+                            className={styles.vistaSelect}
+                            value={vista}
+                            onChange={(e) => setVista(e.target.value)}
+                        >
+                            <option value="importe">Importe</option>
+                            <option value="cruces">Cruces</option>
+                            <option value="detalle">Detalle</option>
+                        </select>
+                    </div>
+
                     {isFiltered && (
                         <Button variant="ghost" size="sm" onClick={handleLimpiar}>
                             Limpiar filtros
@@ -359,18 +413,40 @@ const InformePlanillaSociosPage = ({ showToast }) => {
             ) : (
                 <>
                     <div className={styles.legend}>
-                        <span className={styles.legendItem}>
-                            <span className={`${styles.legendDot} ${styles.adeudado}`}></span>
-                            Adeudado
-                        </span>
-                        <span className={styles.legendItem}>
-                            <span className={`${styles.legendDot} ${styles.recibido}`}></span>
-                            Recibido
-                        </span>
-                        <span className={styles.legendItem}>
-                            <span className={`${styles.legendDot} ${styles.pendiente}`}></span>
-                            Pendiente
-                        </span>
+                        {vista === 'detalle' && (
+                            <>
+                                <span className={styles.legendItem}>
+                                    <span className={`${styles.legendDot} ${styles.adeudado}`}></span>
+                                    Adeudado
+                                </span>
+                                <span className={styles.legendItem}>
+                                    <span className={`${styles.legendDot} ${styles.recibido}`}></span>
+                                    Recibido
+                                </span>
+                                <span className={styles.legendItem}>
+                                    <span className={`${styles.legendDot} ${styles.pendiente}`}></span>
+                                    Pendiente
+                                </span>
+                            </>
+                        )}
+                        {vista === 'importe' && (
+                            <>
+                                <span className={styles.legendItem}>
+                                    <span className={`${styles.legendDot} ${styles.recibido}`}></span>
+                                    Verde: ya pagado
+                                </span>
+                                <span className={styles.legendItem}>
+                                    <span className={`${styles.legendDot} ${styles.pendiente}`}></span>
+                                    Rojo: pendiente de pago
+                                </span>
+                            </>
+                        )}
+                        {vista === 'cruces' && (
+                            <span className={styles.legendItem}>
+                                <span className={styles.cruzMarca}>✕</span>
+                                El mes está saldado · celda vacía: pendiente o sin cargo
+                            </span>
+                        )}
                     </div>
 
                     <div className={styles.tableContainer}>
@@ -396,19 +472,28 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                                             </div>
                                         </td>
                                         {meses.map(mes => (
-                                            <td key={mes} className={styles.montoCellWrap}>
-                                                <MontoStack valores={item.PorMes?.[mes]} />
+                                            <td key={mes} className={vista === 'cruces' ? styles.cruzCellWrap : styles.montoCellWrap}>
+                                                {vista === 'detalle' && <MontoStack valores={item.PorMes?.[mes]} />}
+                                                {vista === 'importe' && <MontoImporte valores={item.PorMes?.[mes]} />}
+                                                {vista === 'cruces' && <MontoCruz valores={item.PorMes?.[mes]} />}
                                             </td>
                                         ))}
-                                        <td className={styles.totalCellWrap}>
-                                            <MontoStack valores={item.Total} />
+                                        <td className={vista === 'cruces' ? styles.cruzCellWrap : styles.totalCellWrap}>
+                                            {vista === 'detalle' && <MontoStack valores={item.Total} />}
+                                            {vista === 'importe' && <MontoImporte valores={item.Total} />}
+                                            {vista === 'cruces' && <MontoCruz valores={item.Total} />}
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                             <tfoot>
                                 <tr className={styles.footerRow}>
-                                    <td className={styles.socioCell}>Total de esta página</td>
+                                    <td className={styles.socioCell}>
+                                        Total de esta página
+                                        {vista !== 'detalle' && (
+                                            <div className={styles.socioMeta}>siempre con el detalle completo</div>
+                                        )}
+                                    </td>
                                     {meses.map(mes => (
                                         <td key={mes} className={styles.montoCellWrap}>
                                             <MontoStack valores={totalesPorMes[mes]} />
