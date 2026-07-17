@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
-
 import { fetchItems, createItem, updateItem, deleteItem } from '../services/api';
+import { Button, PageHeader, Badge, TableActions, ConfirmDialog } from '../components/ui';
 import styles from './UsuariosPage.module.css';
 
 const TIPOS = ['Administrador', 'Operador'];
+
+const PlusIcon = (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+);
 
 const UsuariosPage = ({ showToast }) => {
     const [usuarios, setUsuarios] = useState([]);
@@ -12,10 +18,10 @@ const UsuariosPage = ({ showToast }) => {
     const [creando, setCreando] = useState(false);
     const [guardando, setGuardando] = useState(false);
     const [formData, setFormData] = useState({ nombre: '', contrasena: '', tipo: 'Operador', nroCaja: '1' });
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
-    useEffect(() => {
-        cargar();
-    }, []);
+    useEffect(() => { cargar(); }, []);
 
     const cargar = async () => {
         setLoading(true);
@@ -41,20 +47,11 @@ const UsuariosPage = ({ showToast }) => {
         setFormData({ nombre: '', contrasena: '', tipo: 'Operador', nroCaja: '1' });
     };
 
-    const handleCancelar = () => {
-        setEditando(null);
-        setCreando(false);
-    };
+    const handleCancelar = () => { setEditando(null); setCreando(false); };
 
     const handleGuardar = async () => {
-        if (!formData.nombre || !formData.tipo) {
-            showToast('Nombre y tipo son requeridos', 'error');
-            return;
-        }
-        if (creando && !formData.contrasena) {
-            showToast('La contraseña es requerida para un usuario nuevo', 'error');
-            return;
-        }
+        if (!formData.nombre || !formData.tipo) { showToast('Nombre y tipo son requeridos', 'error'); return; }
+        if (creando && !formData.contrasena) { showToast('La contraseña es requerida para un usuario nuevo', 'error'); return; }
         setGuardando(true);
         try {
             if (creando) {
@@ -74,14 +71,25 @@ const UsuariosPage = ({ showToast }) => {
         }
     };
 
-    const handleEliminar = async (id, nombre) => {
-        if (!window.confirm(`¿Segura que querés eliminar al usuario "${nombre}"?`)) return;
+    const requestDelete = (u) => setDeleteTarget(u);
+
+    const closeConfirm = () => {
+        if (deleting) return;
+        setDeleteTarget(null);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
         try {
-            await deleteItem('usuarios', id);
+            await deleteItem('usuarios', deleteTarget.id);
             showToast('Usuario eliminado correctamente', 'success');
+            setDeleteTarget(null);
             cargar();
         } catch (err) {
             showToast('Error al eliminar el usuario', 'error');
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -98,147 +106,112 @@ const UsuariosPage = ({ showToast }) => {
 
     return (
         <div className={styles.page}>
-            <div className={styles.header}>
-                <h2 className={styles.title}>Gestión de Usuarios</h2>
-                <button className="btn-primary" onClick={handleNuevo}>
-                    + Nuevo Usuario
-                </button>
-            </div>
+            <PageHeader
+                title="Gestión de Usuarios"
+                actions={
+                    <Button variant="primary" icon={PlusIcon} onClick={handleNuevo}>
+                        Nuevo Usuario
+                    </Button>
+                }
+            />
 
             {creando && (
-                <div style={{
-                    background: 'white',
-                    border: '1px solid var(--gray-200)',
-                    borderRadius: '12px',
-                    padding: '24px',
-                    marginBottom: '24px',
-                    boxShadow: 'var(--shadow-sm)'
-                }}>
-                    <h3 style={{ marginBottom: '20px', fontSize: '1.1rem', fontWeight: '600', color: 'var(--gray-800)' }}>
-                        Nuevo usuario
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--gray-700)' }}>Nombre de usuario</label>
-                            <input
-                                placeholder="Ingresá el nombre"
-                                value={formData.nombre}
-                                onChange={e => setFormData({ ...formData, nombre: e.target.value })}
-                                style={{ padding: '8px 12px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '0.9rem' }}
-                            />
+                <div className={styles.formCard}>
+                    <h3 className={styles.formTitle}>Nuevo usuario</h3>
+                    <div className={styles.formGrid}>
+                        <div className={styles.field}>
+                            <label>Nombre de usuario</label>
+                            <input placeholder="Ingresá el nombre" value={formData.nombre} onChange={e => setFormData({ ...formData, nombre: e.target.value })} />
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--gray-700)' }}>Contraseña</label>
-                            <input
-                                placeholder="Ingresá la contraseña"
-                                type="password"
-                                value={formData.contrasena}
-                                onChange={e => setFormData({ ...formData, contrasena: e.target.value })}
-                                style={{ padding: '8px 12px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '0.9rem' }}
-                            />
+                        <div className={styles.field}>
+                            <label>Contraseña</label>
+                            <input placeholder="Ingresá la contraseña" type="password" value={formData.contrasena} onChange={e => setFormData({ ...formData, contrasena: e.target.value })} />
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--gray-700)' }}>Rol</label>
-                            <select
-                                value={formData.tipo}
-                                onChange={e => setFormData({ ...formData, tipo: e.target.value })}
-                                style={{ padding: '8px 12px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '0.9rem' }}
-                            >
+                        <div className={styles.field}>
+                            <label>Rol</label>
+                            <select value={formData.tipo} onChange={e => setFormData({ ...formData, tipo: e.target.value })}>
                                 {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
                             </select>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            <label style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--gray-700)' }}>Nro. de Caja</label>
-                            <input
-                                placeholder="1"
-                                value={formData.nroCaja}
-                                onChange={e => setFormData({ ...formData, nroCaja: e.target.value })}
-                                style={{ padding: '8px 12px', border: '1px solid var(--gray-300)', borderRadius: '8px', fontSize: '0.9rem' }}
-                            />
+                        <div className={styles.field}>
+                            <label>Nro. de Caja</label>
+                            <input placeholder="1" value={formData.nroCaja} onChange={e => setFormData({ ...formData, nroCaja: e.target.value })} />
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <button className={`btn-primary ${styles.btnSm}`} onClick={handleGuardar} disabled={guardando}>
-                            {guardando ? 'Guardando...' : 'Guardar'}
-                        </button>
-                        <button className={`btn-secondary ${styles.btnSm}`} onClick={handleCancelar}>Cancelar</button>
+                    <div className={styles.formActions}>
+                        <Button variant="primary" size="sm" onClick={handleGuardar} loading={guardando}>Guardar</Button>
+                        <Button variant="secondary" size="sm" onClick={handleCancelar} disabled={guardando}>Cancelar</Button>
                     </div>
                 </div>
             )}
 
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Rol</th>
-                        <th>Nro. Caja</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {usuarios.map(u => (
-                        <tr key={u.id}>
-                            <td>
-                                {editando === u.id
-                                    ? <input
-                                        value={formData.nombre}
-                                        onChange={e => setFormData({ ...formData, nombre: e.target.value })}
-                                        style={{ padding: '6px 10px', border: '1px solid var(--gray-300)', borderRadius: '6px' }}
-                                    />
-                                    : u.nombre}
-                            </td>
-                            <td>
-                                {editando === u.id
-                                    ? <select
-                                        value={formData.tipo}
-                                        onChange={e => setFormData({ ...formData, tipo: e.target.value })}
-                                        style={{ padding: '6px 10px', border: '1px solid var(--gray-300)', borderRadius: '6px' }}
-                                    >
-                                        {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
-                                    </select>
-                                    : <span style={{
-                                        display: 'inline-block',
-                                        padding: '3px 10px',
-                                        borderRadius: '999px',
-                                        fontSize: '0.8rem',
-                                        fontWeight: '600',
-                                        background: u.tipo === 'Administrador' ? 'var(--primary-100)' : 'var(--gray-100)',
-                                        color: u.tipo === 'Administrador' ? 'var(--primary-700)' : 'var(--gray-600)',
-                                    }}>
-                                        {u.tipo}
-                                    </span>
-                                }
-                            </td>
-                            <td>
-                                {editando === u.id
-                                    ? <input
-                                        value={formData.nroCaja}
-                                        onChange={e => setFormData({ ...formData, nroCaja: e.target.value })}
-                                        style={{ padding: '6px 10px', border: '1px solid var(--gray-300)', borderRadius: '6px', width: '80px' }}
-                                    />
-                                    : u.nroCaja}
-                            </td>
-                            <td>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    {editando === u.id ? (
-                                        <>
-                                            <button className={`btn-primary ${styles.btnSm}`} onClick={handleGuardar} disabled={guardando}>
-                                                {guardando ? 'Guardando...' : 'Guardar'}
-                                            </button>
-                                            <button className={`btn-secondary ${styles.btnSm}`} onClick={handleCancelar}>Cancelar</button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button className={`btn-primary ${styles.btnSm}`} onClick={() => handleEditar(u)}>Editar</button>
-                                            <button className={`btn-secondary ${styles.btnSm}`} onClick={() => handleEliminar(u.id, u.nombre)}>Eliminar</button>
-                                        </>
-                                    )}
-                                </div>
-                            </td>
+            <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Rol</th>
+                            <th>Nro. Caja</th>
+                            <th className={styles.actionsHeader}>Acciones</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {usuarios.map(u => (
+                            <tr key={u.id}>
+                                <td>
+                                    {editando === u.id
+                                        ? <input className={styles.inlineInput} value={formData.nombre} onChange={e => setFormData({ ...formData, nombre: e.target.value })} />
+                                        : u.nombre}
+                                </td>
+                                <td>
+                                    {editando === u.id
+                                        ? <select className={styles.inlineInput} value={formData.tipo} onChange={e => setFormData({ ...formData, tipo: e.target.value })}>
+                                            {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+                                        </select>
+                                        : <Badge variant={u.tipo === 'Administrador' ? 'primary' : 'neutral'}>{u.tipo}</Badge>
+                                    }
+                                </td>
+                                <td>
+                                    {editando === u.id
+                                        ? <input className={`${styles.inlineInput} ${styles.inlineInputSmall}`} value={formData.nroCaja} onChange={e => setFormData({ ...formData, nroCaja: e.target.value })} />
+                                        : u.nroCaja}
+                                </td>
+                                <td className={styles.actionsCell}>
+                                    {editando === u.id ? (
+                                        <div className={styles.editActions}>
+                                            <Button variant="primary" size="sm" onClick={handleGuardar} loading={guardando}>Guardar</Button>
+                                            <Button variant="secondary" size="sm" onClick={handleCancelar} disabled={guardando}>Cancelar</Button>
+                                        </div>
+                                    ) : (
+                                        <TableActions
+                                            onEdit={() => handleEditar(u)}
+                                            onDelete={() => requestDelete(u)}
+                                        />
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            <ConfirmDialog
+                isOpen={!!deleteTarget}
+                title="¿Eliminar usuario?"
+                description="Esta acción no se puede deshacer."
+                confirmLabel="Sí, eliminar"
+                cancelLabel="Cancelar"
+                variant="danger"
+                loading={deleting}
+                onConfirm={confirmDelete}
+                onCancel={closeConfirm}
+            >
+                {deleteTarget && (
+                    <div className={styles.confirmSummary}>
+                        <div className={styles.confirmName}>{deleteTarget.nombre}</div>
+                    </div>
+                )}
+            </ConfirmDialog>
         </div>
     );
 };
