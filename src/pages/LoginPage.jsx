@@ -71,11 +71,6 @@ function LoginPage({ onLogin }) {
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
-
-        <p className={styles.footer}>
-          ¿No tenés cuenta?{' '}
-          <Link to="/register" className={styles.link}>Registrarse</Link>
-        </p>
       </div>
     </div>
   );
