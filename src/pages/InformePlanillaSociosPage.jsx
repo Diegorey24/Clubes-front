@@ -1,7 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSociosDeudasPlanilla, fetchItems } from '../services/api';
+import { getSociosDeudasPlanilla, exportSociosDeudasPlanilla, fetchItems } from '../services/api';
 import { Button, PageHeader, BackLink } from '../components/ui';
 import styles from './InformePlanillaSociosPage.module.css';
+
+// Descarga un blob ya recibido con el nombre de archivo indicado.
+const descargarBlob = (blob, nombreArchivo) => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+};
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(amount || 0);
@@ -40,6 +52,12 @@ const SearchIcon = (
 const ClearIcon = (
     <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
         <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+    </svg>
+);
+
+const ExportIcon = (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
 );
 
@@ -148,6 +166,7 @@ const InformePlanillaSociosPage = ({ showToast }) => {
     // renderiza lo que ya se cargó. "Importe" es la vista más usada, así
     // que arranca seleccionada por defecto.
     const [vista, setVista] = useState('importe');
+    const [exportando, setExportando] = useState(false);
 
     const [meses, setMeses] = useState([]);
     const [items, setItems] = useState([]);
@@ -248,6 +267,30 @@ const InformePlanillaSociosPage = ({ showToast }) => {
 
     const handleLimpiar = () => {
         setFilters(getDefaultFilters());
+    };
+
+    const handleExport = async () => {
+        if (exportando || rangoIncompleto || rangoInvalido) return;
+        setExportando(true);
+        try {
+            const blob = await exportSociosDeudasPlanilla(
+                filters.fechaDesde,
+                filters.fechaHasta,
+                debouncedSearch,
+                filters.categoria,
+                filters.radio,
+                filters.soloConDeuda,
+                filters.rubro,
+                vista
+            );
+            descargarBlob(blob, `planilla_socios_deudas_${vista}.xlsx`);
+        } catch (err) {
+            console.error('Error exporting planilla de socios y deudas:', err);
+            const mensaje = err.response?.data?.error || 'Error al exportar la planilla de socios y deudas';
+            showToast?.(mensaje, 'error');
+        } finally {
+            setExportando(false);
+        }
     };
 
     const isFiltered = filters.search || filters.categoria || filters.radio || filters.rubro || filters.soloConDeuda
@@ -412,41 +455,53 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                 <p className={styles.noData}>No hay socios que coincidan con los filtros seleccionados.</p>
             ) : (
                 <>
-                    <div className={styles.legend}>
-                        {vista === 'detalle' && (
-                            <>
+                    <div className={styles.legendRow}>
+                        <div className={styles.legend}>
+                            {vista === 'detalle' && (
+                                <>
+                                    <span className={styles.legendItem}>
+                                        <span className={`${styles.legendDot} ${styles.adeudado}`}></span>
+                                        Adeudado
+                                    </span>
+                                    <span className={styles.legendItem}>
+                                        <span className={`${styles.legendDot} ${styles.recibido}`}></span>
+                                        Recibido
+                                    </span>
+                                    <span className={styles.legendItem}>
+                                        <span className={`${styles.legendDot} ${styles.pendiente}`}></span>
+                                        Pendiente
+                                    </span>
+                                </>
+                            )}
+                            {vista === 'importe' && (
+                                <>
+                                    <span className={styles.legendItem}>
+                                        <span className={`${styles.legendDot} ${styles.recibido}`}></span>
+                                        Verde: ya pagado
+                                    </span>
+                                    <span className={styles.legendItem}>
+                                        <span className={`${styles.legendDot} ${styles.pendiente}`}></span>
+                                        Rojo: pendiente de pago
+                                    </span>
+                                </>
+                            )}
+                            {vista === 'cruces' && (
                                 <span className={styles.legendItem}>
-                                    <span className={`${styles.legendDot} ${styles.adeudado}`}></span>
-                                    Adeudado
+                                    <span className={styles.cruzMarca}>✕</span>
+                                    El mes está saldado · celda vacía: pendiente o sin cargo
                                 </span>
-                                <span className={styles.legendItem}>
-                                    <span className={`${styles.legendDot} ${styles.recibido}`}></span>
-                                    Recibido
-                                </span>
-                                <span className={styles.legendItem}>
-                                    <span className={`${styles.legendDot} ${styles.pendiente}`}></span>
-                                    Pendiente
-                                </span>
-                            </>
-                        )}
-                        {vista === 'importe' && (
-                            <>
-                                <span className={styles.legendItem}>
-                                    <span className={`${styles.legendDot} ${styles.recibido}`}></span>
-                                    Verde: ya pagado
-                                </span>
-                                <span className={styles.legendItem}>
-                                    <span className={`${styles.legendDot} ${styles.pendiente}`}></span>
-                                    Rojo: pendiente de pago
-                                </span>
-                            </>
-                        )}
-                        {vista === 'cruces' && (
-                            <span className={styles.legendItem}>
-                                <span className={styles.cruzMarca}>✕</span>
-                                El mes está saldado · celda vacía: pendiente o sin cargo
-                            </span>
-                        )}
+                            )}
+                        </div>
+
+                        <Button
+                            variant="soft"
+                            size="sm"
+                            icon={ExportIcon}
+                            loading={exportando}
+                            onClick={handleExport}
+                        >
+                            {exportando ? 'Exportando...' : 'Descargar Excel'}
+                        </Button>
                     </div>
 
                     <div className={styles.tableContainer}>
@@ -457,7 +512,9 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                                     {meses.map(mes => (
                                         <th key={mes} className={styles.mesHeader}>{formatAniomes(mes)}</th>
                                     ))}
-                                    <th className={styles.totalHeader}>Total</th>
+                                    {vista !== 'cruces' && (
+                                        <th className={styles.totalHeader}>Total</th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody>
@@ -478,11 +535,12 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                                                 {vista === 'cruces' && <MontoCruz valores={item.PorMes?.[mes]} />}
                                             </td>
                                         ))}
-                                        <td className={vista === 'cruces' ? styles.cruzCellWrap : styles.totalCellWrap}>
-                                            {vista === 'detalle' && <MontoStack valores={item.Total} />}
-                                            {vista === 'importe' && <MontoImporte valores={item.Total} />}
-                                            {vista === 'cruces' && <MontoCruz valores={item.Total} />}
-                                        </td>
+                                        {vista !== 'cruces' && (
+                                            <td className={styles.totalCellWrap}>
+                                                {vista === 'detalle' && <MontoStack valores={item.Total} />}
+                                                {vista === 'importe' && <MontoImporte valores={item.Total} />}
+                                            </td>
+                                        )}
                                     </tr>
                                 ))}
                             </tbody>
@@ -499,9 +557,11 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                                             <MontoStack valores={totalesPorMes[mes]} />
                                         </td>
                                     ))}
-                                    <td className={styles.totalCellWrap}>
-                                        <MontoStack valores={totalGeneralPagina} />
-                                    </td>
+                                    {vista !== 'cruces' && (
+                                        <td className={styles.totalCellWrap}>
+                                            <MontoStack valores={totalGeneralPagina} />
+                                        </td>
+                                    )}
                                 </tr>
                             </tfoot>
                         </table>

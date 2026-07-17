@@ -277,13 +277,23 @@
     min-width: 148px;
 }
 
-/* Leyenda de colores arriba de la tabla */
+/* Fila arriba de la tabla: leyenda de colores a la izquierda, botón de
+   exportar a la derecha. */
+.legendRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-sm);
+}
+
 .legend {
     display: flex;
     align-items: center;
     gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-sm);
     padding: 0 0.2rem;
+    flex-wrap: wrap;
 }
 
 .legendItem {

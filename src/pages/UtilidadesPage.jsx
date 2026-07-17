@@ -109,7 +109,9 @@ const INFORMES = [
   },
   {
     to: "/informe-planilla-socios",
-    label: "Planilla de Socios y Deudas",
+    label: "LA planilla del Nando",
+    // label: "Planilla de Socios y Deudas",
+
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
         <path

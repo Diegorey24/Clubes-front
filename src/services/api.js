@@ -172,6 +172,33 @@ export const getSociosDeudasPlanilla = async (page = 1, limit = 10, fechaDesde, 
   }
 };
 
+// Exporta la planilla de socios y deudas a Excel. Un solo endpoint cubre
+// las tres presentaciones (detalle / importe / cruces); "vista" solo
+// cambia cómo arma las columnas el backend, no la URL. Mismos filtros que
+// getSociosDeudasPlanilla, sin paginar.
+export const exportSociosDeudasPlanilla = async (fechaDesde, fechaHasta, search = '', categoria = '', radio = '', soloConDeuda = false, rubro = '', vista = 'detalle') => {
+  try {
+    const params = new URLSearchParams();
+    if (fechaDesde) params.append('fechaDesde', fechaDesde);
+    if (fechaHasta) params.append('fechaHasta', fechaHasta);
+    if (search) params.append('search', search);
+    if (categoria) params.append('categoria', categoria);
+    if (radio) params.append('radio', radio);
+    if (soloConDeuda) params.append('soloConDeuda', 'true');
+    if (rubro) params.append('rubro', rubro);
+    params.append('vista', vista);
+
+    const response = await api.get('/socios/deudas/planilla/export', {
+      params,
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar la planilla de socios y deudas:', error);
+    throw error;
+  }
+};
+
 export const getSocioById = async (id) => {
   try {
     const response = await api.get(`/socios/${id}`);

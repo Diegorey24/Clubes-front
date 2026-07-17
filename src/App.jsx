@@ -102,7 +102,7 @@ function App() {
           <Route path="/login" element={usuario ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />} />
           <Route path="/register" element={usuario ? <Navigate to="/" replace /> : <RegisterPage />} />
 
-          <Route path="/" element={<PrivateRoute usuario={usuario}><DashboardPage /></PrivateRoute>} />
+          <Route path="/" element={<PrivateRoute usuario={usuario}><DashboardPage usuario={usuario} /></PrivateRoute>} />
           <Route path="/rubros" element={<PrivateRoute usuario={usuario}><RubrosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/radios" element={<PrivateRoute usuario={usuario}><RadiosPage showToast={showToast} /></PrivateRoute>} />
           <Route path="/formapago" element={<PrivateRoute usuario={usuario}><FormaPagoPage showToast={showToast} /></PrivateRoute>} />
