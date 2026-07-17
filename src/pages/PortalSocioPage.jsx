@@ -181,15 +181,15 @@ const PortalSocioPage = ({ socio, onLogout, showToast }) => {
                                     ) : (
                                         cuentaCorriente.map((row) => (
                                             <tr key={row.Id}>
-                                                <td>{row.Aniomes}</td>
-                                                <td className={styles.amount}>${row.Importe?.toFixed(2)}</td>
-                                                <td>
+                                                <td data-label="Período">{row.Aniomes}</td>
+                                                <td data-label="Importe" className={styles.amount}>${row.Importe?.toFixed(2)}</td>
+                                                <td data-label="Estado">
                                                     <span className={`${styles.badge} ${row.NroRecibo === 0 ? styles.badgePending : styles.badgePaid}`}>
                                                         {row.NroRecibo === 0 ? 'Pendiente' : 'Pagado'}
                                                     </span>
                                                 </td>
-                                                <td>{formatFecha(row.FechaPago)}</td>
-                                                <td>{row.FormaPago?.trim() || '-'}</td>
+                                                <td data-label="Fecha pago">{formatFecha(row.FechaPago)}</td>
+                                                <td data-label="Forma de pago">{row.FormaPago?.trim() || '-'}</td>
                                             </tr>
                                         ))
                                     )}
