@@ -542,4 +542,9 @@ export const cambiarTitularGrupoFamiliar = async (socDocIde, nuevoTitularSocDocI
   return response.data;
 };
 
+export const cambiarContrasenaSocio = async (ci, contrasenaActual, contrasenaNueva) => {
+  const response = await api.put(`/portal-socio/cambiar-contrasena/${ci}`, { contrasenaActual, contrasenaNueva });
+  return response.data;
+};
+
 export default api;

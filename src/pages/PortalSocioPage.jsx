@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getFichaSocio, getCuentaCorrienteSocio, actualizarDatosSocio } from '../services/api';
+import { getFichaSocio, getCuentaCorrienteSocio, actualizarDatosSocio, cambiarContrasenaSocio } from '../services/api';
 import { formatFecha } from '../utils/date';
 import styles from './PortalSocioPage.module.css';
 
@@ -12,6 +12,9 @@ const PortalSocioPage = ({ socio, onLogout, showToast }) => {
     const [formData, setFormData] = useState({
         SocTel: '', SocTelCel: '', SocEMail: '', SocDom: ''
     });
+    const [cambioPass, setCambioPass] = useState(false);
+    const [passForm, setPassForm] = useState({ actual: '', nueva: '', confirmar: '' });
+    const [guardandoPass, setGuardandoPass] = useState(false);
 
     useEffect(() => {
         cargar();
@@ -66,6 +69,32 @@ const PortalSocioPage = ({ socio, onLogout, showToast }) => {
 
     const nombreCompleto = `${ficha.PrimerNombre?.trim() || ''} ${ficha.SegundoNombre?.trim() || ''} ${ficha.PrimerApellido?.trim() || ''} ${ficha.SegundoApellido?.trim() || ''}`.replace(/\s+/g, ' ').trim();
     const iniciales = `${ficha.PrimerNombre?.trim()?.[0] || ''}${ficha.PrimerApellido?.trim()?.[0] || ''}`.toUpperCase();
+
+    const handleCambiarContrasena = async () => {
+        if (!passForm.actual || !passForm.nueva || !passForm.confirmar) {
+            showToast('Completá todos los campos', 'error');
+            return;
+        }
+        if (passForm.nueva !== passForm.confirmar) {
+            showToast('Las contraseñas nuevas no coinciden', 'error');
+            return;
+        }
+        if (passForm.nueva.length < 6) {
+            showToast('La contraseña nueva debe tener al menos 6 caracteres', 'error');
+            return;
+        }
+        setGuardandoPass(true);
+        try {
+            await cambiarContrasenaSocio(socio.ci, passForm.actual, passForm.nueva);
+            showToast('Contraseña actualizada correctamente', 'success');
+            setCambioPass(false);
+            setPassForm({ actual: '', nueva: '', confirmar: '' });
+        } catch (err) {
+            showToast(err.response?.data?.error || 'Error al cambiar la contraseña', 'error');
+        } finally {
+            setGuardandoPass(false);
+        }
+    };
 
     return (
         <div className={styles.page}>
@@ -156,6 +185,58 @@ const PortalSocioPage = ({ socio, onLogout, showToast }) => {
                             </div>
                         )}
                     </div>
+                </div>
+
+                <div className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <h3 className={styles.cardTitle}>Contraseña</h3>
+                        {!cambioPass && (
+                            <button className="btn-primary" onClick={() => setCambioPass(true)}>
+                                Cambiar contraseña
+                            </button>
+                        )}
+                    </div>
+                    {cambioPass && (
+                        <div className={styles.cardBody}>
+                            <div className={styles.infoGrid}>
+                                <div className={styles.infoItem}>
+                                    <span className={styles.infoLabel}>Contraseña actual</span>
+                                    <input
+                                        className={styles.input}
+                                        type="password"
+                                        value={passForm.actual}
+                                        onChange={e => setPassForm({ ...passForm, actual: e.target.value })}
+                                    />
+                                </div>
+                                <div className={styles.infoItem}>
+                                    <span className={styles.infoLabel}>Nueva contraseña</span>
+                                    <input
+                                        className={styles.input}
+                                        type="password"
+                                        value={passForm.nueva}
+                                        onChange={e => setPassForm({ ...passForm, nueva: e.target.value })}
+                                    />
+                                </div>
+                                <div className={styles.infoItem}>
+                                    <span className={styles.infoLabel}>Confirmar nueva contraseña</span>
+                                    <input
+                                        className={styles.input}
+                                        type="password"
+                                        value={passForm.confirmar}
+                                        onChange={e => setPassForm({ ...passForm, confirmar: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className={styles.actions}>
+                                <button className="btn-primary" onClick={handleCambiarContrasena} disabled={guardandoPass}>
+                                    {guardandoPass ? 'Guardando...' : 'Guardar'}
+                                </button>
+                                <button className="btn-secondary" onClick={() => { setCambioPass(false); setPassForm({ actual: '', nueva: '', confirmar: '' }); }}>
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Cuenta corriente */}
