@@ -257,6 +257,16 @@
         padding: var(--spacing-lg);
     }
 
+    .cardHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .cardHeader button {
+        width: 100%;
+    }
+
     .actions {
         flex-direction: column;
     }

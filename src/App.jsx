@@ -35,6 +35,7 @@ import InformeSociosContactoPage from './pages/InformeSociosContactoPage';
 import InformeSociosDeudasPage from './pages/InformeSociosDeudasPage';
 import InformePlanillaSociosPage from './pages/InformePlanillaSociosPage';
 import InformeCobranzaPeriodoPage from './pages/InformeCobranzaPeriodoPage';
+import ControlAccesoPage from './pages/ControlAccesoPage';
 import './App.css';
 
 const getUsuarioGuardado = () => {
@@ -51,7 +52,7 @@ function PrivateRoute({ usuario, children }) {
   return children;
 }
 
-function App() {
+function AppInner() {
   const [usuario, setUsuario] = useState(getUsuarioGuardado);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
@@ -63,9 +64,7 @@ function App() {
     setToastVisible(true);
   };
 
-  const hideToast = () => {
-    setToastVisible(false);
-  };
+  const hideToast = () => setToastVisible(false);
 
   const handleLogin = (u) => {
     setUsuario(u);
@@ -139,7 +138,7 @@ function AppContent({
 
   return (
     <div className={isPortalSocio ? 'app app--portal-socio' : 'app'}>
-      {!isPortalSocio && usuario && <HeaderNav usuario={usuario} onLogout={handleLogout} />}
+      {!isPortalSocio && !location.pathname.startsWith('/control-acceso') && usuario && <HeaderNav usuario={usuario} onLogout={handleLogout} />}
       <main className="main-content"><Routes>
         <Route path="/login" element={usuario ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />} />
         <Route path="/register" element={usuario ? <Navigate to="/" replace /> : <RegisterPage />} />
@@ -174,6 +173,8 @@ function AppContent({
         <Route path="/informe-socios-deudas" element={<PrivateRoute usuario={usuario}><InformeSociosDeudasPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-planilla-socios" element={<PrivateRoute usuario={usuario}><InformePlanillaSociosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-cobranza-periodo" element={<PrivateRoute usuario={usuario}><InformeCobranzaPeriodoPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/control-acceso/login" element={usuario ? <Navigate to="/control-acceso" replace /> : <LoginPage onLogin={handleLogin} />} />
+        <Route path="/control-acceso" element={usuario ? <ControlAccesoPage usuario={usuario} onLogout={handleLogout} showToast={showToast} /> : <Navigate to="/control-acceso/login" replace />} />
       </Routes></main>
       {!isPortalSocio && usuario && <Footer />}
       {isPortalSocio && socio && <Footer label="Portal del Socio" />}
@@ -187,4 +188,4 @@ function AppContent({
   );
 }
 
-export default App;
+export default AppInner;
