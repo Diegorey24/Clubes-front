@@ -1,54 +1,92 @@
 .page {
     min-height: 100vh;
     background: var(--gray-50);
-    padding: var(--spacing-2xl) var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
     max-width: 900px;
+    width: 100%;
     margin: 0 auto;
+    padding: var(--spacing-2xl) var(--spacing-lg);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xl);
+    box-sizing: border-box;
 }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.headerLeft {
+.welcome {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
 }
 
 .avatar {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #4f46e5, #4338ca);
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
+    box-shadow: var(--shadow-md);
 }
 
-.title {
+.welcomeTitle {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--gray-900);
     margin: 0;
 }
 
-.subtitle {
-    margin: 0;
-    font-size: 0.875rem;
+.welcomeSubtitle {
+    margin: 0.15rem 0 0;
+    font-size: 0.9rem;
     color: var(--gray-500);
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.statCard {
+    background: white;
+    border: 1px solid var(--gray-100);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.statLabel {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.statValue {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.statCardWarning .statValue {
+    color: #b45309;
+}
+
+.statCardOk .statValue {
+    color: var(--success-600, #15803d);
 }
 
 .card {
@@ -72,6 +110,14 @@
     font-weight: 700;
     color: var(--gray-900);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.cardIcon {
+    color: var(--primary-600);
+    flex-shrink: 0;
 }
 
 .cardBody {
@@ -163,6 +209,10 @@
     border-bottom: none;
 }
 
+.rowPending {
+    background: #fffbeb;
+}
+
 .table .amount {
     font-variant-numeric: tabular-nums;
     font-weight: 600;
@@ -194,8 +244,12 @@
 }
 
 @media (max-width: 640px) {
-    .page {
+    .container {
         padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .cardHeader,

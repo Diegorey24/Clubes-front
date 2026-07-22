@@ -1,6 +1,6 @@
 import styles from './Footer.module.css';
 
-const Footer = () => {
+const Footer = ({ label = 'Gestión de Socios' }) => {
     const year = new Date().getFullYear();
 
     return (
@@ -9,7 +9,7 @@ const Footer = () => {
                 <span className={styles.text}>
                     © {year}
                 </span>
-                <span className={styles.creditLabel}>Gestión de Socios</span>
+                <span className={styles.creditLabel}>{label}</span>
                 <img
                     src={`${import.meta.env.BASE_URL}Macrosoft-wh.png`}
                     alt="Macrosoft"
