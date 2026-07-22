@@ -151,14 +151,14 @@ const CajaPage = ({ usuario, showToast }) => {
                     >
                         Salida de Caja
                     </Button>
-                    <Button
+                    {/* <Button
                         variant="soft"
                         icon={CobranzaIcon}
                         className={styles.actionBtn}
                         onClick={() => setModalTipo('Cobranza Especial')}
                     >
                         Cobranza Especial
-                    </Button>
+                    </Button> */}
                     <Button
                         variant="soft-danger"
                         icon={CerrarIcon}

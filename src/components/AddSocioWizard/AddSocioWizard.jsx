@@ -382,7 +382,7 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                                     name="SocTel"
                                     value={formData.SocTel}
                                     onChange={handleInputChange}
-                                    placeholder="Ej: 099123456"
+                                    placeholder="Ej: 25605895"
                                 />
                             </div>
                             <div className={styles.formGroup}>
@@ -399,7 +399,7 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                         </div>
 
                         <div className={styles.formGroup}>
-                            <label htmlFor="ResponsableDomicilio">Responsable del Domicilio</label>
+                            <label htmlFor="ResponsableDomicilio">Domicilio del responsable</label>
                             <input
                                 type="text"
                                 id="ResponsableDomicilio"
@@ -429,7 +429,7 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                                 />
                             </div>
                             <div className={styles.formGroup}>
-                                <label htmlFor="SocFchMed">Fecha Médica</label>
+                                <label htmlFor="SocFchMed">Vigencia de la ficha médica</label>
                                 <input
                                     type="date"
                                     id="SocFchMed"

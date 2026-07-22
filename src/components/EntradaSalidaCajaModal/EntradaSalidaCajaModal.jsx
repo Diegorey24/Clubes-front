@@ -30,7 +30,7 @@ const CloseIcon = (
 const TIPO_CONFIG = {
     'Entrada Caja': { titulo: 'Entrada de Caja', accion: crearEntradaCaja, icon: EntradaIcon, tono: 'success' },
     'Salida Caja': { titulo: 'Salida de Caja', accion: crearSalidaCaja, icon: SalidaIcon, tono: 'warning' },
-    'Cobranza Especial': { titulo: 'Cobranza Especial', accion: crearCobranzaEspecial, icon: CobranzaIcon, tono: 'primary' },
+    // 'Cobranza Especial': { titulo: 'Cobranza Especial', accion: crearCobranzaEspecial, icon: CobranzaIcon, tono: 'primary' },
 };
 
 const EntradaSalidaCajaModal = ({ isOpen, tipo, onClose, onSuccess, caja, usuario, showToast }) => {
