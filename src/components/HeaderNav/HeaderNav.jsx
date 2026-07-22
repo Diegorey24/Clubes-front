@@ -75,7 +75,7 @@ const HeaderNav = ({ usuario, onLogout }) => {
                     {usuario && (
                         <div className={styles.userMenu}>
                             <img
-                                src={`${import.meta.env.BASE_URL}cliente.svg`}
+                                src={`${import.meta.env.BASE_URL}cliente.png`}
                                 alt="Logo del club"
                                 className={styles.clientLogo}
                             />

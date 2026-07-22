@@ -134,6 +134,7 @@
 
     .clientLogo {
         display: none;
+       
     }
 }
 
@@ -150,7 +151,7 @@
    junto al usuario logueado, sin competir con la marca del producto
    (Macrosoft) que va a la izquierda. */
 .clientLogo {
-    height: 24px;
+    height: 50px;
     width: auto;
     max-width: 100px;
     object-fit: contain;

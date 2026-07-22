@@ -30,7 +30,7 @@ function PortalSocioLoginPage({ onLogin }) {
             <div className={styles.card}>
                 <div className={styles.brand}>
                     <img
-                        src={`${import.meta.env.BASE_URL}cliente.svg`}
+                        src={`${import.meta.env.BASE_URL}cliente.png`}
                         alt="Logo del club"
                         style={{ height: '72px', marginBottom: '8px' }}
                     />
