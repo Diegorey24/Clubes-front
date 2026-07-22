@@ -20,6 +20,12 @@ const TrashIcon = (
     </svg>
 );
 
+const CobrarIcon = (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m9-8a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
 /**
  * Grupo estándar de acciones para filas de tabla: Ver / Editar / Eliminar.
  * Pensado para filas donde el click ya abre el detalle: deja las acciones
@@ -32,24 +38,36 @@ const TrashIcon = (
  *
  * Ejemplo:
  *   <TableActions
+ *     onCobrar={() => abrirCobro(socio)}
  *     onView={() => navigate(`/socios/${id}`)}
  *     onEdit={() => navigate(`/socios/edit/${id}`)}
  *     onDelete={() => handleDelete(id)}
  *   />
  */
-const TableActions = ({ onView, onEdit, onDelete, size = 'sm', className = '' }) => {
+const TableActions = ({ onCobrar, onView, onEdit, onDelete, size = 'sm', className = '' }) => {
     const withStop = (handler) => (e) => {
         e.stopPropagation();
         handler(e);
     };
 
-    if (!onView && !onEdit && !onDelete) return null;
+    if (!onCobrar && !onView && !onEdit && !onDelete) return null;
 
     return (
         <div
             className={`${styles.actions} ${className}`}
             onClick={(e) => e.stopPropagation()}
         >
+            {onCobrar && (
+                <Button
+                    variant="soft"
+                    size={size}
+                    iconOnly
+                    icon={CobrarIcon}
+                    title="Cobrar cuota"
+                    aria-label="Cobrar cuota"
+                    onClick={withStop(onCobrar)}
+                />
+            )}
             {onView && (
                 <Button
                     variant="ghost"

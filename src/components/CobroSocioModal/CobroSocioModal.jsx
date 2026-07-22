@@ -71,7 +71,10 @@ const DownloadIcon = (
     </svg>
 );
 
-const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast }) => {
+// presetCi: cuando se conoce de antemano el socio a cobrar (ej. desde la fila
+// de un socio en la lista de Socios), se salta por completo el paso de
+// búsqueda y se cargan sus cuotas pendientes directamente al abrir el modal.
+const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast, presetCi = null }) => {
     const [query, setQuery] = useState('');
     const [searching, setSearching] = useState(false);
     const [socio, setSocio] = useState(null);
@@ -98,8 +101,12 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
             getMediosPago()
                 .then((data) => setMediosPago(Array.isArray(data) ? data : []))
                 .catch(() => setMediosPago([]));
+            if (presetCi) {
+                buscar({ ci: presetCi });
+            }
         }
-    }, [isOpen]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, presetCi]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -286,7 +293,9 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                         <div>
                             <h3 id="cobro-socio-title" className={styles.title}>Cobrar Cuota a Socio</h3>
                             <p className={styles.stepLabel}>
-                                {paso === 'cuotas' ? 'Paso 1 · Buscar socio y seleccionar cuotas' : 'Paso 2 · Forma de pago'}
+                                {paso === 'cuotas'
+                                    ? (presetCi ? 'Paso 1 · Seleccionar cuotas' : 'Paso 1 · Buscar socio y seleccionar cuotas')
+                                    : 'Paso 2 · Forma de pago'}
                             </p>
                         </div>
                     </div>
@@ -304,24 +313,26 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                 <div className={styles.body}>
                     {paso === 'cuotas' && (
                         <>
-                            <form onSubmit={handleBuscar} className={styles.searchRow}>
-                                <div className={styles.searchInputWrap}>
-                                    <span className={styles.searchIcon}>{SearchIcon}</span>
-                                    <input
-                                        type="text"
-                                        className={styles.searchInput}
-                                        placeholder="Cédula o nombre del socio"
-                                        value={query}
-                                        onChange={(e) => setQuery(e.target.value)}
-                                        autoFocus
-                                    />
-                                </div>
-                                <Button type="submit" variant="soft" loading={searching}>
-                                    Buscar
-                                </Button>
-                            </form>
+                            {!presetCi && (
+                                <form onSubmit={handleBuscar} className={styles.searchRow}>
+                                    <div className={styles.searchInputWrap}>
+                                        <span className={styles.searchIcon}>{SearchIcon}</span>
+                                        <input
+                                            type="text"
+                                            className={styles.searchInput}
+                                            placeholder="Cédula o nombre del socio"
+                                            value={query}
+                                            onChange={(e) => setQuery(e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <Button type="submit" variant="soft" loading={searching}>
+                                        Buscar
+                                    </Button>
+                                </form>
+                            )}
 
-                            {candidatos && (
+                            {!presetCi && candidatos && (
                                 <div className={styles.candidatos}>
                                     {candidatos.map((c) => (
                                         <button
@@ -335,6 +346,14 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                                         </button>
                                     ))}
                                 </div>
+                            )}
+
+                            {presetCi && searching && !socio && (
+                                <p className={styles.empty}>Buscando cuotas pendientes...</p>
+                            )}
+
+                            {presetCi && !searching && !socio && !candidatos && (
+                                <p className={styles.empty}>No se pudo cargar la información del socio.</p>
                             )}
 
                             {socio && (

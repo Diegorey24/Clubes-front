@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteSocio, fetchItems } from '../../services/api';
 import { TableActions, Badge, ConfirmDialog } from '../ui';
+import CobroSocioModal from '../CobroSocioModal/CobroSocioModal';
 import styles from './SociosTable.module.css';
 
-const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/socios' }) => {
+const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/socios', usuario, showToast }) => {
     const navigate = useNavigate();
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState('');
     const [motivos, setMotivos] = useState([]);
     const [motivoBaja, setMotivoBaja] = useState('');
+    const [cobroTarget, setCobroTarget] = useState(null);
 
     useEffect(() => {
         const loadMotivos = async () => {
@@ -113,6 +115,7 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
                             {!readOnly && (
                                 <td className={styles.actionsCell}>
                                     <TableActions
+                                        onCobrar={usuario?.nroCaja ? () => setCobroTarget(socio) : undefined}
                                         onView={() => navigate(`${detailPath}/${socio.SocNro}`)}
                                         onEdit={() => navigate(`/socios/edit/${socio.SocNro}`)}
                                         onDelete={() => requestDelete(socio)}
@@ -171,6 +174,16 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
 
                 {deleteError && <p className={styles.confirmError}>{deleteError}</p>}
             </ConfirmDialog>
+
+            <CobroSocioModal
+                isOpen={!!cobroTarget}
+                onClose={() => setCobroTarget(null)}
+                onSuccess={() => {}}
+                presetCi={cobroTarget?.SocDocIde || null}
+                caja={usuario?.nroCaja}
+                usuario={usuario?.nombre}
+                showToast={showToast}
+            />
         </div>
     );
 };

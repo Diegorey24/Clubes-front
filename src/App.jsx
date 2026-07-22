@@ -150,7 +150,7 @@ function AppContent({
         <Route path="/mediospago" element={<PrivateRoute usuario={usuario}><MediosPagoPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/parametros" element={<PrivateRoute usuario={usuario}><ParametrosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/agregar-socio" element={<PrivateRoute usuario={usuario}><AddSocioPage showToast={showToast} /></PrivateRoute>} />
-        <Route path="/socios" element={<PrivateRoute usuario={usuario}><SociosPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/socios" element={<PrivateRoute usuario={usuario}><SociosPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
         <Route path="/socios-historicos" element={<PrivateRoute usuario={usuario}><SociosHistoricosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/socios-historicos/:id" element={<PrivateRoute usuario={usuario}><SocioDetailsPage isHistorical={true} /></PrivateRoute>} />
         <Route path="/grupos-familiares" element={<PrivateRoute usuario={usuario}><GruposFamiliaresPage showToast={showToast} /></PrivateRoute>} />

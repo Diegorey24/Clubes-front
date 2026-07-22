@@ -28,7 +28,7 @@ const ExportIcon = (
     </svg>
 );
 
-const SociosPage = ({ showToast }) => {
+const SociosPage = ({ usuario, showToast }) => {
     const [socios, setSocios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [exporting, setExporting] = useState(false);
@@ -238,6 +238,8 @@ const SociosPage = ({ showToast }) => {
                         <SociosTable
                             socios={socios}
                             onSocioDeleted={() => loadSocios(page, debouncedSearch, filters.categoria, filters.radio)}
+                            usuario={usuario}
+                            showToast={showToast}
                         />
 
                         {/* Pagination Controls */}
