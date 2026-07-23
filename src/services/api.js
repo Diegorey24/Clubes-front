@@ -653,4 +653,14 @@ export const cambiarContrasenaSocio = async (ci, contrasenaActual, contrasenaNue
   return response.data;
 };
 
+// Fotos de socios
+export const subirFotoSocio = async (ci, file) => {
+  const formData = new FormData();
+  formData.append('foto', file);
+  const response = await api.post(`/fotos/${ci}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+  return response.data;
+};
+
 export default api;

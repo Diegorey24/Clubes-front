@@ -72,7 +72,7 @@
 }
 
 /* Separador sutil entre secciones consecutivas (dentro de la misma pestaña) */
-.section + .section {
+.section+.section {
     padding-top: var(--spacing-xl);
     border-top: 1px solid var(--gray-100);
 }
@@ -400,6 +400,62 @@
     }
 }
 
+/* Foto del socio en el header */
+.headerInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.fotoContainer {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.fotoSocio {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.fotoPlaceholder {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+}
+
+.fotoUploadBtn {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+}
+
+.fotoUploadBtn:hover {
+    transform: scale(1.1);
+}
+
 @media (max-width: 640px) {
     .page {
         padding: var(--spacing-md);
@@ -430,7 +486,7 @@
     }
 
     .dateField,
-    .filterBar > button {
+    .filterBar>button {
         width: 100%;
     }
 
@@ -453,7 +509,7 @@
         justify-content: stretch;
     }
 
-    .ccActions > * {
+    .ccActions>* {
         flex: 1;
     }
 }
