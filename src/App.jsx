@@ -33,6 +33,8 @@ import UsuariosPage from './pages/UsuariosPage';
 import UtilidadesPage from './pages/UtilidadesPage';
 import InformeSociosContactoPage from './pages/InformeSociosContactoPage';
 import InformeSociosDeudasPage from './pages/InformeSociosDeudasPage';
+import InformeSociosDeudasPorCategoriaPage from './pages/InformeSociosDeudasPorCategoriaPage';
+import InformeSociosDeudasPorRubroPage from './pages/InformeSociosDeudasPorRubroPage';
 import InformePlanillaSociosPage from './pages/InformePlanillaSociosPage';
 import InformeCobranzaPeriodoPage from './pages/InformeCobranzaPeriodoPage';
 import ControlAccesoPage from './pages/ControlAccesoPage';
@@ -171,6 +173,8 @@ function AppContent({
         <Route path="/utilidades" element={<PrivateRoute usuario={usuario}><UtilidadesPage usuario={usuario} /></PrivateRoute>} />
         <Route path="/informe-socios-contacto" element={<PrivateRoute usuario={usuario}><InformeSociosContactoPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-socios-deudas" element={<PrivateRoute usuario={usuario}><InformeSociosDeudasPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-socios-deudas-por-categoria" element={<PrivateRoute usuario={usuario}><InformeSociosDeudasPorCategoriaPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-socios-deudas-por-rubro" element={<PrivateRoute usuario={usuario}><InformeSociosDeudasPorRubroPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-planilla-socios" element={<PrivateRoute usuario={usuario}><InformePlanillaSociosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-cobranza-periodo" element={<PrivateRoute usuario={usuario}><InformeCobranzaPeriodoPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/control-acceso/login" element={usuario ? <Navigate to="/control-acceso" replace /> : <LoginPage onLogin={handleLogin} />} />

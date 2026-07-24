@@ -151,6 +151,56 @@ export const exportSociosDeudasDetalle = async (search = '', categoria = '', rad
   }
 };
 
+// Total de deuda para el filtro dado (sin paginar, suma de todo el
+// resultado filtrado). Mismos filtros que getSociosDeudas salvo
+// soloConDeuda, que este endpoint no admite.
+export const getSociosDeudasTotal = async (search = '', categoria = '', radio = '', fechaDesde = '', fechaHasta = '') => {
+  try {
+    const params = { search, categoria, radio };
+    if (fechaDesde) params.fechaDesde = fechaDesde;
+    if (fechaHasta) params.fechaHasta = fechaHasta;
+
+    const response = await api.get('/socios/deudas/total', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener el total de deudas:', error);
+    throw error;
+  }
+};
+
+// Deuda agrupada por categoría de socio. Mismos filtros que getSociosDeudas
+// salvo "categoria": no se admite porque es el campo por el que agrupa.
+// Respuesta: { items: [{ CatCod, Categoria, Total }] }.
+export const getSociosDeudasPorCategoria = async (search = '', radio = '', fechaDesde = '', fechaHasta = '') => {
+  try {
+    const params = { search, radio };
+    if (fechaDesde) params.fechaDesde = fechaDesde;
+    if (fechaHasta) params.fechaHasta = fechaHasta;
+
+    const response = await api.get('/socios/deudas/por-categoria', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener la deuda por categoría:', error);
+    throw error;
+  }
+};
+
+// Deuda agrupada por rubro. Mismos filtros que getSociosDeudas. Respuesta:
+// { items: [{ Rubro, RubroDescripcion, Total }] }.
+export const getSociosDeudasPorRubro = async (search = '', categoria = '', radio = '', fechaDesde = '', fechaHasta = '') => {
+  try {
+    const params = { search, categoria, radio };
+    if (fechaDesde) params.fechaDesde = fechaDesde;
+    if (fechaHasta) params.fechaHasta = fechaHasta;
+
+    const response = await api.get('/socios/deudas/por-rubro', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener la deuda por rubro:', error);
+    throw error;
+  }
+};
+
 // Informe "Planilla de socios y deudas". A diferencia de getSociosDeudas,
 // fechaDesde/fechaHasta son obligatorios: definen las columnas de la
 // planilla (un mes -Aniomes AAAAMM- por columna). El backend hace la

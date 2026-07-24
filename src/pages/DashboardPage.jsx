@@ -250,7 +250,7 @@ const DashboardPage = ({ usuario }) => {
         <div className={styles.page}>
             <PageHeader
                 title={`${getSaludo()}${usuario?.nombre ? `, ${usuario.nombre}` : ''}`}
-                subtitle={`${getFechaHoy()} · Resumen general del club`}
+                subtitle={`${getFechaHoy()} · Resumen general `}
                 // actions={
                 //     <Button to="/agregar-socio" variant="primary" icon={PlusIcon}>
                 //         Nuevo Socio

@@ -38,7 +38,7 @@ const DashboardPage = () => {
             <div className={styles.header}>
                 <div>
                     <h1 className={styles.title}>Panel de Control</h1>
-                    <p className={styles.subtitle}>Resumen general del club</p>
+                    <p className={styles.subtitle}>Resumen general</p>
                 </div>
                 <Link to="/agregar-socio" className={styles.addButton}>
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">

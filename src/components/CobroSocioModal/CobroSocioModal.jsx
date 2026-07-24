@@ -27,7 +27,56 @@ const nombreCompleto = (s) => {
     return partes.join(' ');
 };
 
-const nuevaFormaPago = (importe = '') => ({ medioPago: '', importe });
+// Convierte un importe tipeado en formato es-UY ("1.234,56") a número. Si
+// no tiene coma, se asume que ya es un número plano (ej. "1234").
+const parseImporte = (value) => {
+    if (value === null || value === undefined || value === '') return 0;
+    if (typeof value === 'number') return value;
+    const clean = String(value).trim();
+    if (clean.includes(',')) {
+        return parseFloat(clean.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    return parseFloat(clean.replace(/\./g, '')) || 0;
+};
+
+// Formatea un número a "1.234,56" (miles con punto, decimales con coma),
+// para prellenar el input de importe.
+const numberToInputValue = (num) => {
+    if (num === '' || num === null || num === undefined || isNaN(num)) return '';
+    return new Intl.NumberFormat('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+};
+
+// Reformatea lo que el usuario va tipeando en el input de importe: solo
+// dígitos y una coma decimal (máx. 2 decimales), con puntos de miles en la
+// parte entera. Se aplica en cada onChange para que el campo siempre se vea
+// en formato es-UY mientras se escribe.
+const formatImporteInput = (raw) => {
+    if (raw === '' || raw === null || raw === undefined) return '';
+    let value = String(raw).replace(/[^\d,]/g, '');
+    const firstComma = value.indexOf(',');
+    if (firstComma !== -1) {
+        value = value.slice(0, firstComma + 1) + value.slice(firstComma + 1).replace(/,/g, '');
+    }
+    let [intPart, decPart] = value.split(',');
+    intPart = (intPart || '').replace(/^0+(?=\d)/, '');
+    if (decPart !== undefined) decPart = decPart.slice(0, 2);
+    const intFormatted = intPart ? intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+    return decPart !== undefined ? `${intFormatted},${decPart}` : intFormatted;
+};
+
+// El objeto "socio" de /caja/cuotas-pendientes no trae la categoría; viene
+// en cada cuota (CategoriaNombre). Se toma la de la primera cuota cobrada
+// que la tenga (en la práctica todas comparten la misma categoría vigente).
+const categoriaDeCuotas = (cuotasList) => {
+    const conCategoria = (cuotasList || []).find((c) => (c.CategoriaNombre || '').trim());
+    return (conCategoria?.CategoriaNombre || '').trim();
+};
+
+// Deja solo caracteres seguros para un nombre de archivo (sin barras, dos
+// puntos, etc.), preservando espacios internos.
+const sanitizeFilenamePart = (value) => String(value ?? '').trim().replace(/[\\/:*?"<>|]/g, '');
+
+const nuevaFormaPago = (importe = '') => ({ medioPago: '', importe: importe === '' ? '' : numberToInputValue(importe) });
 
 const CobrarIcon = (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -172,7 +221,7 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast,
         .filter((c) => selectedIds.has(c.Id))
         .reduce((acc, c) => acc + (parseFloat(c.Importe) || 0), 0);
 
-    const totalFormasPago = formasPago.reduce((acc, fp) => acc + (parseFloat(fp.importe) || 0), 0);
+    const totalFormasPago = formasPago.reduce((acc, fp) => acc + parseImporte(fp.importe), 0);
     const restante = total - totalFormasPago;
 
     const handleIrAFormaPago = () => {
@@ -191,7 +240,8 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast,
     const handleChangeFormaPago = (index, field, value) => {
         setFormasPago((prev) => {
             const next = [...prev];
-            next[index] = { ...next[index], [field]: value };
+            const nextValue = field === 'importe' ? formatImporteInput(value) : value;
+            next[index] = { ...next[index], [field]: nextValue };
             return next;
         });
     };
@@ -206,7 +256,7 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast,
 
     const formasPagoValidas =
         formasPago.length > 0 &&
-        formasPago.every((fp) => fp.medioPago && parseFloat(fp.importe) > 0) &&
+        formasPago.every((fp) => fp.medioPago && parseImporte(fp.importe) > 0) &&
         Math.abs(restante) < 0.01;
 
     const handleCobrar = async () => {
@@ -224,7 +274,7 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast,
                 cuotaIds: Array.from(selectedIds),
                 formasPago: formasPago.map((fp) => ({
                     medioPago: Number(fp.medioPago),
-                    importe: parseFloat(fp.importe) || 0,
+                    importe: parseImporte(fp.importe),
                 })),
             });
             showToast(`Cobro registrado: ${formatCurrency(total)}`, 'success');
@@ -232,6 +282,8 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast,
                 nroDoc: result.nroDoc,
                 nombreSocio: nombreCompleto(socio),
                 ci: socio.SocDocIde,
+                socNro: socio.SocNro,
+                categoriaSocio: categoriaDeCuotas(cuotas.filter(c => selectedIds.has(c.Id))),
                 cuotas: cuotas.filter(c => selectedIds.has(c.Id)),
                 formasPago,
                 mediosPago,
@@ -254,13 +306,20 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast,
     // del socio). Acá solo se adaptan los datos de este cobro a ese formato.
     const generarPDF = async () => {
         try {
-            const { nroDoc, nombreSocio, ci, cuotas, formasPago, mediosPago, total, fecha, usuario, caja } = reciboData;
+            const { nroDoc, nombreSocio, ci, socNro, categoriaSocio: catSocio, cuotas, formasPago, mediosPago, total, fecha, usuario, caja } = reciboData;
+
+            // Nombre-cedula-nrosocio, ej. "CABRERA PEREYRA RODRIGO PEDRO-35541563-1234.pdf".
+            const nombreArchivo = [nombreSocio, ci, socNro]
+                .map(sanitizeFilenamePart)
+                .filter(Boolean)
+                .join('-');
 
             await generarReciboPDF({
                 nroDoc,
                 titulo: 'Recibo de Cobro',
                 nombreSocio,
                 ci,
+                categoriaSocio: catSocio,
                 items: cuotas.map((c) => ({
                     periodo: formatAniomes(c.Aniomes),
                     concepto: c.RubroNombre?.trim() || `Rubro ${c.Rubro}`,
@@ -273,10 +332,11 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast,
                     const mp = mediosPago.find((m) => String(m.IdMedioPago) === String(fp.medioPago));
                     return {
                         descripcion: mp?.Descripcion?.trim() || `Medio ${fp.medioPago}`,
-                        importe: fp.importe,
+                        importe: parseImporte(fp.importe),
                     };
                 }),
                 filenamePrefix: 'recibo',
+                nombreArchivo: nombreArchivo || undefined,
             });
         } catch (err) {
             console.error('Error generando el PDF del recibo:', err);
@@ -422,10 +482,9 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast,
                                             ))}
                                         </select>
                                         <input
-                                            type="number"
+                                            type="text"
+                                            inputMode="decimal"
                                             className={styles.input}
-                                            step="0.01"
-                                            min="0"
                                             placeholder="Importe"
                                             value={fp.importe}
                                             onChange={(e) => handleChangeFormaPago(index, 'importe', e.target.value)}

@@ -39,12 +39,14 @@ const cargarLogo = () => new Promise((resolve) => {
  * @param {string} [data.numeroLabel] - Prefijo del número (ej. "N°", "Emisión N°").
  * @param {string} data.nombreSocio
  * @param {string|number} data.ci
+ * @param {string} [data.categoriaSocio] - Si se pasa, se muestra debajo del nombre en el recuadro de datos del socio.
  * @param {Array<{periodo: string, concepto: string, importe: number}>} data.items
  * @param {number} data.total
  * @param {string} data.fecha - Ya formateada (ej. "15/07/2026").
  * @param {string} [data.meta] - Línea opcional debajo del encabezado (ej. "Caja N° 1 · Atendido por Juan").
  * @param {Array<{descripcion: string, importe: number}>} [data.formasPago] - Si se omite, no se muestra la sección.
- * @param {string} [data.filenamePrefix] - Prefijo del archivo descargado.
+ * @param {string} [data.filenamePrefix] - Prefijo del archivo descargado (se usa junto con nroDoc si no se pasa nombreArchivo).
+ * @param {string} [data.nombreArchivo] - Nombre completo del archivo (sin ".pdf"). Si se pasa, tiene prioridad sobre filenamePrefix.
  */
 export const generarReciboPDF = async ({
     nroDoc,
@@ -52,12 +54,14 @@ export const generarReciboPDF = async ({
     numeroLabel = 'N°',
     nombreSocio,
     ci,
+    categoriaSocio = '',
     items = [],
     total,
     fecha,
     meta = '',
     formasPago = null,
     filenamePrefix = 'recibo',
+    nombreArchivo = '',
 }) => {
     const doc = new jsPDF();
 
@@ -116,7 +120,8 @@ export const generarReciboPDF = async ({
     }
 
     // ---------- Datos del socio ----------
-    const socioBoxHeight = 18;
+    const categoria = (categoriaSocio || '').trim();
+    const socioBoxHeight = categoria ? 24 : 18;
     doc.setDrawColor(...borderColor);
     doc.setLineWidth(0.3);
     doc.setFillColor(...rowAltFill);
@@ -131,6 +136,12 @@ export const generarReciboPDF = async ({
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.text(`CI ${ci}`, RIGHT - 6, y + 14.5, { align: 'right' });
+    if (categoria) {
+        doc.setTextColor(...muted);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.text(categoria, MARGIN + 6, y + 20.5);
+    }
     y += socioBoxHeight + 11;
 
     // ---------- Tabla de conceptos ----------
@@ -230,5 +241,5 @@ export const generarReciboPDF = async ({
         }
     }
 
-    doc.save(`${filenamePrefix}_${nroDoc}.pdf`);
+    doc.save(`${nombreArchivo || `${filenamePrefix}_${nroDoc}`}.pdf`);
 };

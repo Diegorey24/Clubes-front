@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSociosDeudas, fetchItems } from '../services/api';
+import { getSociosDeudas, getSociosDeudasTotal, fetchItems } from '../services/api';
 import SociosDeudasTable from '../components/SociosDeudasTable/SociosDeudasTable';
 import { Button, PageHeader, BackLink } from '../components/ui';
 import styles from './SociosPage.module.css'; // Reutiliza los estilos base de SociosPage
@@ -59,6 +59,11 @@ const InformeSociosDeudasPage = ({ showToast }) => {
     // que se actualiza en cada tecla para que el input se sienta responsivo).
     const [debouncedSearch, setDebouncedSearch] = useState('');
 
+    // Deuda total real (suma de todo el resultado filtrado, no solo la
+    // página actual), vía GET /socios/deudas/total. soloConDeuda no aplica
+    // acá: ese endpoint no lo admite.
+    const [totalDeuda, setTotalDeuda] = useState(0);
+
     // Load filters data
     useEffect(() => {
         const loadFilters = async () => {
@@ -98,6 +103,21 @@ const InformeSociosDeudasPage = ({ showToast }) => {
         loadSocios(page, debouncedSearch, filters.categoria, filters.radio, filters.soloConDeuda, filters.fechaDesde, filters.fechaHasta);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, debouncedSearch, filters.categoria, filters.radio, filters.soloConDeuda, filters.fechaDesde, filters.fechaHasta]);
+
+    // Deuda total del filtro aplicado (independiente de la página). Reacciona
+    // a los mismos filtros que /socios/deudas/total admite: search,
+    // categoria, radio, fechaDesde, fechaHasta.
+    useEffect(() => {
+        const loadTotal = async () => {
+            try {
+                const data = await getSociosDeudasTotal(debouncedSearch, filters.categoria, filters.radio, filters.fechaDesde, filters.fechaHasta);
+                setTotalDeuda(data.total || 0);
+            } catch (err) {
+                console.error('Error loading deuda total:', err);
+            }
+        };
+        loadTotal();
+    }, [debouncedSearch, filters.categoria, filters.radio, filters.fechaDesde, filters.fechaHasta]);
 
     const loadSocios = async (currentPage, search, cat, rad, soloConDeuda, fechaDesde, fechaHasta) => {
         setLoading(true);
@@ -168,10 +188,9 @@ const InformeSociosDeudasPage = ({ showToast }) => {
         }
     };
 
-    // La deuda total solo puede sumarse sobre los socios de la página
-    // actual: el endpoint no expone un agregado sobre todo el resultado
-    // filtrado, así que el pill se etiqueta explícitamente como "de esta
-    // página" para no dar a entender que es un total global.
+    // La deuda "de esta página" se sigue calculando en cliente, sumando los
+    // socios ya cargados; el total global (arriba, en rojo) viene de
+    // /socios/deudas/total, que sí agrega sobre todo el resultado filtrado.
     const sociosConDeudaEnPagina = socios.filter((s) => (s.Deuda || 0) > 0).length;
     const deudaEnPagina = socios.reduce((acc, s) => acc + (s.Deuda || 0), 0);
 
@@ -250,6 +269,9 @@ const InformeSociosDeudasPage = ({ showToast }) => {
                             {totalItems} socio{totalItems !== 1 ? 's' : ''} · {sociosConDeudaEnPagina} con deuda en esta página
                         </div>
                         <div className={localStyles.deudaPill}>
+                            Deuda total: {formatCurrency(totalDeuda)}
+                        </div>
+                        <div className={localStyles.deudaPillSoft}>
                             Deuda de esta página: {formatCurrency(deudaEnPagina)}
                         </div>
                     </div>
