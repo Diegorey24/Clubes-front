@@ -37,6 +37,12 @@ const describirOmitido = (om) => {
     return `CI ${om}`;
 };
 
+// Rubro reservado para la cuota social (lo emite el proceso "Generar
+// Cuotas"): nunca se ofrece acá, así se evita duplicar cuotas o generarlas
+// con importe fijo cuando en realidad depende de la categoría de cada
+// socio.
+const ID_RUBRO_CUOTA = 1;
+
 // A partir del input type="month" (AAAA-MM) calcula los dos formatos que
 // pide la API: Mes (fecha, primer día del mes) y Aniomes (AAAAMM
 // numérico). La fecha de vencimiento no la calcula el front -- la resuelve
@@ -92,7 +98,9 @@ const GenerarCargosPage = ({ usuario, showToast }) => {
                     fetchItems('rubros'),
                 ]);
                 setCategorias(Array.isArray(catsData) ? catsData : []);
-                setRubros(Array.isArray(rubrosData) ? rubrosData : []);
+                const rubrosSinCuota = (Array.isArray(rubrosData) ? rubrosData : [])
+                    .filter((r) => Number(r.IdRubro) !== ID_RUBRO_CUOTA);
+                setRubros(rubrosSinCuota);
             } catch (err) {
                 console.error('Error cargando categorías/rubros:', err);
                 showToast?.('Error al cargar categorías y rubros', 'error');

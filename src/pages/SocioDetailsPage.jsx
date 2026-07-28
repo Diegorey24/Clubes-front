@@ -93,6 +93,12 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
     const [endDate, setEndDate] = useState(defaultDateRange.end);
     const [activeTab, setActiveTab] = useState('info');
 
+    // Orden de la cuenta corriente (propia y familiar): 'vencimiento-desc'
+    // es el que ya trae la API por defecto (lo más nuevo primero), así que
+    // arranca ahí para no cambiar el comportamiento actual. El usuario
+    // puede elegir otra combinación desde el combo.
+    const [orden, setOrden] = useState('vencimiento-desc');
+
     const [cuentaCorrienteFamiliar, setCuentaCorrienteFamiliar] = useState([]);
     const [loadingCCFam, setLoadingCCFam] = useState(false);
     const [ccFamLoaded, setCcFamLoaded] = useState(false);
@@ -167,28 +173,32 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
     };
 
 
-    const loadCuentaCorriente = async (ci, from = startDate, to = endDate) => {
+    const loadCuentaCorriente = async (ci, from = startDate, to = endDate, ordenValue = orden) => {
         setLoadingCC(true);
         try {
             const { getCuentaCorriente } = await import('../services/api');
-            const data = await getCuentaCorriente(ci, from, to);
+            const [orderBy, orderDir] = ordenValue.split('-');
+            const data = await getCuentaCorriente(ci, from, to, orderBy, orderDir);
             setCuentaCorriente(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error loading cuenta corriente:', err);
+            showToast?.(err.message || 'Error al cargar la cuenta corriente', 'error');
         } finally {
             setLoadingCC(false);
             setCcLoaded(true);
         }
     };
 
-    const loadCuentaCorrienteFamiliar = async (ci) => {
+    const loadCuentaCorrienteFamiliar = async (ci, ordenValue = orden) => {
         setLoadingCCFam(true);
         try {
             const { getCuentaCorrienteFamiliar } = await import('../services/api');
-            const data = await getCuentaCorrienteFamiliar(ci, startDate, endDate);
+            const [orderBy, orderDir] = ordenValue.split('-');
+            const data = await getCuentaCorrienteFamiliar(ci, startDate, endDate, orderBy, orderDir);
             setCuentaCorrienteFamiliar(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error loading cuenta corriente familiar:', err);
+            showToast?.(err.message || 'Error al cargar la cuenta corriente familiar', 'error');
         } finally {
             setLoadingCCFam(false);
             setCcFamLoaded(true);
@@ -202,6 +212,21 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
         }
         if (tabId === 'cuentaCorrienteFamiliar' && !ccFamLoaded && socio?.SocDocIde) {
             loadCuentaCorrienteFamiliar(socio.SocDocIde);
+        }
+    };
+
+    // Cambiar el orden recarga la pestaña que se está viendo ahora mismo, y
+    // marca la otra como "no cargada" para que traiga el orden nuevo la
+    // próxima vez que se abra (comparten el mismo criterio de orden).
+    const handleOrdenChange = (value) => {
+        setOrden(value);
+        if (!socio?.SocDocIde) return;
+        if (activeTab === 'cuentaCorrienteFamiliar') {
+            loadCuentaCorrienteFamiliar(socio.SocDocIde, value);
+            setCcLoaded(false);
+        } else {
+            loadCuentaCorriente(socio.SocDocIde, startDate, endDate, value);
+            setCcFamLoaded(false);
         }
     };
 
@@ -603,6 +628,19 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
                                             onChange={(e) => setEndDate(e.target.value)}
                                         />
                                     </div>
+                                    <div className={styles.dateField}>
+                                        <label>Ordenar por</label>
+                                        <select
+                                            className={`${styles.dateInput} ${styles.orderSelect}`}
+                                            value={orden}
+                                            onChange={(e) => handleOrdenChange(e.target.value)}
+                                        >
+                                            <option value="vencimiento-desc">Vencimiento (más nuevo primero)</option>
+                                            <option value="vencimiento-asc">Vencimiento (más antiguo primero)</option>
+                                            <option value="emision-desc">N.° Emisión (mayor primero)</option>
+                                            <option value="emision-asc">N.° Emisión (menor primero)</option>
+                                        </select>
+                                    </div>
                                     <Button
                                         variant="soft"
                                         size="sm"
@@ -741,6 +779,22 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
                                         .
                                     </span>
                                 </p>
+
+                                <div className={styles.filterBar}>
+                                    <div className={styles.dateField}>
+                                        <label>Ordenar por</label>
+                                        <select
+                                            className={`${styles.dateInput} ${styles.orderSelect}`}
+                                            value={orden}
+                                            onChange={(e) => handleOrdenChange(e.target.value)}
+                                        >
+                                            <option value="vencimiento-desc">Vencimiento (más nuevo primero)</option>
+                                            <option value="vencimiento-asc">Vencimiento (más antiguo primero)</option>
+                                            <option value="emision-desc">N.° Emisión (mayor primero)</option>
+                                            <option value="emision-asc">N.° Emisión (menor primero)</option>
+                                        </select>
+                                    </div>
+                                </div>
 
                                 {!loadingCCFam && cuentaCorrienteFamiliar.length > 0 && (
                                     <div className={styles.debtSummary}>

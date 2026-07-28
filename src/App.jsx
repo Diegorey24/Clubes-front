@@ -115,10 +115,7 @@ function AppInner() {
   );
 }
 
-// Layout: decide qué chrome (header/footer/título de pestaña) mostrar según
-// la sección en la que se está. El portal del socio es una web aparte desde
-// el punto de vista del usuario: no debe verse el header ni el footer del
-// staff, ni depender de que haya sesión de "gestion-de-socios" iniciada.
+
 function AppContent({
   usuario,
   socio,

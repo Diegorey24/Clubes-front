@@ -382,17 +382,24 @@ export const exportSociosHistoricos = async (filters = {}) => {
   }
 };
 
-export const getCuentaCorriente = async (ci, startDate, endDate) => {
+// orderBy/orderDir son opcionales: 'emision' | 'vencimiento' y 'asc' | 'desc'.
+// Si no se mandan, la API usa su orden por defecto (vencimiento
+// descendente). Si el valor es inválido, la API responde 400 con el
+// detalle del error en el body.
+export const getCuentaCorriente = async (ci, startDate, endDate, orderBy, orderDir) => {
   const params = new URLSearchParams();
   if (startDate) params.append('startDate', startDate);
   if (endDate) params.append('endDate', endDate);
+  if (orderBy) params.append('orderBy', orderBy);
+  if (orderDir) params.append('orderDir', orderDir);
 
   const queryString = params.toString();
   const url = `${API_BASE_URL}/cuenta-corriente/${ci}${queryString ? `?${queryString}` : ''}`;
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error('Error al obtener cuenta corriente');
+    const detalle = await response.json().catch(() => null);
+    throw new Error(detalle?.error || detalle?.detail || 'Error al obtener cuenta corriente');
   }
   return await response.json();
 };
@@ -472,17 +479,21 @@ export const anularCargo = async (id) => {
   }
 };
 
-export const getCuentaCorrienteFamiliar = async (ci, startDate, endDate) => {
+// orderBy/orderDir: mismo contrato que getCuentaCorriente.
+export const getCuentaCorrienteFamiliar = async (ci, startDate, endDate, orderBy, orderDir) => {
   const params = new URLSearchParams();
   if (startDate) params.append('startDate', startDate);
   if (endDate) params.append('endDate', endDate);
+  if (orderBy) params.append('orderBy', orderBy);
+  if (orderDir) params.append('orderDir', orderDir);
 
   const queryString = params.toString();
   const url = `${API_BASE_URL}/cuenta-corriente/familiar/${ci}${queryString ? `?${queryString}` : ''}`;
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error('Error al obtener cuenta corriente familiar');
+    const detalle = await response.json().catch(() => null);
+    throw new Error(detalle?.error || detalle?.detail || 'Error al obtener cuenta corriente familiar');
   }
   return await response.json();
 };

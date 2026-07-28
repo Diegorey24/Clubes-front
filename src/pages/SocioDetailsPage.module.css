@@ -152,8 +152,9 @@
     border-radius: var(--radius-lg);
     border: 1px solid var(--gray-200);
     font-size: 0.875rem;
+    line-height: 1.2;
     color: var(--gray-800);
-    height: 34px;
+    height: 42px;
     transition: all var(--transition-fast);
 }
 
@@ -161,6 +162,16 @@
     outline: none;
     border-color: var(--primary-400);
     box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
+/* El combo de orden es más largo que los inputs de fecha y, al ser un
+   <select>, el navegador lo comprime dentro del flex del filterBar en vez
+   de agrandarlo -- eso cortaba el texto de las opciones. min-width +
+   flex-shrink: 0 le reservan el ancho que necesita. */
+.orderSelect {
+    min-width: 230px;
+    flex-shrink: 0;
+    cursor: pointer;
 }
 
 /* Aviso de rango de fechas (cuenta corriente familiar) */
