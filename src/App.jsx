@@ -22,6 +22,7 @@ import SocioEditPage from './pages/SocioEditPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import GenerarCuotasPage from './pages/GenerarCuotasPage';
+import GenerarCargosPage from './pages/GenerarCargosPage';
 import RechazosPage from './pages/RechazosPage';
 import CajaPage from './pages/CajaPage';
 import CajaHistoricoPage from './pages/CajaHistoricoPage';
@@ -160,6 +161,7 @@ function AppContent({
         <Route path="/categorias-socios" element={<PrivateRoute usuario={usuario}><CategoriasSociosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/motivos-baja" element={<PrivateRoute usuario={usuario}><MotivosBajaPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/generar-cuotas" element={<PrivateRoute usuario={usuario}><GenerarCuotasPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/generar-cargos" element={<PrivateRoute usuario={usuario}><GenerarCargosPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
         <Route path="/rechazos" element={<PrivateRoute usuario={usuario}><RechazosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/caja" element={<PrivateRoute usuario={usuario}><CajaPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />
         <Route path="/caja/historico" element={<PrivateRoute usuario={usuario}><CajaHistoricoPage usuario={usuario} showToast={showToast} /></PrivateRoute>} />

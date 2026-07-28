@@ -410,6 +410,36 @@ export const crearCargo = async (data) => {
   }
 };
 
+// Crea el mismo cargo (mismo rubro, mes e importe) para varios socios de
+// una sola vez. USADO POR GenerarCargosPage (proceso "Generación de
+// Cargos" en Utilidades). PENDIENTE: este endpoint todavía no existe en el
+// backend -- se arma acá el contrato más probable, mismo shape que
+// crearCargo pero con un array de cédulas en vez de una sola, para poder
+// maquetar y probar el front ya mismo. Cuando el endpoint real esté listo,
+// debería alcanzar con ajustar la URL y, si hace falta, el nombre de los
+// campos del payload; el resto del front no debería necesitar cambios.
+//
+// El importe siempre sale del rubro elegido (rubro.Importe): no hay
+// override manual ni cálculo especial por categoría. La fecha de
+// vencimiento no la manda el front -- la calcula la API a partir del mes.
+export const crearCargoMasivo = async ({ cis, mes, rubro, importe, aniomes, usuario }) => {
+  try {
+    const payload = {
+      CIs: cis,
+      Mes: mes,
+      Rubro: Number(rubro),
+      Importe: Number(importe),
+      Aniomes: aniomes,
+      Usuario: usuario,
+    };
+    const response = await api.post('/cuenta-corriente/masivo', payload);
+    return response.data;
+  } catch (error) {
+    console.error('Error al crear los cargos masivos:', error);
+    throw error;
+  }
+};
+
 // Detalle de una categoría de socio (incluye CatPrc y los importes
 // escalonados Importe3..Importe7 según cantidad de integrantes del grupo
 // familiar). Usado por CrearCargoModal cuando el rubro elegido es el

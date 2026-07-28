@@ -56,6 +56,20 @@ const PROCESOS = [
     ),
   },
   {
+    to: "/generar-cargos",
+    label: "Generar Cargos",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+        <path
+          fillRule="evenodd"
+          d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM6 13a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ),
+  },
+  {
     to: "/generacion-archivos",
     label: "Generación de Archivos",
     icon: (

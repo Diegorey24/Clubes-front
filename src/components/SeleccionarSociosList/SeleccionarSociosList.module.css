@@ -1,0 +1,164 @@
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.searchBox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 240px;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 0.85rem;
+    color: var(--gray-400);
+    display: flex;
+    pointer-events: none;
+}
+
+.searchBox input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.65rem 1rem 0.65rem 2.6rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    font-size: 0.9rem;
+    background: white;
+    color: var(--gray-900);
+    transition: all var(--transition-fast);
+}
+
+.searchBox input:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
+.counts {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.selectedBadge {
+    padding: 0.4rem 0.85rem;
+    background: hsl(210, 76%, 97%);
+    color: var(--primary-700);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.totalCount {
+    color: var(--gray-500);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.tableContainer {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-100);
+    overflow: hidden;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    background: var(--gray-50);
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.table td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--gray-50);
+    color: var(--gray-700);
+    font-size: 0.875rem;
+}
+
+.table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover {
+    background-color: var(--gray-50);
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.rowSelected,
+.rowSelected:hover {
+    background-color: hsl(210, 76%, 97%);
+}
+
+.checkboxHeader,
+.checkboxCell {
+    width: 1%;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.checkboxHeader input,
+.checkboxCell input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.nameCell {
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.muted {
+    color: var(--gray-500);
+}
+
+.loadingState,
+.emptyState {
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    color: var(--gray-400);
+    font-size: 0.9rem;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    color: var(--gray-600);
+}
+
+.pageIndicator {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--gray-500);
+}
