@@ -1,0 +1,49 @@
+.wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: var(--spacing-xl);
+}
+
+.card {
+    max-width: 440px;
+    width: 100%;
+    text-align: center;
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-100);
+}
+
+.title {
+    margin: 0 0 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.description {
+    margin: 0 0 var(--spacing-lg);
+    color: var(--gray-500);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 1.5rem;
+    border-radius: var(--radius-md);
+    background: var(--primary-600);
+    color: white;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    text-decoration: none;
+}
+
+.button:hover {
+    background: var(--primary-700);
+}

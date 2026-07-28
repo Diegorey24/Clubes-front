@@ -3,10 +3,14 @@ import { useState, useEffect } from 'react';
 import HeaderNav from './components/HeaderNav/HeaderNav';
 import Footer from './components/Footer/Footer';
 import Toast from './components/Toast/Toast';
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import Home from './pages/Home';
 import RubrosPage from './pages/RubrosPage';
 import RadiosPage from './pages/RadiosPage';
-import FormaPagoPage from './pages/FormaPagoPage';
+// Forma de Pago: deshabilitado a pedido -- "no va más por un tiempo".
+// Descomentar junto con la ruta /formapago (y el tile en UtilidadesPage)
+// cuando vuelva a estar disponible.
+// import FormaPagoPage from './pages/FormaPagoPage';
 import MediosPagoPage from './pages/MediosPagoPage';
 import ParametrosPage from './pages/ParametrosPage';
 import AddSocioPage from './pages/AddSocioPage';
@@ -139,14 +143,15 @@ function AppContent({
   return (
     <div className={isPortalSocio ? 'app app--portal-socio' : 'app'}>
       {!isPortalSocio && !location.pathname.startsWith('/control-acceso') && usuario && <HeaderNav usuario={usuario} onLogout={handleLogout} />}
-      <main className="main-content"><Routes>
+      <main className="main-content"><ErrorBoundary key={location.pathname}><Routes>
         <Route path="/login" element={usuario ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />} />
         <Route path="/register" element={usuario ? <Navigate to="/" replace /> : <RegisterPage />} />
 
         <Route path="/" element={<PrivateRoute usuario={usuario}><DashboardPage usuario={usuario} /></PrivateRoute>} />
         <Route path="/rubros" element={<PrivateRoute usuario={usuario}><RubrosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/radios" element={<PrivateRoute usuario={usuario}><RadiosPage showToast={showToast} /></PrivateRoute>} />
-        <Route path="/formapago" element={<PrivateRoute usuario={usuario}><FormaPagoPage showToast={showToast} /></PrivateRoute>} />
+        {/* Forma de Pago: deshabilitado a pedido, ver comentario junto al import de FormaPagoPage arriba. */}
+        {/* <Route path="/formapago" element={<PrivateRoute usuario={usuario}><FormaPagoPage showToast={showToast} /></PrivateRoute>} /> */}
         <Route path="/mediospago" element={<PrivateRoute usuario={usuario}><MediosPagoPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/parametros" element={<PrivateRoute usuario={usuario}><ParametrosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/agregar-socio" element={<PrivateRoute usuario={usuario}><AddSocioPage showToast={showToast} /></PrivateRoute>} />
@@ -178,7 +183,7 @@ function AppContent({
         <Route path="/informe-cobranza-periodo" element={<PrivateRoute usuario={usuario}><InformeCobranzaPeriodoPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/control-acceso/login" element={usuario ? <Navigate to="/control-acceso" replace /> : <LoginPage onLogin={handleLogin} />} />
         <Route path="/control-acceso" element={usuario ? <ControlAccesoPage usuario={usuario} onLogout={handleLogout} showToast={showToast} /> : <Navigate to="/control-acceso/login" replace />} />
-      </Routes></main>
+      </Routes></ErrorBoundary></main>
       {!isPortalSocio && usuario && <Footer />}
       {isPortalSocio && socio && <Footer label="Portal del Socio" />}
       <Toast

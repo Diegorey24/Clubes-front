@@ -37,7 +37,9 @@ const SocioEditPage = ({ showToast }) => {
     // Lists
     const [categorias, setCategorias] = useState([]);
     const [radios, setRadios] = useState([]);
-    const [formasPago, setFormasPago] = useState([]);
+    // Forma de Pago: deshabilitado a pedido -- "no va más por un tiempo".
+    // Ver también el campo comentado más abajo en el formulario.
+    // const [formasPago, setFormasPago] = useState([]);
     const [nacionalidades, setNacionalidades] = useState([]);
 
     useEffect(() => {
@@ -47,17 +49,18 @@ const SocioEditPage = ({ showToast }) => {
 
     const loadData = async () => {
         try {
-            const [socioData, catsData, radiosData, formasData, nacData] = await Promise.all([
+            const [socioData, catsData, radiosData, nacData] = await Promise.all([
                 getSocioById(id),
                 fetchItems('categoriaSocios'),
                 fetchItems('radios'),
-                fetchItems('formapago'),
+                // Forma de Pago: deshabilitado a pedido, ver comentario junto al useState de formasPago.
+                // fetchItems('formapago'),
                 fetchItems('nacionalidades')
             ]);
 
             setCategorias(Array.isArray(catsData) ? catsData : []);
             setRadios(Array.isArray(radiosData) ? radiosData : []);
-            setFormasPago(Array.isArray(formasData) ? formasData : []);
+            // setFormasPago(Array.isArray(formasData) ? formasData : []);
             setNacionalidades(Array.isArray(nacData) ? nacData : []);
 
             if (socioData) {
@@ -347,13 +350,15 @@ const SocioEditPage = ({ showToast }) => {
                                             {radios.map(r => <option key={r.IdRadio} value={r.IdRadio}>{r.Nombre}</option>)}
                                         </select>
                                     </div>
-                                    <div className={styles.formGroup}>
+                                    {/* Forma de Pago: deshabilitado a pedido -- "no va más por un tiempo".
+                                        Descomentar junto con el useState de formasPago y el fetchItems('formapago') de arriba. */}
+                                    {/* <div className={styles.formGroup}>
                                         <label>Forma de Pago</label>
                                         <select name="ForPagCod" value={formData.ForPagCod || ''} onChange={handleChange}>
                                             <option value="">Seleccione...</option>
                                             {formasPago.map(f => <option key={f.IdFormaPago} value={f.IdFormaPago}>{f.Nombre}</option>)}
                                         </select>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
 

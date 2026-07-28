@@ -488,10 +488,11 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
                                             <span className={styles.label}>Categoría</span>
                                             <span className={styles.value}>{socio.CatNom || socio.CatCod || '-'}</span>
                                         </div>
-                                        <div className={styles.field}>
+                                        {/* Forma de Pago: deshabilitado a pedido -- "no va más por un tiempo". */}
+                                        {/* <div className={styles.field}>
                                             <span className={styles.label}>Forma de Pago</span>
                                             <span className={styles.value}>{socio.ForPagNom || socio.ForPagCod || '-'}</span>
-                                        </div>
+                                        </div> */}
                                         <div className={styles.field}>
                                             <span className={styles.label}>Radio</span>
                                             <span className={styles.value}>{socio.RADNOM || socio.RadCod || '-'}</span>

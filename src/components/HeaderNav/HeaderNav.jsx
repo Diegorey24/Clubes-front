@@ -12,7 +12,7 @@ const UTILIDADES_PATHS = [
     '/grupos-familiares',
     '/rubros',
     '/radios',
-    '/formapago',
+    // '/formapago', // deshabilitado a pedido -- ver App.jsx / UtilidadesPage.jsx
     '/mediospago',
     '/motivos-baja',
     '/parametros',
