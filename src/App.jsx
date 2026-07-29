@@ -42,6 +42,8 @@ import InformeSociosDeudasPorCategoriaPage from './pages/InformeSociosDeudasPorC
 import InformeSociosDeudasPorRubroPage from './pages/InformeSociosDeudasPorRubroPage';
 import InformePlanillaSociosPage from './pages/InformePlanillaSociosPage';
 import InformeCobranzaPeriodoPage from './pages/InformeCobranzaPeriodoPage';
+import InformeCumpleanosPage from './pages/InformeCumpleanosPage';
+import InformeFichaMedicaVencimientoPage from './pages/InformeFichaMedicaVencimientoPage';
 import ControlAccesoPage from './pages/ControlAccesoPage';
 import './App.css';
 
@@ -181,6 +183,8 @@ function AppContent({
         <Route path="/informe-socios-deudas-por-rubro" element={<PrivateRoute usuario={usuario}><InformeSociosDeudasPorRubroPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-planilla-socios" element={<PrivateRoute usuario={usuario}><InformePlanillaSociosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-cobranza-periodo" element={<PrivateRoute usuario={usuario}><InformeCobranzaPeriodoPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-cumpleanos" element={<PrivateRoute usuario={usuario}><InformeCumpleanosPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-ficha-medica-vencimiento" element={<PrivateRoute usuario={usuario}><InformeFichaMedicaVencimientoPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/control-acceso/login" element={usuario ? <Navigate to="/control-acceso" replace /> : <LoginPage onLogin={handleLogin} />} />
         <Route path="/control-acceso" element={usuario ? <ControlAccesoPage usuario={usuario} onLogout={handleLogout} showToast={showToast} /> : <Navigate to="/control-acceso/login" replace />} />
       </Routes></ErrorBoundary></main>

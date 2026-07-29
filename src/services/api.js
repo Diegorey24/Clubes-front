@@ -259,6 +259,29 @@ export const getSocioById = async (id) => {
   }
 };
 
+// Informe "Cumpleaños". fecha es obligatoria (YYYY-MM-DD): el backend
+// compara día y mes de SocFchNac contra esa fecha (el año no se compara).
+// La respuesta trae un array con exactamente los mismos campos que
+// GET /socios/:id por cada socio que cumple años ese día -- incluye datos
+// de contacto (SocEMail, SocTel, SocTelCel, SocDom), CatNom, RADNOM,
+// ForPagNom, DescuentoPorcentaje y CargosExtra -- así que no hace falta un
+// segundo pedido para el detalle de cada uno.
+export const getSociosCumpleanos = async (fecha) => {
+  const response = await api.get('/socios/cumpleanos', { params: { fecha } });
+  return response.data;
+};
+
+// Informe "Vencimiento de Ficha Médica". fecha es obligatoria (YYYY-MM-DD):
+// el backend devuelve los socios cuya SocFchMed vence ANTES de esa fecha,
+// ya ordenados por fecha de vencimiento. Mismo shape que GET /socios/:id
+// (incluye datos de contacto, CatNom/RADNOM/ForPagNom/NacDsc,
+// DescuentoPorcentaje y CargosExtra) para poder avisarles sin pedidos
+// adicionales.
+export const getSociosFichaMedicaVencimiento = async (fecha) => {
+  const response = await api.get('/socios/ficha-medica-vencimiento', { params: { fecha } });
+  return response.data;
+};
+
 export const createSocio = async (data) => {
   try {
     const response = await api.post('/socios', data);
@@ -494,6 +517,51 @@ export const getCuentaCorrienteFamiliar = async (ci, startDate, endDate, orderBy
   if (!response.ok) {
     const detalle = await response.json().catch(() => null);
     throw new Error(detalle?.error || detalle?.detail || 'Error al obtener cuenta corriente familiar');
+  }
+  return await response.json();
+};
+
+// Equivalente a getCuentaCorriente pero para socios dados de baja: lee de
+// CuentaCorrienteBajados en vez de CuentaCorriente. Mismos parámetros
+// (startDate, endDate, orderBy, orderDir). Se usa en el detalle de socio
+// histórico, donde ya no hay movimientos en la tabla de cuenta corriente
+// activa.
+export const getCuentaCorrienteBajados = async (ci, startDate, endDate, orderBy, orderDir) => {
+  const params = new URLSearchParams();
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  if (orderBy) params.append('orderBy', orderBy);
+  if (orderDir) params.append('orderDir', orderDir);
+
+  const queryString = params.toString();
+  const url = `${API_BASE_URL}/cuenta-corriente/bajados/${ci}${queryString ? `?${queryString}` : ''}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    const detalle = await response.json().catch(() => null);
+    throw new Error(detalle?.error || detalle?.detail || 'Error al obtener la cuenta corriente histórica');
+  }
+  return await response.json();
+};
+
+// Equivalente a getCuentaCorrienteFamiliar pero para socios dados de baja:
+// el CodGrupo también se resuelve desde CuentaCorrienteBajados, porque un
+// socio de baja ya no tiene movimientos en CuentaCorriente. Mismos
+// parámetros que getCuentaCorrienteBajados.
+export const getCuentaCorrienteBajadosFamiliar = async (ci, startDate, endDate, orderBy, orderDir) => {
+  const params = new URLSearchParams();
+  if (startDate) params.append('startDate', startDate);
+  if (endDate) params.append('endDate', endDate);
+  if (orderBy) params.append('orderBy', orderBy);
+  if (orderDir) params.append('orderDir', orderDir);
+
+  const queryString = params.toString();
+  const url = `${API_BASE_URL}/cuenta-corriente/bajados/familiar/${ci}${queryString ? `?${queryString}` : ''}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    const detalle = await response.json().catch(() => null);
+    throw new Error(detalle?.error || detalle?.detail || 'Error al obtener la cuenta corriente familiar histórica');
   }
   return await response.json();
 };
@@ -751,6 +819,73 @@ export const subirFotoSocio = async (ci, file) => {
   const response = await api.post(`/fotos/${ci}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
+  return response.data;
+};
+
+// CRUD de Descuentos (Ci, Porcentaje). Un solo registro por CI. GET /socios/:id
+// y GET /socios-historicos/:id ya traen DescuentoPorcentaje vía LEFT JOIN
+// (null si el socio no tiene descuento cargado), así que la pestaña de
+// detalle no necesita llamar a getDescuentoByCi para mostrarlo -- solo para
+// las operaciones de alta/baja/modificación.
+export const getDescuentos = async () => {
+  const response = await api.get('/descuentos');
+  return response.data;
+};
+
+export const getDescuentoByCi = async (ci) => {
+  const response = await api.get(`/descuentos/${ci}`);
+  return response.data;
+};
+
+// 409 si ya existe un registro de descuento para ese CI.
+export const createDescuento = async (ci, porcentaje) => {
+  const response = await api.post('/descuentos', { Ci: ci, Porcentaje: porcentaje });
+  return response.data;
+};
+
+export const updateDescuento = async (ci, porcentaje) => {
+  const response = await api.put(`/descuentos/${ci}`, { Porcentaje: porcentaje });
+  return response.data;
+};
+
+export const deleteDescuento = async (ci) => {
+  const response = await api.delete(`/descuentos/${ci}`);
+  return response.data;
+};
+
+// CRUD de Cargos Extra (Ci, Rubro, Importe). Clave compuesta Ci+Rubro: un
+// socio puede tener varios cargos extra, pero no dos con el mismo rubro.
+// Igual que con Descuentos, GET /socios/:id y GET /socios-historicos/:id ya
+// traen el array CargosExtra (Rubro, RubDsc, Importe) para mostrarlo en el
+// detalle; estos métodos son para las operaciones de alta/baja/modificación.
+export const getCargosExtra = async () => {
+  const response = await api.get('/cargos-extra');
+  return response.data;
+};
+
+export const getCargosExtraByCi = async (ci) => {
+  const response = await api.get(`/cargos-extra/${ci}`);
+  return response.data;
+};
+
+export const getCargoExtraByCiRubro = async (ci, rubro) => {
+  const response = await api.get(`/cargos-extra/${ci}/${rubro}`);
+  return response.data;
+};
+
+// 409 si ya existe un cargo extra con esa combinación Ci+Rubro.
+export const createCargoExtra = async (ci, rubro, importe) => {
+  const response = await api.post('/cargos-extra', { Ci: ci, Rubro: rubro, Importe: importe });
+  return response.data;
+};
+
+export const updateCargoExtra = async (ci, rubro, importe) => {
+  const response = await api.put(`/cargos-extra/${ci}/${rubro}`, { Importe: importe });
+  return response.data;
+};
+
+export const deleteCargoExtra = async (ci, rubro) => {
+  const response = await api.delete(`/cargos-extra/${ci}/${rubro}`);
   return response.data;
 };
 

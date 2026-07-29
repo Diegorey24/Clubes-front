@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSocioById, getSocioHistoricoById, subirFotoSocio } from '../services/api';
-import { Button, Badge, Tabs, Title, BackLink } from '../components/ui';
+import { getSocioById, getSocioHistoricoById, subirFotoSocio, deleteDescuento, deleteCargoExtra } from '../services/api';
+import { Button, Badge, Tabs, Title, BackLink, ConfirmDialog } from '../components/ui';
 import { formatFecha } from '../utils/date';
 import { generarReciboPDF } from '../utils/reciboPdf';
 import CrearCargoModal from '../components/CrearCargoModal/CrearCargoModal';
 import AnularCargoModal from '../components/AnularCargoModal/AnularCargoModal';
+import DescuentoModal from '../components/DescuentoModal/DescuentoModal';
+import CargoExtraModal from '../components/CargoExtraModal/CargoExtraModal';
 import styles from './SocioDetailsPage.module.css';
 const API_BASE_URL = window.globalConfig?.API_URL || import.meta.env.VITE_API_BASE_URL || 'https://apis.devmacrosoft.com/CLUBES_API/api';
 const FOTOS_BASE_URL = API_BASE_URL.replace(/\/api$/, '');
@@ -67,6 +69,12 @@ const DownloadIcon = (
     </svg>
 );
 
+const TrashIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+);
+
 // Por defecto, la cuenta corriente se filtra desde el primer día del mes,
 // un año atrás, hasta hoy. Por ejemplo si hoy es 14/07/2026, se busca desde
 // el 01/07/2025. Esto evita traer demasiados registros en cada llamado,
@@ -105,6 +113,14 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
 
     const [isCrearCargoOpen, setIsCrearCargoOpen] = useState(false);
     const [isAnularCargoOpen, setIsAnularCargoOpen] = useState(false);
+    const [isDescuentoModalOpen, setIsDescuentoModalOpen] = useState(false);
+    const [isConfirmDeleteDescuentoOpen, setIsConfirmDeleteDescuentoOpen] = useState(false);
+    const [eliminandoDescuento, setEliminandoDescuento] = useState(false);
+
+    const [isCargoExtraModalOpen, setIsCargoExtraModalOpen] = useState(false);
+    const [cargoExtraEnEdicion, setCargoExtraEnEdicion] = useState(null);
+    const [cargoExtraAEliminar, setCargoExtraAEliminar] = useState(null);
+    const [eliminandoCargoExtra, setEliminandoCargoExtra] = useState(false);
 
     const [fotoKey, setFotoKey] = useState(Date.now());
     const [fotoExt, setFotoExt] = useState('jpg');
@@ -173,12 +189,17 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
     };
 
 
+    // Un socio histórico (dado de baja) ya no tiene movimientos en
+    // CuentaCorriente: hay que leer de CuentaCorrienteBajados en su lugar,
+    // vía los endpoints /cuenta-corriente/bajados.
     const loadCuentaCorriente = async (ci, from = startDate, to = endDate, ordenValue = orden) => {
         setLoadingCC(true);
         try {
-            const { getCuentaCorriente } = await import('../services/api');
+            const { getCuentaCorriente, getCuentaCorrienteBajados } = await import('../services/api');
             const [orderBy, orderDir] = ordenValue.split('-');
-            const data = await getCuentaCorriente(ci, from, to, orderBy, orderDir);
+            const data = isHistorical
+                ? await getCuentaCorrienteBajados(ci, from, to, orderBy, orderDir)
+                : await getCuentaCorriente(ci, from, to, orderBy, orderDir);
             setCuentaCorriente(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error loading cuenta corriente:', err);
@@ -192,9 +213,11 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
     const loadCuentaCorrienteFamiliar = async (ci, ordenValue = orden) => {
         setLoadingCCFam(true);
         try {
-            const { getCuentaCorrienteFamiliar } = await import('../services/api');
+            const { getCuentaCorrienteFamiliar, getCuentaCorrienteBajadosFamiliar } = await import('../services/api');
             const [orderBy, orderDir] = ordenValue.split('-');
-            const data = await getCuentaCorrienteFamiliar(ci, startDate, endDate, orderBy, orderDir);
+            const data = isHistorical
+                ? await getCuentaCorrienteBajadosFamiliar(ci, startDate, endDate, orderBy, orderDir)
+                : await getCuentaCorrienteFamiliar(ci, startDate, endDate, orderBy, orderDir);
             setCuentaCorrienteFamiliar(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error loading cuenta corriente familiar:', err);
@@ -232,6 +255,63 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
 
     const handleCargoCreado = () => {
         if (socio) loadCuentaCorriente(socio.SocDocIde);
+    };
+
+    // Alta/edición del descuento se hacen desde DescuentoModal; acá solo se
+    // recarga el socio para traer el DescuentoPorcentaje actualizado (viene
+    // en el mismo join que el resto de la ficha, no hace falta un pedido
+    // aparte).
+    const handleDescuentoGuardado = () => {
+        loadSocio();
+    };
+
+    const handleConfirmarEliminarDescuento = async () => {
+        if (!socio) return;
+        setEliminandoDescuento(true);
+        try {
+            await deleteDescuento(socio.SocDocIde);
+            showToast?.('Descuento eliminado exitosamente', 'success');
+            setIsConfirmDeleteDescuentoOpen(false);
+            loadSocio();
+        } catch (err) {
+            console.error('Error eliminando el descuento:', err);
+            showToast?.(err.response?.data?.error || 'Error al eliminar el descuento', 'error');
+        } finally {
+            setEliminandoDescuento(false);
+        }
+    };
+
+    // Igual que con el descuento: alta/edición se hacen en CargoExtraModal,
+    // acá solo se recarga el socio para traer el array CargosExtra
+    // actualizado (mismo join que el resto de la ficha).
+    const handleCargoExtraGuardado = () => {
+        loadSocio();
+    };
+
+    const handleAgregarCargoExtra = () => {
+        setCargoExtraEnEdicion(null);
+        setIsCargoExtraModalOpen(true);
+    };
+
+    const handleEditarCargoExtra = (cargo) => {
+        setCargoExtraEnEdicion(cargo);
+        setIsCargoExtraModalOpen(true);
+    };
+
+    const handleConfirmarEliminarCargoExtra = async () => {
+        if (!socio || !cargoExtraAEliminar) return;
+        setEliminandoCargoExtra(true);
+        try {
+            await deleteCargoExtra(socio.SocDocIde, cargoExtraAEliminar.Rubro);
+            showToast?.('Cargo extra eliminado exitosamente', 'success');
+            setCargoExtraAEliminar(null);
+            loadSocio();
+        } catch (err) {
+            console.error('Error eliminando el cargo extra:', err);
+            showToast?.(err.response?.data?.error || 'Error al eliminar el cargo extra', 'error');
+        } finally {
+            setEliminandoCargoExtra(false);
+        }
     };
 
     // Un movimiento se puede descargar cuando tiene N.° de Recibo cargado.
@@ -344,12 +424,17 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
     //     && String(socio.GruFamNro) === String(socio.SocDocIde);
     // const mostrarTabResponsable = hasResponsableData && perteneceAGrupoFamiliar && !esTitularDeSuGrupo;
 
+    const tieneDescuento = socio.DescuentoPorcentaje !== null && socio.DescuentoPorcentaje !== undefined;
+    const cargosExtra = Array.isArray(socio.CargosExtra) ? socio.CargosExtra : [];
+    const rubrosUsadosCargoExtra = cargosExtra.map((c) => c.Rubro);
+
     const tabs = [
         { id: 'info', label: 'Información General' },
         // ...(mostrarTabResponsable ? [{ id: 'responsable', label: 'Datos del Responsable' }] : []),
         { id: 'padres', label: 'Datos de los Padres/Responsables' },
         { id: 'cuentaCorriente', label: 'Cuenta Corriente' },
         { id: 'cuentaCorrienteFamiliar', label: 'Cuenta Corriente Familiar' },
+        { id: 'descuentos', label: 'Descuentos y Cargos Extra' },
     ];
 
     return (
@@ -877,6 +962,120 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
                                 )}
                             </div>
                         )}
+
+                        {activeTab === 'descuentos' && (
+                            <div className={styles.section}>
+                                <Title variant="section">Descuento</Title>
+
+                                {!isHistorical && (
+                                    <div className={styles.addButtonRow}>
+                                        {tieneDescuento ? (
+                                            <>
+                                                <Button
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    icon={EditIcon}
+                                                    onClick={() => setIsDescuentoModalOpen(true)}
+                                                >
+                                                    Editar
+                                                </Button>
+                                                <Button
+                                                    variant="soft-danger"
+                                                    size="sm"
+                                                    icon={TrashIcon}
+                                                    onClick={() => setIsConfirmDeleteDescuentoOpen(true)}
+                                                >
+                                                    Eliminar
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
+                                                icon={PlusIcon}
+                                                onClick={() => setIsDescuentoModalOpen(true)}
+                                            >
+                                                Agregar Descuento
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
+
+                                {tieneDescuento ? (
+                                    <div className={styles.descuentoCard}>
+                                        <div className={styles.descuentoInfo}>
+                                            <span className={styles.descuentoLabel}>Porcentaje de descuento</span>
+                                            <span className={styles.descuentoValor}>{socio.DescuentoPorcentaje}%</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className={styles.noData}>Este socio no tiene un descuento cargado.</p>
+                                )}
+
+                                <div className={`${styles.section} ${styles.nestedSection}`}>
+                                    <Title variant="section">Cargos Extra</Title>
+
+                                    {!isHistorical && (
+                                        <div className={styles.addButtonRow}>
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
+                                                icon={PlusIcon}
+                                                onClick={handleAgregarCargoExtra}
+                                            >
+                                                Agregar Cargo Extra
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {cargosExtra.length === 0 ? (
+                                        <p className={styles.noData}>Este socio no tiene cargos extra cargados.</p>
+                                    ) : (
+                                        <div className={styles.tableContainer}>
+                                            <table className={styles.ccTable}>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Rubro</th>
+                                                        <th>Importe</th>
+                                                        {!isHistorical && <th>Acciones</th>}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {cargosExtra.map((cargo) => (
+                                                        <tr key={cargo.Rubro}>
+                                                            <td>{cargo.RubDsc?.trim() || `Rubro ${cargo.Rubro}`}</td>
+                                                            <td className={styles.amount}>{formatCurrency(parseFloat(cargo.Importe) || 0)}</td>
+                                                            {!isHistorical && (
+                                                                <td>
+                                                                    <div className={styles.tableActionsCell}>
+                                                                        <Button
+                                                                            variant="secondary"
+                                                                            size="sm"
+                                                                            icon={EditIcon}
+                                                                            onClick={() => handleEditarCargoExtra(cargo)}
+                                                                        >
+                                                                            Editar
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="soft-danger"
+                                                                            size="sm"
+                                                                            icon={TrashIcon}
+                                                                            onClick={() => setCargoExtraAEliminar(cargo)}
+                                                                        >
+                                                                            Eliminar
+                                                                        </Button>
+                                                                    </div>
+                                                                </td>
+                                                            )}
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -897,6 +1096,54 @@ const SocioDetailsPage = ({ isHistorical = false, usuario, showToast }) => {
                 socio={socio}
                 showToast={showToast}
             />
+
+            <DescuentoModal
+                isOpen={isDescuentoModalOpen}
+                onClose={() => setIsDescuentoModalOpen(false)}
+                onSuccess={handleDescuentoGuardado}
+                socio={socio}
+                descuentoActual={tieneDescuento ? socio.DescuentoPorcentaje : null}
+                showToast={showToast}
+            />
+
+            <ConfirmDialog
+                isOpen={isConfirmDeleteDescuentoOpen}
+                title="¿Eliminar este descuento?"
+                description="El socio dejará de tener un descuento aplicado. Esta acción no se puede deshacer."
+                confirmLabel="Sí, eliminar"
+                variant="danger"
+                loading={eliminandoDescuento}
+                onConfirm={handleConfirmarEliminarDescuento}
+                onCancel={() => setIsConfirmDeleteDescuentoOpen(false)}
+            />
+
+            <CargoExtraModal
+                isOpen={isCargoExtraModalOpen}
+                onClose={() => setIsCargoExtraModalOpen(false)}
+                onSuccess={handleCargoExtraGuardado}
+                socio={socio}
+                cargoExtraActual={cargoExtraEnEdicion}
+                rubrosExcluidos={rubrosUsadosCargoExtra}
+                showToast={showToast}
+            />
+
+            <ConfirmDialog
+                isOpen={!!cargoExtraAEliminar}
+                title="¿Eliminar este cargo extra?"
+                description="Esta acción no se puede deshacer."
+                confirmLabel="Sí, eliminar"
+                variant="danger"
+                loading={eliminandoCargoExtra}
+                onConfirm={handleConfirmarEliminarCargoExtra}
+                onCancel={() => setCargoExtraAEliminar(null)}
+            >
+                {cargoExtraAEliminar && (
+                    <div className={styles.confirmDetail}>
+                        <span>{cargoExtraAEliminar.RubDsc?.trim() || `Rubro ${cargoExtraAEliminar.Rubro}`}</span>
+                        <span>{formatCurrency(parseFloat(cargoExtraAEliminar.Importe) || 0)}</span>
+                    </div>
+                )}
+            </ConfirmDialog>
         </div>
     );
 };

@@ -1,9 +1,17 @@
 import { useState } from 'react';
 import { getCuotasPendientes, generarCuotas } from '../services/api';
+import { ConfirmDialog } from '../components/ui';
 import styles from './GenerarCuotasPage.module.css';
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(amount || 0);
+};
+
+// periodo viene como "AAAA-MM" del input type=month; se muestra como MM/AAAA.
+const formatPeriodo = (value) => {
+    if (!value) return '-';
+    const [y, m] = value.split('-');
+    return `${m}/${y}`;
 };
 
 const GenerarCuotasPage = ({ showToast }) => {
@@ -12,6 +20,7 @@ const GenerarCuotasPage = ({ showToast }) => {
     const [result, setResult] = useState(null);
     const [loadingPreview, setLoadingPreview] = useState(false);
     const [generando, setGenerando] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
     const periodoToAniomes = (value) => {
         // value viene como "AAAA-MM" del input type=month
@@ -38,18 +47,19 @@ const GenerarCuotasPage = ({ showToast }) => {
         }
     };
 
-    const handleGenerar = async () => {
+    const handleGenerar = () => {
         if (!preview) return;
-        const confirmado = window.confirm(
-            `Se van a generar ${preview.cantidad} cuotas para el período ${periodo} por un total estimado de ${formatCurrency(preview.totalEstimado)}.\n\n¿Confirmás la generación?`
-        );
-        if (!confirmado) return;
+        setIsConfirmOpen(true);
+    };
 
+    const handleConfirmarGenerar = async () => {
+        if (!preview) return;
         setGenerando(true);
         try {
             const data = await generarCuotas(preview.aniomes);
             setResult(data);
             setPreview(null);
+            setIsConfirmOpen(false);
             showToast(`Se generaron ${data.generadas} cuotas correctamente`, 'success');
         } catch (err) {
             console.error('Error al generar cuotas:', err);
@@ -125,6 +135,24 @@ const GenerarCuotasPage = ({ showToast }) => {
                     )}
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={isConfirmOpen}
+                title="¿Generar las cuotas de este período?"
+                description="Esta acción crea la cuota social en la cuenta corriente de cada socio incluido y no se puede deshacer."
+                confirmLabel="Sí, generar cuotas"
+                variant="primary"
+                loading={generando}
+                onConfirm={handleConfirmarGenerar}
+                onCancel={() => setIsConfirmOpen(false)}
+            >
+                {preview && (
+                    <div className={styles.confirmDetail}>
+                        <span>Período {formatPeriodo(periodo)}</span>
+                        <span>{preview.cantidad} cuota{preview.cantidad !== 1 ? 's' : ''} · {formatCurrency(preview.totalEstimado)} estimado</span>
+                    </div>
+                )}
+            </ConfirmDialog>
         </div>
     );
 };

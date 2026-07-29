@@ -167,6 +167,24 @@ const INFORMES = [
       </svg>
     ),
   },
+  {
+    to: "/informe-cumpleanos",
+    label: "Cumpleaños",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10 2a1 1 0 011 1v1.126a3 3 0 011.83 1.652 1 1 0 11-1.83.808A1 1 0 0010 6a1 1 0 00-1 1c0 .374.153.578.727 1.014.57.433 1.273 1.06 1.273 2.236 0 1.007-.57 1.735-1 2.152V13a1 1 0 11-2 0v-.598a3.007 3.007 0 01-1.83-1.652 1 1 0 111.83-.808c.156.362.502.558.83.558.44 0 .8-.36.8-.75 0-.374-.153-.578-.727-1.014C7.23 8.303 6.527 7.676 6.527 6.5c0-1.007.57-1.735 1-2.152V3a1 1 0 011-1zM4 9a1 1 0 00-1 1v6a2 2 0 002 2h10a2 2 0 002-2v-6a1 1 0 10-2 0v1H5v-1a1 1 0 00-1-1z" />
+      </svg>
+    ),
+  },
+  {
+    to: "/informe-ficha-medica-vencimiento",
+    label: "Vencimiento de Ficha Médica",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1h3a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h3V3a1 1 0 011-1zM9 9a1 1 0 000 2h.01a1 1 0 100-2H9zm2 4a1 1 0 100 2h.01a1 1 0 100-2H11zM7 13a1 1 0 011-1h.01a1 1 0 110 2H8a1 1 0 01-1-1zm6-4a1 1 0 100 2h.01a1 1 0 100-2H13z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
 ];
 
 const TABLAS = [

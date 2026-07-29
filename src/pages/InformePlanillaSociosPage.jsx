@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSociosDeudasPlanilla, exportSociosDeudasPlanilla, fetchItems } from '../services/api';
+import { getSociosDeudasPlanilla, exportSociosDeudasPlanilla, getSociosDeudasTotal, fetchItems } from '../services/api';
 import { Button, PageHeader, BackLink } from '../components/ui';
 import styles from './InformePlanillaSociosPage.module.css';
 
@@ -124,16 +124,6 @@ const MontoCruz = ({ valores }) => {
     return <span className={styles.cruzMarca} aria-label="Pagado">✕</span>;
 };
 
-// Suma tres objetos { Adeudado, Recibido, Pendiente } (para los totales de
-// pie de tabla, que el backend no calcula porque cambian según la página).
-const sumarValores = (acc, valores) => ({
-    Adeudado: acc.Adeudado + (valores?.Adeudado || 0),
-    Recibido: acc.Recibido + (valores?.Recibido || 0),
-    Pendiente: acc.Pendiente + (valores?.Pendiente || 0)
-});
-
-const VALORES_VACIOS = { Adeudado: 0, Recibido: 0, Pendiente: 0 };
-
 const getDefaultFilters = () => ({
     search: '',
     categoria: '',
@@ -179,6 +169,11 @@ const InformePlanillaSociosPage = ({ showToast }) => {
     const [limit] = useState(50);
 
     const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    // Deuda total real (suma de todo el resultado filtrado, no solo la
+    // página actual), vía GET /socios/deudas/total, igual que en el listado
+    // de socios y deudas. Ese endpoint no admite rubro ni soloConDeuda.
+    const [totalDeuda, setTotalDeuda] = useState(0);
 
     const rangoInvalido = filters.fechaDesde && filters.fechaHasta && filters.fechaDesde > filters.fechaHasta;
     const rangoIncompleto = !filters.fechaDesde || !filters.fechaHasta;
@@ -257,6 +252,23 @@ const InformePlanillaSociosPage = ({ showToast }) => {
         load();
     }, [load]);
 
+    // Deuda total del filtro aplicado (independiente de la página y del
+    // rango de fechas de la planilla). Reacciona a los mismos filtros que
+    // /socios/deudas/total admite: search, categoria, radio, fechaDesde,
+    // fechaHasta.
+    useEffect(() => {
+        if (rangoIncompleto || rangoInvalido) return;
+        const loadTotal = async () => {
+            try {
+                const data = await getSociosDeudasTotal(debouncedSearch, filters.categoria, filters.radio, filters.fechaDesde, filters.fechaHasta);
+                setTotalDeuda(data.total || 0);
+            } catch (err) {
+                console.error('Error loading deuda total:', err);
+            }
+        };
+        loadTotal();
+    }, [debouncedSearch, filters.categoria, filters.radio, filters.fechaDesde, filters.fechaHasta, rangoIncompleto, rangoInvalido]);
+
     const handlePrevious = () => {
         if (page > 1) setPage(prev => prev - 1);
     };
@@ -295,15 +307,6 @@ const InformePlanillaSociosPage = ({ showToast }) => {
 
     const isFiltered = filters.search || filters.categoria || filters.radio || filters.rubro || filters.soloConDeuda
         || filters.fechaDesde !== getDefaultFechaDesde() || filters.fechaHasta !== getDefaultFechaHasta();
-
-    // Totales por columna (mes) y total general, solo de los socios de la
-    // página actual. Cada celda es { Adeudado, Recibido, Pendiente }, así
-    // que se suman los tres valores por separado.
-    const totalesPorMes = meses.reduce((acc, mes) => {
-        acc[mes] = items.reduce((sum, item) => sumarValores(sum, item.PorMes?.[mes]), { ...VALORES_VACIOS });
-        return acc;
-    }, {});
-    const totalGeneralPagina = items.reduce((sum, item) => sumarValores(sum, item.Total), { ...VALORES_VACIOS });
 
     return (
         <div className={styles.page}>
@@ -379,8 +382,13 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                     </div>
 
                     {!rangoInvalido && !rangoIncompleto && (
-                        <div className={styles.resultsCount}>
-                            {totalItems} socio{totalItems !== 1 ? 's' : ''}
+                        <div className={styles.summaryGroup}>
+                            <div className={styles.resultsCount}>
+                                {totalItems} socio{totalItems !== 1 ? 's' : ''}
+                            </div>
+                            <div className={styles.deudaPill}>
+                                Deuda total: {formatCurrency(totalDeuda)}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -544,26 +552,6 @@ const InformePlanillaSociosPage = ({ showToast }) => {
                                     </tr>
                                 ))}
                             </tbody>
-                            <tfoot>
-                                <tr className={styles.footerRow}>
-                                    <td className={styles.socioCell}>
-                                        Total de esta página
-                                        {vista !== 'detalle' && (
-                                            <div className={styles.socioMeta}>siempre con el detalle completo</div>
-                                        )}
-                                    </td>
-                                    {meses.map(mes => (
-                                        <td key={mes} className={styles.montoCellWrap}>
-                                            <MontoStack valores={totalesPorMes[mes]} />
-                                        </td>
-                                    ))}
-                                    {vista !== 'cruces' && (
-                                        <td className={styles.totalCellWrap}>
-                                            <MontoStack valores={totalGeneralPagina} />
-                                        </td>
-                                    )}
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
 

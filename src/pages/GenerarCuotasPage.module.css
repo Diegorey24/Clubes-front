@@ -110,6 +110,24 @@
     color: var(--primary-600);
 }
 
+.confirmDetail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.85rem 1.1rem;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    color: var(--gray-700);
+    text-align: left;
+}
+
+.confirmDetail span:first-child {
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
 .result {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-lg);

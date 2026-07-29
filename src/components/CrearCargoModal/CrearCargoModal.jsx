@@ -21,6 +21,26 @@ const importeSegunIntegrantes = (cantidad, categoria) => {
     return categoria.Importe7; // 7 o más integrantes
 };
 
+// Un socio puede tener un descuento porcentual propio (DescuentoPorcentaje,
+// viene en el join de GET /socios/:id y /socios-historicos/:id). 0, null,
+// undefined o '' significan "sin descuento cargado".
+const tieneDescuentoValido = (socio) => {
+    const valor = socio?.DescuentoPorcentaje;
+    if (valor === null || valor === undefined || valor === '') return false;
+    const numero = Number(valor);
+    return !Number.isNaN(numero) && numero !== 0;
+};
+
+// Aplica el descuento del socio (si tiene uno cargado) sobre un importe que
+// el sistema ya calculó solo -- rubro con importe fijo, o el que sale de la
+// categoría/grupo familiar. Siempre redondea a dos decimales.
+const aplicarDescuentoSocio = (importe, socio) => {
+    const base = Number(importe) || 0;
+    if (!tieneDescuentoValido(socio)) return Number(base.toFixed(2));
+    const descuento = Number(socio.DescuentoPorcentaje);
+    return Number((base * (1 - descuento / 100)).toFixed(2));
+};
+
 const CargoIcon = (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m-6 4h6m-6 4h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
@@ -98,7 +118,8 @@ const CrearCargoModal = ({ isOpen, onClose, onSuccess, socio, usuario, showToast
         setFormError('');
 
         if (Number(rubroSeleccionado.IdRubro) !== ID_RUBRO_CATEGORIA) {
-            setImporte(Number(rubroSeleccionado.Importe) !== 0 ? rubroSeleccionado.Importe : '');
+            const importeFijo = Number(rubroSeleccionado.Importe) !== 0 ? Number(rubroSeleccionado.Importe) : null;
+            setImporte(importeFijo !== null ? aplicarDescuentoSocio(importeFijo, socio) : '');
             return;
         }
 
@@ -116,13 +137,15 @@ const CrearCargoModal = ({ isOpen, onClose, onSuccess, socio, usuario, showToast
             const categoria = await getCategoriaSocio(socio.CatCod);
             const grupoNro = Number(socio.GruFamNro) || 0;
 
+            let importeBase;
             if (grupoNro === 0) {
-                setImporte(categoria.CatPrc ?? '');
+                importeBase = categoria.CatPrc;
             } else {
                 const grupo = await getGrupoFamiliar(grupoNro);
                 const cantidadIntegrantes = 1 + (grupo?.integrantes?.length || 0);
-                setImporte(importeSegunIntegrantes(cantidadIntegrantes, categoria) ?? '');
+                importeBase = importeSegunIntegrantes(cantidadIntegrantes, categoria);
             }
+            setImporte(importeBase !== null && importeBase !== undefined ? aplicarDescuentoSocio(importeBase, socio) : '');
         } catch (err) {
             console.error('Error calculando importe por categoría:', err);
             setFormError('No se pudo calcular el importe de la categoría. Intentá nuevamente.');
@@ -283,10 +306,16 @@ const CrearCargoModal = ({ isOpen, onClose, onSuccess, socio, usuario, showToast
                                     <span className={styles.hint}>
                                         {calculandoImporte
                                             ? 'Calculando importe según la categoría del socio...'
-                                            : 'Importe calculado según la categoría del socio.'}
+                                            : tieneDescuentoValido(socio)
+                                                ? `Importe calculado según la categoría del socio, con el ${socio.DescuentoPorcentaje}% de descuento del socio ya aplicado.`
+                                                : 'Importe calculado según la categoría del socio.'}
                                     </span>
                                 ) : rubroImporteFijo ? (
-                                    <span className={styles.hint}>Importe fijo del rubro seleccionado.</span>
+                                    <span className={styles.hint}>
+                                        {tieneDescuentoValido(socio)
+                                            ? `Importe fijo del rubro, con el ${socio.DescuentoPorcentaje}% de descuento del socio ya aplicado.`
+                                            : 'Importe fijo del rubro seleccionado.'}
+                                    </span>
                                 ) : rubro ? (
                                     <span className={styles.hint}>Este rubro no tiene importe fijo, ingresalo manualmente.</span>
                                 ) : null}

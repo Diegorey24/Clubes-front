@@ -132,6 +132,23 @@
     white-space: nowrap;
 }
 
+.summaryGroup {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.deudaPill {
+    padding: 0.5rem 1rem;
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
 /* ===== Fila de fechas + "solo con deuda" ===== */
 .dateFiltersRow {
     display: flex;
@@ -453,18 +470,6 @@
     outline: none;
     border-color: var(--primary-400);
     box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
-}
-
-/* Fila de totales de la página actual */
-.footerRow td {
-    background: hsl(210, 76%, 97%);
-    border-top: 2px solid var(--gray-100);
-}
-
-.footerRow .socioCell {
-    background: hsl(210, 76%, 97%);
-    font-weight: 700;
-    color: var(--primary-700);
 }
 
 .noData {
