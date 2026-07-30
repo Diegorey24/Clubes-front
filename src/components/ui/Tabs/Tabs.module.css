@@ -1,0 +1,51 @@
+.tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--gray-100);
+    padding: 0 var(--spacing-lg);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.tab {
+    padding: 0.9rem 1.1rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--gray-500);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tab:hover {
+    color: var(--gray-800);
+}
+
+.active {
+    color: var(--primary-600);
+    border-bottom-color: var(--primary-600);
+}
+
+/* En mobile dejamos que las tabs se scrolleen horizontalmente (swipe) en
+   vez de comprimirlas todas en el ancho de pantalla: con varias pestañas
+   de texto largo, forzarlas a repartirse el espacio las vuelve
+   ilegibles. Un strip scrolleable es el patrón estándar en mobile. */
+@media (max-width: 640px) {
+    .tabs {
+        padding: 0 var(--spacing-md);
+    }
+
+    .tab {
+        padding: 0.85rem 0.9rem;
+        font-size: 0.85rem;
+    }
+}

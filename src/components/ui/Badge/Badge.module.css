@@ -1,0 +1,56 @@
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.neutral {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.primary {
+    background: hsl(210, 76%, 96%);
+    color: var(--primary-700);
+}
+
+.success {
+    background: hsl(142, 65%, 95%);
+    color: var(--success-600);
+}
+
+.danger {
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
+}
+
+.glass {
+    background: rgba(255, 255, 255, 0.22);
+    color: white;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* Variantes "glass" con tinte de color, para transmitir estado (activo/
+   inactivo) incluso sobre headers de color, sin perder la estética
+   translúcida. */
+.glass-success {
+    background: rgba(34, 197, 94, 0.28);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.glass-danger {
+    background: rgba(248, 113, 113, 0.3);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}

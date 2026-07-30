@@ -1,0 +1,529 @@
+.page {
+    padding: var(--spacing-xl);
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+/* ===== Filtros ===== */
+.filtersCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.searchBox {
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.searchBox > svg {
+    position: absolute;
+    left: 1.1rem;
+    color: var(--gray-400);
+    pointer-events: none;
+}
+
+.searchBox input {
+    width: 100%;
+    padding: 0.9rem 2.75rem 0.9rem 3rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    font-size: 0.9375rem;
+    transition: all var(--transition-fast);
+    background: white;
+    color: var(--gray-900);
+}
+
+.searchBox input::placeholder {
+    color: var(--gray-400);
+}
+
+.searchBox input:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
+.clearButton {
+    position: absolute;
+    top: 50%;
+    right: 0.6rem;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.clearButton:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.filtersRow {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.filterGroup {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.filterSelect {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0.65rem 2.5rem 0.65rem 1rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    background-color: white;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none' stroke='%23667085' stroke-width='2'%3E%3Cpath d='M6 8l4 4 4-4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    background-size: 16px;
+    color: var(--gray-700);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-width: 180px;
+    height: 42px;
+}
+
+.filterSelect:hover {
+    border-color: var(--gray-300);
+}
+
+.filterSelect:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
+.resultsCount {
+    padding: 0.5rem 1rem;
+    background: hsl(210, 76%, 97%);
+    color: var(--primary-700);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.summaryGroup {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.deudaPill {
+    padding: 0.5rem 1rem;
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+/* ===== Fila de fechas + "solo con deuda" ===== */
+.dateFiltersRow {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.dateFilterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.dateFilterGroup label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dateInput {
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: var(--gray-800);
+    height: 34px;
+    transition: all var(--transition-fast);
+}
+
+.dateInput:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
+.checkboxGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding-bottom: 0.5rem;
+}
+
+.checkboxGroup label {
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkboxGroup input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-500);
+    cursor: pointer;
+}
+
+/* ===== Planilla ===== */
+.tableContainer {
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    overflow: auto;
+    border: 1px solid var(--gray-100);
+    max-width: 100%;
+}
+
+.table {
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    min-width: 100%;
+}
+
+.table th {
+    background: var(--gray-50);
+    color: var(--gray-500);
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--gray-100);
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--gray-50);
+    color: var(--gray-700);
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover td {
+    background-color: var(--gray-50);
+}
+
+/* Columna de socio "pegada" a la izquierda: con muchos meses la tabla
+   scrollea horizontal, pero siempre se sabe de qué socio es cada fila. */
+.socioHeaderCell,
+.socioCell {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: white;
+    text-align: left;
+    min-width: 220px;
+}
+
+.socioHeaderCell {
+    background: var(--gray-50);
+    z-index: 2;
+}
+
+.table tbody tr:hover .socioCell {
+    background-color: var(--gray-50);
+}
+
+.socioNombre {
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.socioMeta {
+    color: var(--gray-400);
+    font-size: 0.78rem;
+}
+
+.mesHeader {
+    min-width: 148px;
+}
+
+.totalHeader {
+    min-width: 148px;
+}
+
+/* Fila arriba de la tabla: leyenda de colores a la izquierda, botón de
+   exportar a la derecha. */
+.legendRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-sm);
+}
+
+.legend {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: 0 0.2rem;
+    flex-wrap: wrap;
+}
+
+.legendItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+}
+
+.legendDot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.legendDot.adeudado {
+    background: var(--gray-400);
+}
+
+.legendDot.recibido {
+    background: var(--success-500);
+}
+
+.legendDot.pendiente {
+    background: var(--error-500);
+}
+
+/* Celda con el desglose Adeudado / Recibido / Pendiente de un mes (o del
+   total). Cada renglón tiene su propio color, consistente con la leyenda. */
+.montoCellWrap {
+    padding: 0.5rem 0.9rem !important;
+}
+
+.montoStack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.montoRow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    line-height: 1.3;
+}
+
+.montoLabel {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: inherit;
+    opacity: 0.75;
+}
+
+.montoAdeudado {
+    color: var(--gray-500);
+}
+
+.montoRecibido {
+    color: var(--success-600);
+}
+
+.montoPendiente {
+    color: var(--gray-400);
+}
+
+.montoPendiente.montoDeuda {
+    color: var(--error-600);
+    font-weight: 700;
+}
+
+.montoPendiente.montoDeuda .montoLabel {
+    opacity: 1;
+}
+
+.montoVacio {
+    color: var(--gray-300);
+}
+
+.totalCellWrap {
+    padding: 0.5rem 0.9rem !important;
+    border-left: 1px solid var(--gray-100);
+}
+
+.totalCellWrap .montoRow {
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+/* ===== Vista "Importe": un número por celda ===== */
+.importePagado {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--success-600);
+}
+
+.importePendiente {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--error-600);
+}
+
+/* ===== Vista "Cruces": solo un indicador de saldado ===== */
+.cruzCellWrap {
+    padding: 0.75rem 1rem !important;
+}
+
+.cruzMarca {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: hsl(142, 65%, 94%);
+    color: var(--success-600);
+    font-weight: 700;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+/* Selector de "Vista" (Detalle / Importe / Cruces): mismo look de los
+   selects de fecha, pero un poco más angosto ya que solo tiene 3 opciones. */
+.vistaSelect {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 0.5rem 2.25rem 0.5rem 0.85rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    background-color: white;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none' stroke='%23667085' stroke-width='2'%3E%3Cpath d='M6 8l4 4 4-4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 14px;
+    color: var(--gray-700);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    height: 34px;
+    min-width: 130px;
+}
+
+.vistaSelect:hover {
+    border-color: var(--gray-300);
+}
+
+.vistaSelect:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
+.noData {
+    color: var(--gray-500);
+    text-align: center;
+    padding: var(--spacing-xl);
+    background-color: var(--gray-50);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--gray-200);
+    font-size: 0.9375rem;
+}
+
+.error {
+    padding: var(--spacing-lg);
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    font-weight: 500;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* ===== Paginado ===== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+    color: var(--gray-600);
+}
+
+.pageButton {
+    min-width: 112px;
+}
+
+.pageIndicator {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-500);
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: var(--spacing-md);
+    }
+
+    .filtersRow,
+    .dateFiltersRow {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filterGroup {
+        flex-direction: column;
+    }
+}

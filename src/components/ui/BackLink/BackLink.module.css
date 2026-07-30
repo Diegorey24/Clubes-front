@@ -1,0 +1,27 @@
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: var(--spacing-md);
+    padding: 0.35rem 0;
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.backLink svg {
+    transition: transform var(--transition-fast);
+}
+
+.backLink:hover {
+    color: var(--primary-600);
+}
+
+.backLink:hover svg {
+    transform: translateX(-3px);
+}

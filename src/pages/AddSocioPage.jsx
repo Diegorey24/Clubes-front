@@ -14,15 +14,22 @@ const AddSocioPage = ({ showToast }) => {
             const newSocio = await createSocio(formData);
             showToast(`Socio creado exitosamente. Número: ${newSocio.SocNro}`, 'success');
 
-            // Navigate back to home after 1.5 seconds
+            // OJO: antes esto vivía en un "finally", así que isSubmitting
+            // pasaba a false apenas terminaba el POST -- el overlay de
+            // "Creando socio..." desaparecía de golpe, volvía a mostrarse
+            // el wizard (ya inútil, el socio ya estaba creado) durante
+            // 1.5s, y recién ahí navegaba. Ese parpadeo era lo que se veía
+            // como "se cierra y no deja ver nada". Ahora el overlay se
+            // queda montado hasta que efectivamente navegamos, y en vez de
+            // volver al Panel general, vamos directo a la ficha del socio
+            // recién creado para que quede visible que sí se creó.
             setTimeout(() => {
-                navigate('/');
-            }, 1500);
+                navigate(newSocio?.SocNro ? `/socios/${newSocio.SocNro}` : '/');
+            }, 1200);
         } catch (error) {
             console.error('Error creating socio:', error);
             const errorMessage = error.response?.data?.error || error.message || 'Error al crear el socio';
             showToast(errorMessage, 'error');
-        } finally {
             setIsSubmitting(false);
         }
     };

@@ -18,7 +18,7 @@ const Header = () => {
                             </defs>
                         </svg>
                     </div>
-                    <span className={styles.logoText}>Gestión de Clubes</span>
+                    <span className={styles.logoText}>Gestión de socios</span>
                 </div>
                 <div className={styles.headerStatus}>
                     <div className={styles.statusIndicator}>

@@ -1,24 +1,72 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { deleteSocio } from '../../services/api';
+import { deleteSocio, fetchItems } from '../../services/api';
+import { TableActions, Badge, ConfirmDialog } from '../ui';
+import CobroSocioModal from '../CobroSocioModal/CobroSocioModal';
 import styles from './SociosTable.module.css';
 
-const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/socios' }) => {
+const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/socios', usuario, showToast }) => {
     const navigate = useNavigate();
-    console.log(socios);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
+    const [motivos, setMotivos] = useState([]);
+    const [motivoBaja, setMotivoBaja] = useState('');
+    const [cobroTarget, setCobroTarget] = useState(null);
+
+    useEffect(() => {
+        const loadMotivos = async () => {
+            try {
+                const data = await fetchItems('motivos-baja');
+                setMotivos(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error('Error loading motivos de baja:', error);
+            }
+        };
+        loadMotivos();
+    }, []);
+
     const handleRowClick = (id) => {
         navigate(`${detailPath}/${id}`);
     };
 
-    const handleDelete = async (e, id) => {
-        e.stopPropagation();
-        if (window.confirm('¿Está seguro que desea dar de baja a este socio? Esta acción moverá al socio al histórico.')) {
-            try {
-                await deleteSocio(id);
-                if (onSocioDeleted) onSocioDeleted();
-            } catch (error) {
-                console.error('Error deleting socio:', error);
-                alert('Error al dar de baja al socio');
-            }
+    const requestDelete = (socio) => {
+        setDeleteError('');
+        setMotivoBaja('');
+        setDeleteTarget(socio);
+    };
+
+    const closeConfirm = () => {
+        if (deleting) return;
+        setDeleteTarget(null);
+        setDeleteError('');
+        setMotivoBaja('');
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        if (!motivoBaja) {
+            setDeleteError('Seleccioná el motivo de la baja para continuar.');
+            return;
+        }
+        const motivoSeleccionado = motivos.find((m) => String(m.Id) === String(motivoBaja));
+        const motivoTexto = motivoSeleccionado?.Descripcion?.trim();
+        if (!motivoTexto) {
+            setDeleteError('Seleccioná el motivo de la baja para continuar.');
+            return;
+        }
+        setDeleting(true);
+        setDeleteError('');
+        try {
+            await deleteSocio(deleteTarget.SocNro, motivoTexto);
+            setDeleteTarget(null);
+            setMotivoBaja('');
+            if (onSocioDeleted) onSocioDeleted();
+        } catch (error) {
+            console.error('Error deleting socio:', error);
+            setDeleteError('No se pudo dar de baja al socio. Intentá nuevamente.');
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -45,7 +93,7 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
                         <th>Nombre Completo</th>
                         <th>Categoría</th>
                         <th>Radio</th>
-                        {!readOnly && <th style={{ width: '80px', textAlign: 'center' }}>Acciones</th>}
+                        {!readOnly && <th className={styles.actionsHeader}>Acciones</th>}
                     </tr>
                 </thead>
                 <tbody>
@@ -55,38 +103,87 @@ const SociosTable = ({ socios, onSocioDeleted, readOnly = false, detailPath = '/
                             onClick={() => handleRowClick(socio.SocNro)}
                             title="Ver detalles del socio"
                         >
-                            <td>{socio.SocNro}</td>
+                            <td className={styles.muted}>{socio.SocNro}</td>
                             <td>{socio.SocDocIde}</td>
-                            <td>{socio.PrimerNombre} {socio.PrimerApellido}</td>
-                            <td>{socio.CategoriaNombre || '-'}</td>
-                            <td>{socio.RadioNombre || '-'}</td>
+                            <td className={styles.nameCell}>{socio.PrimerNombre} {socio.PrimerApellido}</td>
+                            <td>
+                                {socio.CategoriaNombre
+                                    ? <Badge variant="primary">{socio.CategoriaNombre}</Badge>
+                                    : <span className={styles.muted}>-</span>}
+                            </td>
+                            <td className={styles.muted}>{socio.RadioNombre || '-'}</td>
                             {!readOnly && (
-                                <td onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
-                                    <button
-                                        className={styles.editButton}
-                                        onClick={() => navigate(`/socios/edit/${socio.SocNro}`)}
-                                        title="Editar socio"
-                                    >
-                                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        className={`${styles.editButton} ${styles.deleteButton}`}
-                                        onClick={(e) => handleDelete(e, socio.SocNro)}
-                                        title="Dar de Baja"
-                                        style={{ color: '#ef4444' }}
-                                    >
-                                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                                <td className={styles.actionsCell}>
+                                    <TableActions
+                                        onCobrar={usuario?.nroCaja ? () => setCobroTarget(socio) : undefined}
+                                        onView={() => navigate(`${detailPath}/${socio.SocNro}`)}
+                                        onEdit={() => navigate(`/socios/edit/${socio.SocNro}`)}
+                                        onDelete={() => requestDelete(socio)}
+                                    />
                                 </td>
                             )}
                         </tr>
                     ))}
                 </tbody>
             </table>
+
+            <ConfirmDialog
+                isOpen={!!deleteTarget}
+                title="¿Dar de baja al socio?"
+                description="Esta acción moverá al socio al histórico. Vas a poder consultarlo ahí más adelante."
+                confirmLabel="Sí, dar de baja"
+                cancelLabel="Cancelar"
+                variant="danger"
+                loading={deleting}
+                onConfirm={confirmDelete}
+                onCancel={closeConfirm}
+            >
+                {deleteTarget && (
+                    <div className={styles.confirmSummary}>
+                        <div className={styles.confirmName}>
+                            {deleteTarget.PrimerNombre} {deleteTarget.PrimerApellido}
+                        </div>
+                        <div className={styles.confirmMeta}>
+                            <span>N.° {deleteTarget.SocNro}</span>
+                            <span>·</span>
+                            <span>CI {deleteTarget.SocDocIde}</span>
+                        </div>
+                    </div>
+                )}
+
+                <div className={styles.motivoField}>
+                    <label htmlFor="motivoBaja">
+                        Motivo de la baja <span className={styles.required}>*</span>
+                    </label>
+                    <select
+                        id="motivoBaja"
+                        className={styles.motivoSelect}
+                        value={motivoBaja}
+                        onChange={(e) => {
+                            setMotivoBaja(e.target.value);
+                            if (deleteError) setDeleteError('');
+                        }}
+                        disabled={deleting}
+                    >
+                        <option value="">Seleccione un motivo...</option>
+                        {motivos.map((m) => (
+                            <option key={m.Id} value={m.Id}>{m.Descripcion?.trim()}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {deleteError && <p className={styles.confirmError}>{deleteError}</p>}
+            </ConfirmDialog>
+
+            <CobroSocioModal
+                isOpen={!!cobroTarget}
+                onClose={() => setCobroTarget(null)}
+                onSuccess={() => {}}
+                presetCi={cobroTarget?.SocDocIde || null}
+                caja={usuario?.nroCaja}
+                usuario={usuario?.nombre}
+                showToast={showToast}
+            />
         </div>
     );
 };

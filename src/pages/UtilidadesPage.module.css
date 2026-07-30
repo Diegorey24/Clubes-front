@@ -1,0 +1,195 @@
+.page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+}
+
+/* ===== Paneles agrupados (Procesos / Informes / Tablas / Parámetros) =====
+   Cada sección tiene un color de acento propio (borde superior, badge del
+   título y tinte de los íconos) para orientar de un vistazo, manteniendo
+   el mismo tratamiento sobrio (pasteles, sin saturar) en toda la página. */
+.panel {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-top: 3px solid transparent;
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.panelHeader {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+}
+
+.panelIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.procesos {
+    border-top-color: hsl(258, 60%, 62%);
+}
+
+.procesos .panelIcon {
+    background: hsl(258, 70%, 96%);
+    color: hsl(258, 55%, 50%);
+}
+
+.procesos .tileIcon {
+    background: hsl(258, 70%, 96%);
+    color: hsl(258, 55%, 50%);
+}
+
+.procesos .tile:hover {
+    border-color: hsl(258, 60%, 78%);
+    background: hsl(258, 70%, 98%);
+    color: hsl(258, 55%, 40%);
+}
+
+.procesos .tile:hover .tileIcon {
+    background: hsl(258, 70%, 91%);
+    color: hsl(258, 55%, 42%);
+}
+
+.informes {
+    border-top-color: var(--primary-500);
+}
+
+.informes .panelIcon {
+    background: hsl(210, 76%, 96%);
+    color: var(--primary-600);
+}
+
+.tablas {
+    border-top-color: hsl(174, 55%, 42%);
+}
+
+.tablas .panelIcon {
+    background: hsl(174, 55%, 94%);
+    color: hsl(174, 60%, 32%);
+}
+
+.tablas .tileIcon {
+    background: hsl(174, 55%, 94%);
+    color: hsl(174, 60%, 32%);
+}
+
+.tablas .tile:hover {
+    border-color: hsl(174, 50%, 68%);
+    background: hsl(174, 55%, 97%);
+    color: hsl(174, 60%, 28%);
+}
+
+.tablas .tile:hover .tileIcon {
+    background: hsl(174, 55%, 88%);
+    color: hsl(174, 60%, 28%);
+}
+
+.parametros {
+    border-top-color: hsl(30, 85%, 55%);
+}
+
+.parametros .panelIcon {
+    background: hsl(30, 90%, 95%);
+    color: hsl(30, 80%, 42%);
+}
+
+.parametros .tileIcon {
+    background: hsl(30, 90%, 95%);
+    color: hsl(30, 80%, 42%);
+}
+
+.parametros .tile:hover {
+    border-color: hsl(30, 80%, 72%);
+    background: hsl(30, 90%, 98%);
+    color: hsl(30, 80%, 36%);
+}
+
+.parametros .tile:hover .tileIcon {
+    background: hsl(30, 90%, 90%);
+    color: hsl(30, 80%, 36%);
+}
+
+/* Grilla de columnas fijas: todos los tiles del mismo tamaño. Con un
+   número fijo de columnas (en vez de auto-fill/auto-fit) una fila
+   incompleta (ej. 7 tiles -> 4 + 3) simplemente deja celdas vacías al
+   final en vez de estirar los últimos tiles para "rellenar" el ancho. */
+.tileGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+}
+
+.tile {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-100);
+    background: white;
+    text-decoration: none;
+    color: var(--gray-700);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    transition: all var(--transition-fast);
+}
+
+.tile:hover {
+    border-color: var(--primary-400);
+    background: hsl(210, 76%, 98%);
+    color: var(--primary-700);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.tileIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    background: var(--gray-100);
+    color: var(--gray-500);
+    flex-shrink: 0;
+    transition: all var(--transition-fast);
+}
+
+.tile:hover .tileIcon {
+    background: hsl(210, 76%, 96%);
+    color: var(--primary-600);
+}
+
+@media (max-width: 900px) {
+    .tileGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: var(--spacing-md);
+    }
+
+    .tileGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .tileGrid {
+        grid-template-columns: 1fr;
+    }
+}

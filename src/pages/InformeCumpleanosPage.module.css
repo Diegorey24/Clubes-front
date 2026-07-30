@@ -1,0 +1,208 @@
+.page {
+    padding: var(--spacing-xl);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ===== Filtros ===== */
+.filterBar {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+}
+
+.filterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.filterGroup label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.input {
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: var(--gray-800);
+    height: 34px;
+    transition: all var(--transition-fast);
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
+.resultsCount {
+    padding: 0.5rem 1rem;
+    background: hsl(210, 76%, 97%);
+    color: var(--primary-700);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+/* ===== Tabla ===== */
+.tableContainer {
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    overflow: auto;
+    border: 1px solid var(--gray-100);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    min-width: 900px;
+}
+
+.table th {
+    background: var(--gray-50);
+    color: var(--gray-500);
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--gray-100);
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--gray-50);
+    color: var(--gray-700);
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.table tr:hover td {
+    background-color: var(--gray-50);
+}
+
+.nameCell {
+    text-align: left;
+    min-width: 200px;
+}
+
+.socioNombre {
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.socioLink {
+    display: inline-block;
+    font-weight: 600;
+    color: var(--primary-700);
+    text-decoration: none;
+}
+
+.socioLink:hover {
+    text-decoration: underline;
+}
+
+.muted {
+    color: var(--gray-400);
+    font-size: 0.8125rem;
+}
+
+/* ===== Acciones de saludo (email / WhatsApp) ===== */
+.saludoActions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.saludoBtn,
+.saludoBtnWhatsapp {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+}
+
+.saludoBtn {
+    background: hsl(210, 76%, 95%);
+    color: var(--primary-700);
+}
+
+.saludoBtn:hover {
+    background: hsl(210, 76%, 88%);
+}
+
+.saludoBtnWhatsapp {
+    background: hsl(142, 65%, 94%);
+    color: var(--success-600);
+}
+
+.saludoBtnWhatsapp:hover {
+    background: hsl(142, 65%, 86%);
+}
+
+.noData {
+    color: var(--gray-500);
+    text-align: center;
+    padding: var(--spacing-xl);
+    background-color: var(--gray-50);
+    border-radius: var(--radius-lg);
+    border: 1px dashed var(--gray-200);
+    font-size: 0.9375rem;
+}
+
+.error {
+    padding: var(--spacing-lg);
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    font-weight: 500;
+    margin-bottom: var(--spacing-lg);
+}
+
+@media (max-width: 640px) {
+    .page {
+        padding: var(--spacing-md);
+    }
+
+    .filterBar {
+        align-items: stretch;
+    }
+
+    .filterGroup {
+        width: 100%;
+    }
+
+    .input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .resultsCount {
+        margin-left: 0;
+    }
+}

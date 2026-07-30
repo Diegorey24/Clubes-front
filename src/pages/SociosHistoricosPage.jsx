@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react';
 import { getSociosHistoricos, fetchItems } from '../services/api';
 import SociosTable from '../components/SociosTable/SociosTable';
-import styles from './SociosPage.module.css'; // Reusing styles
+import { Button, PageHeader } from '../components/ui';
+import styles from './SociosPage.module.css'; // Reutiliza los estilos de SociosPage
+
+const ExportIcon = (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+);
 
 const SociosHistoricosPage = ({ showToast }) => {
     const [socios, setSocios] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [exporting, setExporting] = useState(false);
     const [filters, setFilters] = useState({
         search: '',
         categoria: '',
@@ -18,7 +26,11 @@ const SociosHistoricosPage = ({ showToast }) => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [limit] = useState(10);
+    const [limit] = useState(50);
+
+    // Texto de búsqueda "asentado" tras el debounce (separado de filters.search,
+    // igual que en SociosPage, para que el input no se sienta trabado).
+    const [debouncedSearch, setDebouncedSearch] = useState('');
 
     // Load filters data
     useEffect(() => {
@@ -38,15 +50,25 @@ const SociosHistoricosPage = ({ showToast }) => {
         loadFilters();
     }, []);
 
-    // Debounce search
+    // Debounce: solo el texto de búsqueda espera a que el usuario termine de tipear.
     useEffect(() => {
         const timer = setTimeout(() => {
-            setPage(1); // Reset to page 1 on search change
-            loadSocios(1, filters.search, filters.categoria, filters.radio);
+            setDebouncedSearch(filters.search);
         }, 500);
-
         return () => clearTimeout(timer);
-    }, [filters, page]);
+    }, [filters.search]);
+
+    // Cada vez que cambia algún filtro "efectivo", volvemos a la página 1.
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch, filters.categoria, filters.radio]);
+
+    // Única fuente de carga: reacciona a la página o a los filtros ya resueltos.
+    // Paginar (Anterior/Siguiente) solo cambia `page`, sin resetear nada.
+    useEffect(() => {
+        loadSocios(page, debouncedSearch, filters.categoria, filters.radio);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, debouncedSearch, filters.categoria, filters.radio]);
 
     const loadSocios = async (currentPage, search, cat, rad) => {
         setLoading(true);
@@ -73,97 +95,105 @@ const SociosHistoricosPage = ({ showToast }) => {
 
     return (
         <div className={styles.page}>
-            <div className={styles.header}>
-                <h2 className={styles.title}>Socios Históricos</h2>
-            </div>
+            <PageHeader
+                title="Socios Históricos"
+                subtitle="Consultá los socios dados de baja"
+                actions={
+                    <Button
+                        variant="soft-success"
+                        icon={ExportIcon}
+                        loading={exporting}
+                        onClick={async () => {
+                            if (exporting) return;
+                            setExporting(true);
+                            try {
+                                const { exportSociosHistoricos } = await import('../services/api');
+                                const blob = await exportSociosHistoricos(filters);
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = 'socios_historicos.xlsx';
+                                document.body.appendChild(a);
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                            } catch (error) {
+                                console.error('Error exporting:', error);
+                                showToast('Error al exportar datos', 'error');
+                            } finally {
+                                setExporting(false);
+                            }
+                        }}
+                    >
+                        {exporting ? 'Exportando...' : 'Exportar Excel'}
+                    </Button>
+                }
+            />
 
-            <div className={styles.filters}>
+            <div className={styles.filtersCard}>
                 <div className={styles.searchBox}>
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                     </svg>
                     <input
                         type="text"
-                        placeholder="Buscar por nombre o cédula..."
+                        placeholder="Buscar por nombre, cédula o número de socio"
                         value={filters.search}
                         onChange={(e) => {
-                            const val = e.target.value;
-                            setFilters(prev => ({ ...prev, search: val }));
-                            setPage(1);
+                            setFilters(prev => ({ ...prev, search: e.target.value }));
                         }}
                     />
                     {filters.search && (
                         <button
+                            type="button"
                             className={styles.clearButton}
                             onClick={() => {
                                 setFilters(prev => ({ ...prev, search: '' }));
+                                setDebouncedSearch('');
                                 setPage(1);
                             }}
                             title="Limpiar búsqueda"
+                            aria-label="Limpiar búsqueda"
                         >
-                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                             </svg>
                         </button>
                     )}
                 </div>
 
-                <div className={styles.filterGroup}>
-                    <select
-                        value={filters.categoria}
-                        onChange={(e) => setFilters(prev => ({ ...prev, categoria: e.target.value, page: 1 }))}
-                        className={styles.filterSelect}
-                    >
-                        <option value="">Todas las Categorías</option>
-                        {categorias.map(cat => (
-                            <option key={cat.CatCod} value={cat.CatCod}>
-                                {cat.CatNom}
-                            </option>
-                        ))}
-                    </select>
+                <div className={styles.filtersRow}>
+                    <div className={styles.filterGroup}>
+                        <select
+                            value={filters.categoria}
+                            onChange={(e) => setFilters(prev => ({ ...prev, categoria: e.target.value }))}
+                            className={styles.filterSelect}
+                        >
+                            <option value="">Todas las categorías</option>
+                            {categorias.map(cat => (
+                                <option key={cat.CatCod} value={cat.CatCod}>
+                                    {cat.CatNom}
+                                </option>
+                            ))}
+                        </select>
 
-                    <select
-                        value={filters.radio}
-                        onChange={(e) => setFilters(prev => ({ ...prev, radio: e.target.value, page: 1 }))}
-                        className={styles.filterSelect}
-                    >
-                        <option value="">Todos los Radios</option>
-                        {radios.map(radio => (
-                            <option key={radio.IdRadio} value={radio.IdRadio}>
-                                {radio.Nombre}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                        <select
+                            value={filters.radio}
+                            onChange={(e) => setFilters(prev => ({ ...prev, radio: e.target.value }))}
+                            className={styles.filterSelect}
+                        >
+                            <option value="">Todos los radios</option>
+                            {radios.map(radio => (
+                                <option key={radio.IdRadio} value={radio.IdRadio}>
+                                    {radio.Nombre}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                <button
-                    className={styles.exportButton}
-                    onClick={async () => {
-                        try {
-                            const { exportSociosHistoricos } = await import('../services/api');
-                            const blob = await exportSociosHistoricos(filters);
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = 'socios_historicos.xlsx';
-                            document.body.appendChild(a);
-                            a.click();
-                            window.URL.revokeObjectURL(url);
-                            document.body.removeChild(a);
-                        } catch (error) {
-                            console.error('Error exporting:', error);
-                            showToast('Error al exportar datos', 'error');
-                        }
-                    }}
-                >
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Exportar Excel
-                </button>
-
-                <div className={styles.resultsCount}>
-                    {totalItems} socio{totalItems !== 1 ? 's' : ''} registrado{totalItems !== 1 ? 's' : ''}
+                    <div className={styles.resultsCount}>
+                        {totalItems} socio{totalItems !== 1 ? 's' : ''} en histórico
+                    </div>
                 </div>
             </div>
 
@@ -184,27 +214,31 @@ const SociosHistoricosPage = ({ showToast }) => {
                         {/* Pagination Controls */}
                         {totalPages > 1 && (
                             <div className={styles.pagination}>
-                                <button
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    className={styles.pageButton}
                                     onClick={handlePrevious}
                                     disabled={page === 1}
-                                    className={styles.pageButton}
                                 >
                                     Anterior
-                                </button>
-                                <span>Página {page} de {totalPages}</span>
-                                <button
+                                </Button>
+                                <span className={styles.pageIndicator}>Página {page} de {totalPages}</span>
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    className={styles.pageButton}
                                     onClick={handleNext}
                                     disabled={page === totalPages}
-                                    className={styles.pageButton}
                                 >
                                     Siguiente
-                                </button>
+                                </Button>
                             </div>
                         )}
                     </>
                 )
             }
-        </div >
+        </div>
     );
 };
 

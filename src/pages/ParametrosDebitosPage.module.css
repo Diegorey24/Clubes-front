@@ -1,104 +1,109 @@
-.tableContainer {
-    background: white;
+.page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+}
+
+.filtersCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(148, 163, 184, 0.16);
     border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
-    overflow: hidden;
-    animation: fadeInUp 0.5s ease-out;
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
 }
 
-.table {
+.searchBox {
     width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
-.table thead {
-    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
-    color: white;
+.searchBox > svg {
+    position: absolute;
+    left: 1.1rem;
+    color: var(--gray-400);
+    pointer-events: none;
 }
 
-.table thead th {
-    padding: var(--spacing-md) var(--spacing-lg);
-    text-align: left;
-    font-weight: 600;
-    font-size: 0.8125rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-}
-
-.table tbody tr {
-    border-bottom: 1px solid var(--gray-200);
+.searchBox input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.9rem 2.75rem 0.9rem 3rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    font-size: 0.9375rem;
     transition: all var(--transition-fast);
+    background: white;
+    color: var(--gray-900);
 }
 
-.table tbody tr:last-child {
-    border-bottom: none;
+.searchBox input::placeholder {
+    color: var(--gray-400);
 }
 
-.table tbody tr:hover {
-    background: var(--gray-50);
+.searchBox input:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
 }
 
-.table tbody td {
-    padding: var(--spacing-md) var(--spacing-lg);
+.clearButton {
+    position: absolute;
+    top: 50%;
+    right: 0.6rem;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    background: none;
+    border: none;
+    border-radius: 50%;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.clearButton:hover {
+    background: var(--gray-100);
     color: var(--gray-700);
 }
 
-.nameCell {
+.clearButton:active {
+    transform: translateY(-50%) scale(0.92);
+}
+
+.resultsCount {
+    align-self: flex-start;
+    padding: 0.5rem 1rem;
+    background: hsl(210, 76%, 97%);
+    color: var(--primary-700);
+    border-radius: 999px;
     font-weight: 600;
-    color: var(--gray-800);
-}
-
-.input {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--gray-300);
-    border-radius: var(--radius-md);
-    font-size: 0.875rem;
-    transition: all var(--transition-fast);
-}
-
-.input:focus {
-    outline: none;
-    border-color: var(--primary-500);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
-
-.actionsCell {
+    font-size: 0.8125rem;
     white-space: nowrap;
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.error {
+    padding: var(--spacing-lg);
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    font-weight: 500;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-    .tableContainer {
-        overflow-x: auto;
-    }
-
-    .table {
-        min-width: 700px;
-    }
-}
-
-@media (max-width: 768px) {
-    .table {
-        font-size: 0.8125rem;
-    }
-
-    .table thead th,
-    .table tbody td {
-        padding: var(--spacing-sm) var(--spacing-md);
+@media (max-width: 640px) {
+    .page {
+        padding: var(--spacing-md);
     }
 }

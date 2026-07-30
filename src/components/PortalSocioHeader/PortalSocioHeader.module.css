@@ -1,0 +1,102 @@
+.header {
+    background: white;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+}
+
+.container {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+    height: 70px;
+    box-sizing: border-box;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    min-width: 0;
+}
+
+.logo {
+    height: 44px;
+    width: auto;
+    flex-shrink: 0;
+}
+
+.brandText {
+    font-size: 1.05rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-700), var(--accent-600));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    white-space: nowrap;
+}
+
+.userMenu {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-shrink: 0;
+}
+
+.userName {
+    font-weight: 600;
+    color: var(--gray-700);
+    font-size: 0.9rem;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.logoutButton {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--gray-200);
+    background: white;
+    color: var(--gray-600);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.logoutButton:hover {
+    color: white;
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
+    border-color: transparent;
+    box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 640px) {
+    .container {
+        padding: 0 var(--spacing-md);
+        height: 62px;
+    }
+
+    .brandText {
+        display: none;
+    }
+
+    .userName {
+        display: none;
+    }
+
+    .logo {
+        height: 36px;
+    }
+}

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { buscarCuotasPendientes, cobrarCuotasSocio, getMediosPago } from '../../services/api';
+import { Button } from '../ui';
+import { generarReciboPDF } from '../../utils/reciboPdf';
 import styles from './CobroSocioModal.module.css';
-import jsPDF from 'jspdf';
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(amount || 0);
@@ -14,9 +15,115 @@ const formatAniomes = (aniomes) => {
     return `${String(month).padStart(2, '0')}/${year}`;
 };
 
-const nuevaFormaPago = (importe = '') => ({ medioPago: '', importe });
+// SocNom viene como char fijo y a veces llega en blanco. En ese caso
+// armamos el nombre con Primer/Segundo Nombre y Apellido, trimeados.
+const nombreCompleto = (s) => {
+    if (!s) return '';
+    const socNom = (s.SocNom || '').trim();
+    if (socNom) return socNom;
+    const partes = [s.PrimerNombre, s.SegundoNombre, s.PrimerApellido, s.SegundoApellido]
+        .map((p) => (p || '').trim())
+        .filter(Boolean);
+    return partes.join(' ');
+};
 
-const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast }) => {
+// Convierte un importe tipeado en formato es-UY ("1.234,56") a número. Si
+// no tiene coma, se asume que ya es un número plano (ej. "1234").
+const parseImporte = (value) => {
+    if (value === null || value === undefined || value === '') return 0;
+    if (typeof value === 'number') return value;
+    const clean = String(value).trim();
+    if (clean.includes(',')) {
+        return parseFloat(clean.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    return parseFloat(clean.replace(/\./g, '')) || 0;
+};
+
+// Formatea un número a "1.234,56" (miles con punto, decimales con coma),
+// para prellenar el input de importe.
+const numberToInputValue = (num) => {
+    if (num === '' || num === null || num === undefined || isNaN(num)) return '';
+    return new Intl.NumberFormat('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+};
+
+// Reformatea lo que el usuario va tipeando en el input de importe: solo
+// dígitos y una coma decimal (máx. 2 decimales), con puntos de miles en la
+// parte entera. Se aplica en cada onChange para que el campo siempre se vea
+// en formato es-UY mientras se escribe.
+const formatImporteInput = (raw) => {
+    if (raw === '' || raw === null || raw === undefined) return '';
+    let value = String(raw).replace(/[^\d,]/g, '');
+    const firstComma = value.indexOf(',');
+    if (firstComma !== -1) {
+        value = value.slice(0, firstComma + 1) + value.slice(firstComma + 1).replace(/,/g, '');
+    }
+    let [intPart, decPart] = value.split(',');
+    intPart = (intPart || '').replace(/^0+(?=\d)/, '');
+    if (decPart !== undefined) decPart = decPart.slice(0, 2);
+    const intFormatted = intPart ? intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+    return decPart !== undefined ? `${intFormatted},${decPart}` : intFormatted;
+};
+
+// El objeto "socio" de /caja/cuotas-pendientes no trae la categoría; viene
+// en cada cuota (CategoriaNombre). Se toma la de la primera cuota cobrada
+// que la tenga (en la práctica todas comparten la misma categoría vigente).
+const categoriaDeCuotas = (cuotasList) => {
+    const conCategoria = (cuotasList || []).find((c) => (c.CategoriaNombre || '').trim());
+    return (conCategoria?.CategoriaNombre || '').trim();
+};
+
+// Deja solo caracteres seguros para un nombre de archivo (sin barras, dos
+// puntos, etc.), preservando espacios internos.
+const sanitizeFilenamePart = (value) => String(value ?? '').trim().replace(/[\\/:*?"<>|]/g, '');
+
+const nuevaFormaPago = (importe = '') => ({ medioPago: '', importe: importe === '' ? '' : numberToInputValue(importe) });
+
+const CobrarIcon = (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m9-8a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+const CloseIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
+const SearchIcon = (
+    <svg width="18" height="18" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+    </svg>
+);
+
+const PlusIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+);
+
+const RemoveIcon = (
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
+const BackArrowIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+);
+
+const DownloadIcon = (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+);
+
+// presetCi: cuando se conoce de antemano el socio a cobrar (ej. desde la fila
+// de un socio en la lista de Socios), se salta por completo el paso de
+// búsqueda y se cargan sus cuotas pendientes directamente al abrir el modal.
+const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast, presetCi = null }) => {
     const [query, setQuery] = useState('');
     const [searching, setSearching] = useState(false);
     const [socio, setSocio] = useState(null);
@@ -39,13 +146,32 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
             setSelectedIds(new Set());
             setPaso('cuotas');
             setFormasPago([nuevaFormaPago()]);
+            setReciboData(null);
             getMediosPago()
                 .then((data) => setMediosPago(Array.isArray(data) ? data : []))
                 .catch(() => setMediosPago([]));
+            if (presetCi) {
+                buscar({ ci: presetCi });
+            }
         }
-    }, [isOpen]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, presetCi]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKey = (e) => {
+            if (e.key === 'Escape' && !submitting) onClose?.();
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, submitting]);
 
     if (!isOpen) return null;
+
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget && !submitting) onClose?.();
+    };
 
     const buscar = async (params) => {
         setSearching(true);
@@ -95,7 +221,7 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
         .filter((c) => selectedIds.has(c.Id))
         .reduce((acc, c) => acc + (parseFloat(c.Importe) || 0), 0);
 
-    const totalFormasPago = formasPago.reduce((acc, fp) => acc + (parseFloat(fp.importe) || 0), 0);
+    const totalFormasPago = formasPago.reduce((acc, fp) => acc + parseImporte(fp.importe), 0);
     const restante = total - totalFormasPago;
 
     const handleIrAFormaPago = () => {
@@ -114,7 +240,8 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
     const handleChangeFormaPago = (index, field, value) => {
         setFormasPago((prev) => {
             const next = [...prev];
-            next[index] = { ...next[index], [field]: value };
+            const nextValue = field === 'importe' ? formatImporteInput(value) : value;
+            next[index] = { ...next[index], [field]: nextValue };
             return next;
         });
     };
@@ -129,7 +256,7 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
 
     const formasPagoValidas =
         formasPago.length > 0 &&
-        formasPago.every((fp) => fp.medioPago && parseFloat(fp.importe) > 0) &&
+        formasPago.every((fp) => fp.medioPago && parseImporte(fp.importe) > 0) &&
         Math.abs(restante) < 0.01;
 
     const handleCobrar = async () => {
@@ -143,18 +270,20 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                 caja,
                 usuario,
                 ci: socio.SocDocIde,
-                nombreSocio: socio.SocNom?.trim(),
+                nombreSocio: nombreCompleto(socio),
                 cuotaIds: Array.from(selectedIds),
                 formasPago: formasPago.map((fp) => ({
                     medioPago: Number(fp.medioPago),
-                    importe: parseFloat(fp.importe) || 0,
+                    importe: parseImporte(fp.importe),
                 })),
             });
             showToast(`Cobro registrado: ${formatCurrency(total)}`, 'success');
             setReciboData({
                 nroDoc: result.nroDoc,
-                nombreSocio: socio.SocNom?.trim(),
+                nombreSocio: nombreCompleto(socio),
                 ci: socio.SocDocIde,
+                socNro: socio.SocNro,
+                categoriaSocio: categoriaDeCuotas(cuotas.filter(c => selectedIds.has(c.Id))),
                 cuotas: cuotas.filter(c => selectedIds.has(c.Id)),
                 formasPago,
                 mediosPago,
@@ -172,110 +301,126 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
         }
     };
 
-    const generarPDF = () => {
-        const doc = new jsPDF();
-        const { nroDoc, nombreSocio, ci, cuotas, formasPago, mediosPago, total, fecha, usuario, caja } = reciboData;
+    // El armado real del PDF vive en utils/reciboPdf.js (compartido con otros
+    // lugares que necesitan imprimir un comprobante, ej. la cuenta corriente
+    // del socio). Acá solo se adaptan los datos de este cobro a ese formato.
+    const generarPDF = async () => {
+        try {
+            const { nroDoc, nombreSocio, ci, socNro, categoriaSocio: catSocio, cuotas, formasPago, mediosPago, total, fecha, usuario, caja } = reciboData;
 
-        // Encabezado
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Club Aguada', 105, 20, { align: 'center' });
+            // Nombre-cedula-nrosocio, ej. "CABRERA PEREYRA RODRIGO PEDRO-35541563-1234.pdf".
+            const nombreArchivo = [nombreSocio, ci, socNro]
+                .map(sanitizeFilenamePart)
+                .filter(Boolean)
+                .join('-');
 
-        doc.setFontSize(13);
-        doc.text('Recibo de Cobro', 105, 30, { align: 'center' });
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Recibo N°: ${nroDoc}`, 20, 45);
-        doc.text(`Fecha: ${fecha}`, 20, 52);
-        doc.text(`Caja: ${caja}  |  Usuario: ${usuario}`, 20, 59);
-
-        // Datos del socio
-        doc.setFont('helvetica', 'bold');
-        doc.text('Socio:', 20, 72);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${nombreSocio}  —  CI: ${ci}`, 20, 79);
-
-        // Detalle de cuotas
-        doc.setFont('helvetica', 'bold');
-        doc.text('Detalle:', 20, 92);
-        doc.setFont('helvetica', 'normal');
-
-        let y = 99;
-        for (const c of cuotas) {
-            const periodo = formatAniomes(c.Aniomes);
-            const rubro = c.RubroNombre?.trim() || `Rubro ${c.Rubro}`;
-            const importe = formatCurrency(c.Importe);
-            doc.text(`${periodo}  ${rubro}`, 20, y);
-            doc.text(importe, 190, y, { align: 'right' });
-            y += 7;
+            await generarReciboPDF({
+                nroDoc,
+                titulo: 'Recibo de Cobro',
+                nombreSocio,
+                ci,
+                categoriaSocio: catSocio,
+                items: cuotas.map((c) => ({
+                    periodo: formatAniomes(c.Aniomes),
+                    concepto: c.RubroNombre?.trim() || `Rubro ${c.Rubro}`,
+                    importe: c.Importe,
+                })),
+                total,
+                fecha,
+                meta: `Caja N° ${caja}  ·  Atendido por ${usuario}`,
+                formasPago: formasPago.map((fp) => {
+                    const mp = mediosPago.find((m) => String(m.IdMedioPago) === String(fp.medioPago));
+                    return {
+                        descripcion: mp?.Descripcion?.trim() || `Medio ${fp.medioPago}`,
+                        importe: parseImporte(fp.importe),
+                    };
+                }),
+                filenamePrefix: 'recibo',
+                nombreArchivo: nombreArchivo || undefined,
+            });
+        } catch (err) {
+            console.error('Error generando el PDF del recibo:', err);
+            showToast('No se pudo generar el PDF del recibo', 'error');
         }
-
-        // Total
-        doc.line(20, y + 2, 190, y + 2);
-        y += 8;
-        doc.setFont('helvetica', 'bold');
-        doc.text('Total:', 20, y);
-        doc.text(formatCurrency(total), 190, y, { align: 'right' });
-
-        // Formas de pago
-        y += 12;
-        doc.setFont('helvetica', 'bold');
-        doc.text('Forma de pago:', 20, y);
-        doc.setFont('helvetica', 'normal');
-        y += 7;
-        for (const fp of formasPago) {
-            const mp = mediosPago.find(m => String(m.IdMedioPago) === String(fp.medioPago));
-            const desc = mp?.Descripcion?.trim() || `Medio ${fp.medioPago}`;
-            doc.text(`${desc}: ${formatCurrency(fp.importe)}`, 20, y);
-            y += 7;
-        }
-
-        doc.save(`recibo_${nroDoc}.pdf`);
     };
 
     return (
-        <div className={styles.overlay} onClick={onClose}>
-            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.overlay} onClick={handleBackdropClick}>
+            <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="cobro-socio-title">
                 <div className={styles.header}>
-                    <h3 className={styles.title}>Cobrar Cuota a Socio</h3>
-                    <button className={styles.closeBtn} onClick={onClose}>×</button>
+                    <div className={styles.headerLeft}>
+                        <span className={styles.iconWrap}>{CobrarIcon}</span>
+                        <div>
+                            <h3 id="cobro-socio-title" className={styles.title}>Cobrar Cuota a Socio</h3>
+                            <p className={styles.stepLabel}>
+                                {paso === 'cuotas'
+                                    ? (presetCi ? 'Paso 1 · Seleccionar cuotas' : 'Paso 1 · Buscar socio y seleccionar cuotas')
+                                    : 'Paso 2 · Forma de pago'}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        className={styles.closeBtn}
+                        onClick={onClose}
+                        disabled={submitting}
+                        aria-label="Cerrar"
+                    >
+                        {CloseIcon}
+                    </button>
                 </div>
 
                 <div className={styles.body}>
                     {paso === 'cuotas' && (
                         <>
-                            <form onSubmit={handleBuscar} className={styles.searchRow}>
-                                <input
-                                    type="text"
-                                    placeholder="Cédula o nombre del socio"
-                                    value={query}
-                                    onChange={(e) => setQuery(e.target.value)}
-                                    autoFocus
-                                />
-                                <button type="submit" className="btn-secondary" disabled={searching}>
-                                    {searching ? 'Buscando...' : 'Buscar'}
-                                </button>
-                            </form>
+                            {!presetCi && (
+                                <form onSubmit={handleBuscar} className={styles.searchRow}>
+                                    <div className={styles.searchInputWrap}>
+                                        <span className={styles.searchIcon}>{SearchIcon}</span>
+                                        <input
+                                            type="text"
+                                            className={styles.searchInput}
+                                            placeholder="Cédula o nombre del socio"
+                                            value={query}
+                                            onChange={(e) => setQuery(e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <Button type="submit" variant="soft" loading={searching}>
+                                        Buscar
+                                    </Button>
+                                </form>
+                            )}
 
-                            {candidatos && (
+                            {!presetCi && candidatos && (
                                 <div className={styles.candidatos}>
                                     {candidatos.map((c) => (
                                         <button
                                             key={c.SocNro}
+                                            type="button"
                                             className={styles.candidatoBtn}
                                             onClick={() => handleElegirCandidato(c)}
                                         >
-                                            {c.SocNom?.trim()} — CI {c.SocDocIde}
+                                            <span className={styles.candidatoNombre}>{nombreCompleto(c)}</span>
+                                            <span className={styles.candidatoMeta}>CI {c.SocDocIde}</span>
                                         </button>
                                     ))}
                                 </div>
                             )}
 
+                            {presetCi && searching && !socio && (
+                                <p className={styles.empty}>Buscando cuotas pendientes...</p>
+                            )}
+
+                            {presetCi && !searching && !socio && !candidatos && (
+                                <p className={styles.empty}>No se pudo cargar la información del socio.</p>
+                            )}
+
                             {socio && (
                                 <>
                                     <div className={styles.socioInfo}>
-                                        {socio.SocNom?.trim()} — CI {socio.SocDocIde} — Socio N° {socio.SocNro}
+                                        <span className={styles.socioNombre}>{nombreCompleto(socio)}</span>
+                                        <span className={styles.socioMeta}>CI {socio.SocDocIde} · Socio N.° {socio.SocNro}</span>
                                     </div>
 
                                     {cuotas.length === 0 ? (
@@ -284,24 +429,27 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                                         <>
                                             <div className={styles.cuotasList}>
                                                 {cuotas.map((c) => (
-                                                    <div className={styles.cuotaRow} key={c.Id}>
+                                                    <label
+                                                        className={`${styles.cuotaRow} ${selectedIds.has(c.Id) ? styles.cuotaRowChecked : ''}`}
+                                                        key={c.Id}
+                                                        htmlFor={`cuota-${c.Id}`}
+                                                    >
                                                         <input
                                                             type="checkbox"
+                                                            className={styles.checkbox}
                                                             checked={selectedIds.has(c.Id)}
                                                             onChange={() => toggleCuota(c.Id)}
                                                             id={`cuota-${c.Id}`}
                                                         />
-                                                        <label htmlFor={`cuota-${c.Id}`}>
-                                                            <span>{formatAniomes(c.Aniomes)}</span>
-                                                            <span>{c.Rubro} - {c.RubroNombre?.trim() || 'Sin rubro'}</span>
-                                                            <span>{formatCurrency(c.Importe)}</span>
-                                                        </label>
-                                                    </div>
+                                                        <span className={styles.cuotaPeriodo}>{formatAniomes(c.Aniomes)}</span>
+                                                        <span className={styles.cuotaRubro}>{c.RubroNombre?.trim() || `Rubro ${c.Rubro}`}</span>
+                                                        <span className={styles.cuotaImporte}>{formatCurrency(c.Importe)}</span>
+                                                    </label>
                                                 ))}
                                             </div>
                                             <div className={styles.totalBox}>
-                                                <span>Total seleccionado</span>
-                                                <span>{formatCurrency(total)}</span>
+                                                <span className={styles.totalLabel}>Total seleccionado</span>
+                                                <span className={styles.totalValue}>{formatCurrency(total)}</span>
                                             </div>
                                         </>
                                     )}
@@ -313,16 +461,18 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                     {paso === 'pago' && (
                         <>
                             <div className={styles.socioInfo}>
-                                {socio.SocNom?.trim()} — CI {socio.SocDocIde} — Total a cobrar: {formatCurrency(total)}
+                                <span className={styles.socioNombre}>{nombreCompleto(socio)}</span>
+                                <span className={styles.socioMeta}>CI {socio.SocDocIde} · Total a cobrar: {formatCurrency(total)}</span>
                             </div>
 
-
-                            <div className={styles.cuotasList}>
+                            <div className={styles.formasPagoList}>
                                 {formasPago.map((fp, index) => (
                                     <div className={styles.formaPagoRow} key={index}>
                                         <select
+                                            className={styles.select}
                                             value={fp.medioPago}
                                             onChange={(e) => handleChangeFormaPago(index, 'medioPago', e.target.value)}
+                                            disabled={!!reciboData}
                                         >
                                             <option value="">Seleccione medio de pago</option>
                                             {mediosPago.map((mp) => (
@@ -332,74 +482,97 @@ const CobroSocioModal = ({ isOpen, onClose, onSuccess, caja, usuario, showToast 
                                             ))}
                                         </select>
                                         <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
+                                            type="text"
+                                            inputMode="decimal"
+                                            className={styles.input}
                                             placeholder="Importe"
                                             value={fp.importe}
                                             onChange={(e) => handleChangeFormaPago(index, 'importe', e.target.value)}
+                                            disabled={!!reciboData}
                                         />
-                                        {formasPago.length > 1 && (
+                                        {formasPago.length > 1 && !reciboData && (
                                             <button
                                                 type="button"
                                                 className={styles.removeFormaPagoBtn}
                                                 onClick={() => handleQuitarFormaPago(index)}
+                                                aria-label="Quitar forma de pago"
                                             >
-                                                ×
+                                                {RemoveIcon}
                                             </button>
                                         )}
                                     </div>
                                 ))}
                             </div>
 
-                            <button type="button" className="btn-secondary" onClick={handleAgregarFormaPago}>
-                                + Agregar otra forma de pago
-                            </button>
+                            {!reciboData && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    icon={PlusIcon}
+                                    onClick={handleAgregarFormaPago}
+                                >
+                                    Agregar otra forma de pago
+                                </Button>
+                            )}
 
-                            <div className={`${styles.totalBox} ${Math.abs(restante) >= 0.01 ? styles.totalBoxAlerta : ''}`}>
-                                <span>Restante por asignar</span>
-                                <span>{formatCurrency(restante)}</span>
-                            </div>
+                            {reciboData ? (
+                                <p className={styles.reciboListo}>
+                                    Cobro registrado correctamente. Ya podés descargar el recibo.
+                                </p>
+                            ) : (
+                                <div className={`${styles.totalBox} ${Math.abs(restante) >= 0.01 ? styles.totalBoxAlerta : ''}`}>
+                                    <span className={styles.totalLabel}>Restante por asignar</span>
+                                    <span className={styles.totalValue}>{formatCurrency(restante)}</span>
+                                </div>
+                            )}
                         </>
                     )}
 
                     <div className={styles.actions}>
                         {paso === 'cuotas' && (
                             <>
-                                <button type="button" className="btn-secondary" onClick={onClose}>
+                                <Button type="button" variant="secondary" onClick={onClose}>
                                     Cancelar
-                                </button>
+                                </Button>
                                 {socio && cuotas.length > 0 && (
-                                    <button
+                                    <Button
                                         type="button"
-                                        className="btn-primary"
+                                        variant="primary"
                                         onClick={handleIrAFormaPago}
                                         disabled={selectedIds.size === 0}
                                     >
                                         Continuar
-                                    </button>
+                                    </Button>
                                 )}
                             </>
                         )}
                         {paso === 'pago' && (
-                            <>
-                                <button type="button" className="btn-secondary" onClick={handleVolverACuotas}>
-                                    Volver
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn-primary"
-                                    onClick={handleCobrar}
-                                    disabled={submitting || !formasPagoValidas}
-                                >
-                                    {submitting ? 'Procesando...' : 'Cobrar'}
-                                </button>
-                                {reciboData && (
-                                    <button type="button" className="btn-secondary" onClick={generarPDF}>
+                            reciboData ? (
+                                <>
+                                    <Button type="button" variant="secondary" onClick={onClose}>
+                                        Cerrar
+                                    </Button>
+                                    <Button type="button" variant="outline" icon={DownloadIcon} onClick={generarPDF}>
                                         Descargar recibo
-                                    </button>
-                                )}
-                            </>
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Button type="button" variant="secondary" icon={BackArrowIcon} onClick={handleVolverACuotas}>
+                                        Volver
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="primary"
+                                        onClick={handleCobrar}
+                                        loading={submitting}
+                                        disabled={!formasPagoValidas}
+                                    >
+                                        Cobrar
+                                    </Button>
+                                </>
+                            )
                         )}
                     </div>
                 </div>

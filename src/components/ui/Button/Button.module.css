@@ -1,0 +1,246 @@
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-family: inherit;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    user-select: none;
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--primary-500);
+    outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ===== Tamaños ===== */
+.sm {
+    height: 34px;
+    padding: 0 0.85rem;
+    font-size: 0.8125rem;
+    border-radius: var(--radius-md);
+}
+
+.md {
+    height: 42px;
+    padding: 0 1.25rem;
+    font-size: 0.9375rem;
+}
+
+.lg {
+    height: 50px;
+    padding: 0 1.75rem;
+    font-size: 1rem;
+}
+
+.iconOnly {
+    padding: 0;
+    width: 42px;
+    gap: 0;
+}
+
+.iconOnly.sm {
+    width: 34px;
+}
+
+.iconOnly.lg {
+    width: 50px;
+}
+
+.icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullWidth {
+    width: 100%;
+}
+
+/* ===== Variantes ===== */
+.primary {
+    background: linear-gradient(135deg, var(--primary-600), var(--accent-500));
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--primary-700), var(--accent-600));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.secondary {
+    background: white;
+    color: var(--gray-700);
+    border: 2px solid var(--gray-300);
+}
+
+.secondary:hover:not(:disabled) {
+    background: var(--gray-50);
+    border-color: var(--gray-400);
+    transform: translateY(-2px);
+}
+
+.success {
+    background: linear-gradient(135deg, var(--success-500), var(--success-600));
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.success:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--success-600), hsl(142, 71%, 30%));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.danger {
+    background: linear-gradient(135deg, var(--error-500), var(--error-600));
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.danger:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--error-600), hsl(0, 84%, 42%));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.outline {
+    background: transparent;
+    color: var(--primary-600);
+    border: 2px solid var(--primary-500);
+}
+
+.outline:hover:not(:disabled) {
+    background: var(--primary-50, hsl(210, 76%, 96%));
+    transform: translateY(-2px);
+}
+
+.ghost {
+    background: transparent;
+    color: var(--gray-600);
+    border: 1px solid transparent;
+}
+
+.ghost:hover:not(:disabled) {
+    background: var(--gray-100);
+    color: var(--gray-800);
+}
+
+.ghost-danger {
+    background: transparent;
+    color: var(--error-500);
+    border: 1px solid transparent;
+}
+
+.ghost-danger:hover:not(:disabled) {
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
+}
+
+/* Variantes "soft": fondo pastel, sin gradiente ni sombra fuerte.
+   Pensadas para toolbars/headers donde varios botones conviven y
+   se busca una estética más suave y pareja entre ellos. */
+.soft {
+    background: hsl(210, 76%, 96%);
+    color: var(--primary-700);
+    border: 1px solid transparent;
+}
+
+.soft:hover:not(:disabled) {
+    background: hsl(210, 76%, 91%);
+    transform: translateY(-1px);
+}
+
+.soft-success {
+    background: hsl(142, 65%, 95%);
+    color: var(--success-600);
+    border: 1px solid transparent;
+}
+
+.soft-success:hover:not(:disabled) {
+    background: hsl(142, 65%, 89%);
+    transform: translateY(-1px);
+}
+
+.soft-danger {
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
+    border: 1px solid transparent;
+}
+
+.soft-danger:hover:not(:disabled) {
+    background: hsl(0, 84%, 92%);
+    transform: translateY(-1px);
+}
+
+.soft-warning {
+    background: hsl(30, 95%, 94%);
+    color: hsl(25, 85%, 40%);
+    border: 1px solid transparent;
+}
+
+.soft-warning:hover:not(:disabled) {
+    background: hsl(30, 95%, 88%);
+    transform: translateY(-1px);
+}
+
+/* Variante "glass": para usar sobre headers/fondos de color (el mismo
+   criterio que Badge variant="glass"). */
+.glass {
+    background: rgba(255, 255, 255, 0.16);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.glass:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.26);
+    transform: translateY(-1px);
+}
+
+/* ===== Loading ===== */
+.spinner {
+    width: 1em;
+    height: 1em;
+    font-size: 1.1rem;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: btn-spin 0.7s linear infinite;
+}
+
+.secondary .spinner,
+.outline .spinner,
+.ghost .spinner,
+.ghost-danger .spinner,
+.soft .spinner,
+.soft-success .spinner,
+.soft-danger .spinner,
+.soft-warning .spinner {
+    border: 2px solid var(--gray-300);
+    border-top-color: var(--gray-600);
+}
+
+@keyframes btn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { checkCedula, fetchItems } from '../../services/api';
+import { ConfirmDialog } from '../ui';
 import styles from './AddSocioWizard.module.css';
 
 const AddSocioWizard = ({ onSubmit, showToast }) => {
@@ -10,8 +11,9 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
     const [cedulaValidated, setCedulaValidated] = useState(false);
     const [categorias, setCategorias] = useState([]);
     const [radios, setRadios] = useState([]);
-    const [formasPago, setFormasPago] = useState([]);
     const [nacionalidades, setNacionalidades] = useState([]);
+    const [mostrarSegundoAutorizado, setMostrarSegundoAutorizado] = useState(false);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
     const [formData, setFormData] = useState({
         // Step 1
@@ -29,32 +31,40 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
         SocEMail: '',
         SocTel: '',
         SocTelCel: '',
-        ResponsableDomicilio: '',
         // Step 4
         SocFchIng: new Date().toISOString().split('T')[0],
         CatCod: '',
-        ForPagCod: '',
+        ForPagCod: 1, // Forma de pago fija: ya no se pregunta en el wizard.
         RadCod: '',
         SocFchMed: '',
-        // Step 5
+        // Step 5 (opcionales: familiares y responsables autorizados)
+        SocNomPad: '',
+        SocTelPad: '',
+        SocNomMad: '',
+        SocTelMad: '',
+        SocAuto1CI: '',
+        SocAuto1: '',
+        SocAuto1Tel: '',
+        SocAuto2CI: '',
+        SocAuto2: '',
+        SocAuto2Tel: '',
+        // Step 6
         SocEmeMov: '',
         SocObserva: ''
     });
 
-    const totalSteps = 5;
+    const totalSteps = 6;
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [catsData, radiosData, formasData, nacData] = await Promise.all([
+                const [catsData, radiosData, nacData] = await Promise.all([
                     fetchItems('categoriaSocios'),
                     fetchItems('radios'),
-                    fetchItems('formapago'),
                     fetchItems('nacionalidades')
                 ]);
                 setCategorias(Array.isArray(catsData) ? catsData : []);
                 setRadios(Array.isArray(radiosData) ? radiosData : []);
-                setFormasPago(Array.isArray(formasData) ? formasData : []);
                 setNacionalidades(Array.isArray(nacData) ? nacData : []);
             } catch (error) {
                 console.error('Error loading initial data:', error);
@@ -70,6 +80,26 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
             ...prev,
             [name]: value
         }));
+    };
+
+    // Nombres y apellidos (del socio, padres y responsables autorizados) se
+    // guardan y muestran en mayúsculas.
+    const handleUppercaseChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value.toUpperCase()
+        }));
+    };
+
+    const handleQuitarSegundoAutorizado = () => {
+        setFormData(prev => ({
+            ...prev,
+            SocAuto2CI: '',
+            SocAuto2: '',
+            SocAuto2Tel: ''
+        }));
+        setMostrarSegundoAutorizado(false);
     };
 
     const validateCedula = async () => {
@@ -109,10 +139,12 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                 return formData.PrimerNombre && formData.PrimerApellido &&
                     formData.SocFchNac && formData.SocSex;
             case 3:
-                return formData.SocDom && formData.SocEMail;
+                return formData.SocDom;
             case 4:
                 return formData.SocFchIng && formData.CatCod;
             case 5:
+                return true;
+            case 6:
                 return true;
             default:
                 return true;
@@ -159,18 +191,20 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
     };
 
     const handleCancel = () => {
-        if (window.confirm('¿Está seguro que desea cancelar? Se perderán todos los datos ingresados.')) {
-            navigate('/');
-        }
+        setShowCancelConfirm(true);
     };
 
-    console.log(radios);
+    const confirmCancel = () => {
+        setShowCancelConfirm(false);
+        navigate('/');
+    };
+
     return (
         <div className={styles.wizard}>
             <div className={styles.wizardHeader}>
                 <h2 className={styles.title}>Agregar Nuevo Socio</h2>
                 <div className={styles.stepIndicator}>
-                    {[1, 2, 3, 4, 5].map(step => (
+                    {[1, 2, 3, 4, 5, 6].map(step => (
                         <div key={step} className={styles.stepWrapper}>
                             <div
                                 className={`${styles.step} ${step === currentStep ? styles.active : ''
@@ -193,11 +227,32 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                     {currentStep === 2 && 'Información Personal'}
                     {currentStep === 3 && 'Información de Contacto'}
                     {currentStep === 4 && 'Detalles de Membresía'}
-                    {currentStep === 5 && 'Información Adicional'}
+                    {currentStep === 5 && 'Familiares y Responsables Autorizados'}
+                    {currentStep === 6 && 'Información Adicional'}
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className={styles.form}>
+            <form
+                onSubmit={handleSubmit}
+                onKeyDown={(e) => {
+                    // Sin esto, al presionar Enter dentro de cualquier input
+                    // el navegador dispara el submit implícito del form: en
+                    // el último paso eso crea el socio sin que el usuario
+                    // haya tocado "Crear Socio". Interceptamos Enter acá y lo
+                    // tratamos como "Siguiente" en los pasos intermedios, y
+                    // lo ignoramos en el último paso (requiere click
+                    // explícito). Los textarea quedan afuera para no romper
+                    // el salto de línea. e.defaultPrevented evita duplicar
+                    // la validación de cédula del paso 1, que ya maneja su
+                    // propio Enter.
+                    if (e.key !== 'Enter' || e.target.tagName === 'TEXTAREA' || e.defaultPrevented) return;
+                    e.preventDefault();
+                    if (currentStep < totalSteps) {
+                        nextStep();
+                    }
+                }}
+                className={styles.form}
+            >
                 {/* Step 1: Cedula Validation */}
                 {currentStep === 1 && (
                     <div className={styles.stepContent}>
@@ -249,8 +304,8 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                                     id="PrimerNombre"
                                     name="PrimerNombre"
                                     value={formData.PrimerNombre}
-                                    onChange={handleInputChange}
-                                    placeholder="Ej: Juan"
+                                    onChange={handleUppercaseChange}
+                                    placeholder="Ej: JUAN"
                                 />
                             </div>
                             <div className={styles.formGroup}>
@@ -260,8 +315,8 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                                     id="SegundoNombre"
                                     name="SegundoNombre"
                                     value={formData.SegundoNombre}
-                                    onChange={handleInputChange}
-                                    placeholder="Ej: Carlos"
+                                    onChange={handleUppercaseChange}
+                                    placeholder="Ej: CARLOS"
                                 />
                             </div>
                         </div>
@@ -276,8 +331,8 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                                     id="PrimerApellido"
                                     name="PrimerApellido"
                                     value={formData.PrimerApellido}
-                                    onChange={handleInputChange}
-                                    placeholder="Ej: Pérez"
+                                    onChange={handleUppercaseChange}
+                                    placeholder="Ej: PÉREZ"
                                 />
                             </div>
                             <div className={styles.formGroup}>
@@ -287,8 +342,8 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                                     id="SegundoApellido"
                                     name="SegundoApellido"
                                     value={formData.SegundoApellido}
-                                    onChange={handleInputChange}
-                                    placeholder="Ej: González"
+                                    onChange={handleUppercaseChange}
+                                    placeholder="Ej: GONZÁLEZ"
                                 />
                             </div>
                         </div>
@@ -360,9 +415,7 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                         </div>
 
                         <div className={styles.formGroup}>
-                            <label htmlFor="SocEMail">
-                                Email <span className={styles.required}>*</span>
-                            </label>
+                            <label htmlFor="SocEMail">Email</label>
                             <input
                                 type="email"
                                 id="SocEMail"
@@ -382,7 +435,7 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                                     name="SocTel"
                                     value={formData.SocTel}
                                     onChange={handleInputChange}
-                                    placeholder="Ej: 099123456"
+                                    placeholder="Ej: 25605895"
                                 />
                             </div>
                             <div className={styles.formGroup}>
@@ -397,18 +450,6 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                                 />
                             </div>
                         </div>
-
-                        <div className={styles.formGroup}>
-                            <label htmlFor="ResponsableDomicilio">Responsable del Domicilio</label>
-                            <input
-                                type="text"
-                                id="ResponsableDomicilio"
-                                name="ResponsableDomicilio"
-                                value={formData.ResponsableDomicilio}
-                                onChange={handleInputChange}
-                                placeholder="Nombre del responsable"
-                            />
-                        </div>
                     </div>
                 )}
 
@@ -417,7 +458,7 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                     <div className={styles.stepContent}>
                         <div className={styles.formRow}>
                             <div className={styles.formGroup}>
-                                /       <label htmlFor="SocFchIng">
+                                <label htmlFor="SocFchIng">
                                     Fecha de Ingreso <span className={styles.required}>*</span>
                                 </label>
                                 <input
@@ -429,7 +470,7 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                                 />
                             </div>
                             <div className={styles.formGroup}>
-                                <label htmlFor="SocFchMed">Fecha Médica</label>
+                                <label htmlFor="SocFchMed">Vigencia de la ficha médica</label>
                                 <input
                                     type="date"
                                     id="SocFchMed"
@@ -476,28 +517,171 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                                 </select>
                             </div>
                         </div>
-
-                        <div className={styles.formGroup}>
-                            <label htmlFor="ForPagCod">Forma de Pago</label>
-                            <select
-                                id="ForPagCod"
-                                name="ForPagCod"
-                                value={formData.ForPagCod}
-                                onChange={handleInputChange}
-                            >
-                                <option value="">Seleccione Forma de Pago...</option>
-                                {formasPago.map(fp => (
-                                    <option key={fp.IdFormaPago} value={fp.IdFormaPago}>
-                                        {fp.Nombre}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
                     </div>
                 )}
 
-                {/* Step 5: Additional Information */}
+                {/* Step 5: Familiares y Responsables Autorizados (opcional) */}
                 {currentStep === 5 && (
+                    <div className={styles.stepContent}>
+                        <p className={styles.stepDescription}>
+                            Estos datos son opcionales. Completalos si corresponde, por ejemplo para socios menores de edad.
+                        </p>
+
+                        <h4 className={styles.sectionTitle}>Padres</h4>
+                        <div className={styles.formRow}>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="SocNomPad">Nombre del padre</label>
+                                <input
+                                    type="text"
+                                    id="SocNomPad"
+                                    name="SocNomPad"
+                                    value={formData.SocNomPad}
+                                    onChange={handleUppercaseChange}
+                                    placeholder="Nombre completo del padre"
+                                />
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="SocTelPad">Teléfono del padre</label>
+                                <input
+                                    type="tel"
+                                    id="SocTelPad"
+                                    name="SocTelPad"
+                                    value={formData.SocTelPad}
+                                    onChange={handleInputChange}
+                                    placeholder="Ej: 099123456"
+                                />
+                            </div>
+                        </div>
+                        <div className={styles.formRow}>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="SocNomMad">Nombre de la madre</label>
+                                <input
+                                    type="text"
+                                    id="SocNomMad"
+                                    name="SocNomMad"
+                                    value={formData.SocNomMad}
+                                    onChange={handleUppercaseChange}
+                                    placeholder="Nombre completo de la madre"
+                                />
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="SocTelMad">Teléfono de la madre</label>
+                                <input
+                                    type="tel"
+                                    id="SocTelMad"
+                                    name="SocTelMad"
+                                    value={formData.SocTelMad}
+                                    onChange={handleInputChange}
+                                    placeholder="Ej: 099123456"
+                                />
+                            </div>
+                        </div>
+
+                        <h4 className={styles.sectionTitle}>Responsable autorizado 1</h4>
+                        <div className={styles.formGroup}>
+                            <label htmlFor="SocAuto1">Nombre</label>
+                            <input
+                                type="text"
+                                id="SocAuto1"
+                                name="SocAuto1"
+                                value={formData.SocAuto1}
+                                onChange={handleUppercaseChange}
+                                placeholder="Nombre completo"
+                            />
+                        </div>
+                        <div className={styles.formRow}>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="SocAuto1CI">Cédula</label>
+                                <input
+                                    type="text"
+                                    id="SocAuto1CI"
+                                    name="SocAuto1CI"
+                                    value={formData.SocAuto1CI}
+                                    onChange={handleInputChange}
+                                    placeholder="Ej: 12345678"
+                                />
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label htmlFor="SocAuto1Tel">Teléfono</label>
+                                <input
+                                    type="tel"
+                                    id="SocAuto1Tel"
+                                    name="SocAuto1Tel"
+                                    value={formData.SocAuto1Tel}
+                                    onChange={handleInputChange}
+                                    placeholder="Ej: 099123456"
+                                />
+                            </div>
+                        </div>
+
+                        {mostrarSegundoAutorizado ? (
+                            <>
+                                <div className={styles.sectionHeaderRow}>
+                                    <h4 className={styles.sectionTitle}>Responsable autorizado 2</h4>
+                                    <button
+                                        type="button"
+                                        className={styles.removeLinkButton}
+                                        onClick={handleQuitarSegundoAutorizado}
+                                    >
+                                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Quitar
+                                    </button>
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label htmlFor="SocAuto2">Nombre</label>
+                                    <input
+                                        type="text"
+                                        id="SocAuto2"
+                                        name="SocAuto2"
+                                        value={formData.SocAuto2}
+                                        onChange={handleUppercaseChange}
+                                        placeholder="Nombre completo"
+                                    />
+                                </div>
+                                <div className={styles.formRow}>
+                                    <div className={styles.formGroup}>
+                                        <label htmlFor="SocAuto2CI">Cédula</label>
+                                        <input
+                                            type="text"
+                                            id="SocAuto2CI"
+                                            name="SocAuto2CI"
+                                            value={formData.SocAuto2CI}
+                                            onChange={handleInputChange}
+                                            placeholder="Ej: 12345678"
+                                        />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label htmlFor="SocAuto2Tel">Teléfono</label>
+                                        <input
+                                            type="tel"
+                                            id="SocAuto2Tel"
+                                            name="SocAuto2Tel"
+                                            value={formData.SocAuto2Tel}
+                                            onChange={handleInputChange}
+                                            placeholder="Ej: 099123456"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <button
+                                type="button"
+                                className={styles.addLinkButton}
+                                onClick={() => setMostrarSegundoAutorizado(true)}
+                            >
+                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Agregar otro responsable autorizado
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {/* Step 6: Additional Information */}
+                {currentStep === 6 && (
                     <div className={styles.stepContent}>
                         <div className={styles.formGroup}>
                             <label htmlFor="SocEmeMov">Teléfono de Emergencia</label>
@@ -596,6 +780,16 @@ const AddSocioWizard = ({ onSubmit, showToast }) => {
                     </div>
                 </div>
             </form>
+
+            <ConfirmDialog
+                isOpen={showCancelConfirm}
+                title="¿Cancelar alta de socio?"
+                description="Se perderán todos los datos ingresados."
+                confirmLabel="Sí, cancelar"
+                cancelLabel="Seguir completando"
+                onConfirm={confirmCancel}
+                onCancel={() => setShowCancelConfirm(false)}
+            />
         </div>
     );
 };

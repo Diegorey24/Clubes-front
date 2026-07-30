@@ -1,0 +1,97 @@
+.summaryGroup {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+/* ===== Fila extra de filtros: solo con deuda + rango de fechas ===== */
+.extraFiltersRow {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.dateFilterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.dateFilterGroup label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dateInput {
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: var(--gray-800);
+    height: 34px;
+    transition: all var(--transition-fast);
+}
+
+.dateInput:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 4px hsl(210, 76%, 95%);
+}
+
+.checkboxGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding-bottom: 0.5rem;
+}
+
+.checkboxGroup label {
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkboxGroup input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-500);
+    cursor: pointer;
+}
+
+/* ===== Barra sobre la tabla: acciones de exportar a Excel ===== */
+.tableToolbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.deudaPill {
+    padding: 0.5rem 1rem;
+    background: hsl(0, 84%, 96%);
+    color: var(--error-600);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+/* Mismo pill que .deudaPill pero en un rojo/ámbar menos fuerte: se usa para
+   la deuda "de esta página", que es un dato parcial frente al total de
+   arriba. */
+.deudaPillSoft {
+    padding: 0.5rem 1rem;
+    background: hsl(30, 95%, 94%);
+    color: hsl(25, 85%, 40%);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
