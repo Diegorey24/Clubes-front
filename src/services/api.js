@@ -336,6 +336,46 @@ export const getSocioHistoricoById = async (id) => {
   }
 };
 
+// Informe "Candidatos a Baja". Socios con más de "cantidadMeses" meses
+// impagos de cuota social (Rubro = 1), con nombre y celular para contactarlos.
+// cantidadMeses es obligatorio y va en el body.
+export const getBajaSocios = async (cantidadMeses) => {
+  const response = await api.post('/socios/baja-socios', { cantidadMeses });
+  return response.data;
+};
+
+// Exporta a Excel el informe "Candidatos a Baja". Mismo parámetro que
+// getBajaSocios, pero por query string para poder descargarlo como blob.
+export const exportBajaSocios = async (cantidadMeses) => {
+  try {
+    const response = await api.get('/socios/baja-socios/export', {
+      params: { cantidadMeses },
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar los candidatos a baja:', error);
+    throw error;
+  }
+};
+
+// Informe "Habilitados a Votar". Socios mayores a edadMin años (calculado a
+// "fecha"), con más antigüedad que "valor" (en meses o años según "tipo"),
+// que hayan pagado la cuota de "aniomes" y cuya categoría no esté en
+// catCodExcluidos. Todos los parámetros son obligatorios salvo
+// catCodExcluidos (default []).
+export const getHabilitadosVotar = async ({ fecha, aniomes, edadMin, tipo, valor, catCodExcluidos = [] }) => {
+  const response = await api.post('/socios/habilitados-votar', {
+    fecha,
+    aniomes,
+    edadMin,
+    tipo,
+    valor,
+    catCodExcluidos,
+  });
+  return response.data;
+};
+
 export const getDashboardStats = async () => {
   try {
     const response = await api.get('/dashboard/stats');
@@ -600,6 +640,190 @@ export const exportCobranzaPeriodo = async (fechaDesde, fechaHasta) => {
     return response.data;
   } catch (error) {
     console.error('Error al exportar la cobranza del período:', error);
+    throw error;
+  }
+};
+
+// Informe "Emisión". No pagina: trae de una todos los cargos de
+// CuentaCorriente con FechaCargo dentro del rango pedido, con joins a
+// Rubros/CategoriasSocios/Socios (RubDsc, CatNom, SocNom en vez de códigos).
+// fechaDesde y fechaHasta son obligatorios; si faltan el backend responde
+// 400 con { error }.
+export const getEmisionPorPeriodo = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/cuenta-corriente/emision', {
+      params: { fechaDesde, fechaHasta }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener el informe de emisión:', error);
+    throw error;
+  }
+};
+
+// Excel del informe "Emisión". Mismo filtro que getEmisionPorPeriodo.
+export const exportEmisionPorPeriodo = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/cuenta-corriente/emision/export', {
+      params: { fechaDesde, fechaHasta },
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar el informe de emisión:', error);
+    throw error;
+  }
+};
+
+// Informe "Listado de Cobranza". No pagina: trae de una todos los movimientos
+// de CuentaCorriente ya cobrados (NroRecibo <> 0) con FechaPago dentro del
+// rango pedido, con joins a Rubros/CategoriasSocios/Socios (RubDsc, CatNom,
+// SocNom en vez de códigos). fechaDesde y fechaHasta son obligatorios; si
+// faltan el backend responde 400 con { error }.
+export const getPagosPorPeriodo = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/cuenta-corriente/pagos-fecha', {
+      params: { fechaDesde, fechaHasta }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener el informe de pagos:', error);
+    throw error;
+  }
+};
+
+// Excel del informe "Listado de Cobranza". Mismo filtro que getPagosPorPeriodo.
+export const exportPagosPorPeriodo = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/cuenta-corriente/pagos-fecha/export', {
+      params: { fechaDesde, fechaHasta },
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar el informe de pagos:', error);
+    throw error;
+  }
+};
+
+// Informe "Movimientos Anulados". No pagina: trae de una todos los cargos
+// anulados (tabla MovimientosAnulados) con FechaPago dentro del rango
+// pedido, con joins a Rubros/CategoriasSocios/Socios (RubDsc, CatNom, SocNom
+// en vez de códigos). fechaDesde y fechaHasta son obligatorios; si faltan el
+// backend responde 400 con { error }.
+export const getMovimientosAnuladosPorPeriodo = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/cuenta-corriente/movimientos-anulados', {
+      params: { fechaDesde, fechaHasta }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener el informe de movimientos anulados:', error);
+    throw error;
+  }
+};
+
+// Excel del informe "Movimientos Anulados". Mismo filtro que getMovimientosAnuladosPorPeriodo.
+export const exportMovimientosAnuladosPorPeriodo = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/cuenta-corriente/movimientos-anulados/export', {
+      params: { fechaDesde, fechaHasta },
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar el informe de movimientos anulados:', error);
+    throw error;
+  }
+};
+
+// Informe "Listado de Altas". No pagina: trae de una todos los socios cuyo
+// ingreso (SocFchIng) cae dentro del rango pedido. fechaDesde y fechaHasta
+// son obligatorios; si faltan el backend responde 400 con { error }.
+export const getListadoAltas = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/socios/altas', {
+      params: { fechaDesde, fechaHasta }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener el informe de listado de altas:', error);
+    throw error;
+  }
+};
+
+// Excel del informe "Listado de Altas". Mismo filtro que getListadoAltas.
+export const exportListadoAltas = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/socios/altas/export', {
+      params: { fechaDesde, fechaHasta },
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar el informe de listado de altas:', error);
+    throw error;
+  }
+};
+
+// Informe "Listado de Bajas". No pagina: trae de una todos los socios cuyo
+// egreso (SocFecEgr_DATE) cae dentro del rango pedido. fechaDesde y
+// fechaHasta son obligatorios; si faltan el backend responde 400 con { error }.
+export const getListadoBajas = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/socios/bajas', {
+      params: { fechaDesde, fechaHasta }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener el informe de listado de bajas:', error);
+    throw error;
+  }
+};
+
+// Excel del informe "Listado de Bajas". Mismo filtro que getListadoBajas.
+export const exportListadoBajas = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/socios/bajas/export', {
+      params: { fechaDesde, fechaHasta },
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar el informe de listado de bajas:', error);
+    throw error;
+  }
+};
+
+// Informe "Movimientos de Caja". No pagina: trae de una todos los
+// comprobantes de CajaCab con Fecha en [fechaDesde, fechaHasta] (rango
+// inclusivo, igual que la consulta SQL original), una fila por cada
+// combinación de rubro/medio de pago del comprobante. fechaDesde/fechaHasta
+// son obligatorios; si faltan el backend responde 400 con { error }.
+export const getMovimientosCaja = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/cajacab/movimientos', {
+      params: { fechaDesde, fechaHasta }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener los movimientos de caja:', error);
+    throw error;
+  }
+};
+
+// Excel del informe "Movimientos de Caja". Mismo filtro que
+// getMovimientosCaja, pero agrupado por comprobante en el backend (ver
+// CajaCabModel.getMovimientosForExport) y devuelto directamente como .xlsx.
+export const exportMovimientosCaja = async (fechaDesde, fechaHasta) => {
+  try {
+    const response = await api.get('/cajacab/movimientos/export', {
+      params: { fechaDesde, fechaHasta },
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al exportar los movimientos de caja:', error);
     throw error;
   }
 };

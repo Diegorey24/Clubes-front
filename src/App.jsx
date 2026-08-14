@@ -42,8 +42,16 @@ import InformeSociosDeudasPorCategoriaPage from './pages/InformeSociosDeudasPorC
 import InformeSociosDeudasPorRubroPage from './pages/InformeSociosDeudasPorRubroPage';
 import InformePlanillaSociosPage from './pages/InformePlanillaSociosPage';
 import InformeCobranzaPeriodoPage from './pages/InformeCobranzaPeriodoPage';
+import InformeMovimientosCajaPage from './pages/InformeMovimientosCajaPage';
+import InformeEmisionPage from './pages/InformeEmisionPage';
+import InformePagosPage from './pages/InformePagosPage';
+import InformeMovimientosAnuladosPage from './pages/InformeMovimientosAnuladosPage';
+import InformeListadoAltasPage from './pages/InformeListadoAltasPage';
+import InformeListadoBajasPage from './pages/InformeListadoBajasPage';
 import InformeCumpleanosPage from './pages/InformeCumpleanosPage';
 import InformeFichaMedicaVencimientoPage from './pages/InformeFichaMedicaVencimientoPage';
+import InformeBajaSociosPage from './pages/InformeBajaSociosPage';
+import InformeHabilitadosVotarPage from './pages/InformeHabilitadosVotarPage';
 import ControlAccesoPage from './pages/ControlAccesoPage';
 import './App.css';
 
@@ -183,8 +191,16 @@ function AppContent({
         <Route path="/informe-socios-deudas-por-rubro" element={<PrivateRoute usuario={usuario}><InformeSociosDeudasPorRubroPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-planilla-socios" element={<PrivateRoute usuario={usuario}><InformePlanillaSociosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-cobranza-periodo" element={<PrivateRoute usuario={usuario}><InformeCobranzaPeriodoPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-movimientos-caja" element={<PrivateRoute usuario={usuario}><InformeMovimientosCajaPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-emision" element={<PrivateRoute usuario={usuario}><InformeEmisionPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-pagos" element={<PrivateRoute usuario={usuario}><InformePagosPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-movimientos-anulados" element={<PrivateRoute usuario={usuario}><InformeMovimientosAnuladosPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-listado-altas" element={<PrivateRoute usuario={usuario}><InformeListadoAltasPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-listado-bajas" element={<PrivateRoute usuario={usuario}><InformeListadoBajasPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-cumpleanos" element={<PrivateRoute usuario={usuario}><InformeCumpleanosPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/informe-ficha-medica-vencimiento" element={<PrivateRoute usuario={usuario}><InformeFichaMedicaVencimientoPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-baja-socios" element={<PrivateRoute usuario={usuario}><InformeBajaSociosPage showToast={showToast} /></PrivateRoute>} />
+        <Route path="/informe-habilitados-votar" element={<PrivateRoute usuario={usuario}><InformeHabilitadosVotarPage showToast={showToast} /></PrivateRoute>} />
         <Route path="/control-acceso/login" element={usuario ? <Navigate to="/control-acceso" replace /> : <LoginPage onLogin={handleLogin} />} />
         <Route path="/control-acceso" element={usuario ? <ControlAccesoPage usuario={usuario} onLogout={handleLogout} showToast={showToast} /> : <Navigate to="/control-acceso/login" replace />} />
       </Routes></ErrorBoundary></main>
